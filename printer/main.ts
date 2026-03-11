@@ -117,7 +117,7 @@ server.get('/handshake', (req, res) => {
 
 
 server.listen(PORT, () => {
-    console.log("🚀 Servidor de Impressão rodando na porta 3030");
+    console.log("🚀 Servidor de Impressão rodando na porta " + PORT);
 });
 
 

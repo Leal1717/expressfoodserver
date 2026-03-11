@@ -9,6 +9,7 @@
 node_modules/
 generated/
 printer/dist/
+prisma/migrations/
 
 # Logs
 logs
