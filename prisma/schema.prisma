@@ -1,0 +1,224 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+
+
+// ----------------------------------------------------------------------------------------------------------------------- nosso
+model Plano {
+  id    Int @id @default(autoincrement())
+  nome String 
+  preco  Decimal @db.Decimal(10, 2)
+  qtd_licencas Int
+  empresas Empresa[]
+}
+
+// ----------------------------------------------------------------------------------------------------------------------- estrutural
+model Empresa {
+  id    Int @id @default(autoincrement())
+  nome_fantasia String 
+  razao_social String 
+  cnpj String 
+  plano_id Int
+  plano Plano @relation(fields: [plano_id], references: [id])
+  usuarios Usuario[]
+  classes Classe[]
+  subitens Subitem[]
+  itens Item[]
+  vendas Venda[]
+  impressoras Impressora[]
+}
+
+model Usuario {
+  id    Int @id @default(autoincrement())
+  nome String 
+  senha String 
+  email String 
+  telefone String 
+
+  ativo Boolean @default(true)
+  
+  empresa_id Int
+  empresa Empresa @relation(fields: [empresa_id], references: [id])
+  @@index([empresa_id])
+
+  vendas Venda[]
+}
+
+model Impressora {
+  id    Int @id @default(autoincrement())
+  nome String 
+  ip String 
+  modelo String 
+  
+  empresa_id Int
+  empresa Empresa @relation(fields: [empresa_id], references: [id])
+  @@index([empresa_id])
+}
+
+// ----------------------------------------------------------------------------------------------------------------------- itens, classes, subitens, vendaveis 
+
+
+model Classe {
+  id    Int @id @default(autoincrement())
+  nome String 
+
+  empresa_id Int
+  empresa Empresa @relation(fields: [empresa_id], references: [id])
+  @@index([empresa_id])
+
+  item Item[]
+}
+
+
+model Subitem {
+  id    Int @id @default(autoincrement())
+  nome String 
+
+  empresa_id Int
+  empresa Empresa @relation(fields: [empresa_id], references: [id])
+  @@index([empresa_id])
+
+  itens ItemSubitem[]
+
+  vendas VendaItemSubitem[] @relation("VendaItemSubitem_Subitem")
+
+}
+
+enum ItemTipo { 
+  PRODUTO
+  MERCADORIA 
+  COMBO
+}
+
+model Item {
+  id  Int @id @default(autoincrement())
+  nome String 
+  descricao String?  
+  codigo_barras String? 
+  preco Decimal @db.Decimal(10, 2)
+  tipo  ItemTipo @default(MERCADORIA)
+
+  empresa_id Int
+  empresa Empresa @relation(fields: [empresa_id], references: [id])
+  @@index([empresa_id])
+  
+  subitens ItemSubitem[]
+
+  classe_id Int?
+  classe Classe? @relation(fields: [classe_id], references: [id])
+
+ // Relação para combos
+  combos_as_combo ComboItem[] @relation("ComboItens") // se este item é um combo que contém outros itens
+  combos_as_item ComboItem[] @relation("ItemInCombos") // se este item faz parte de algum combo
+
+  // relação com vendas
+  vendas VendaItem[]  
+  
+}
+
+enum ItemSubitemTipo {
+  MATERIA_PRIMA
+  ADICIONAL
+  AMBOS
+}
+model ItemSubitem {
+
+  item_id Int
+  item Item @relation(fields: [item_id], references: [id], onDelete: Cascade)
+
+  subitem_id Int
+  subitem Subitem @relation(fields: [subitem_id], references: [id])
+
+  tipo ItemSubitemTipo
+
+  quantidade Decimal @db.Decimal(10, 3)
+  
+  preco Decimal? @db.Decimal(10, 2)
+
+  @@id([item_id, subitem_id])
+  
+
+}
+
+// ----------------------------------------------------------------------------------------------------------------------- combos
+
+model ComboItem {
+  combo_id Int
+  combo    Item @relation("ComboItens", fields: [combo_id], references: [id], onDelete: Cascade)
+
+  item_id  Int
+  item     Item @relation("ItemInCombos", fields: [item_id], references: [id], onDelete: Cascade)
+
+  quantidade Decimal @db.Decimal(10,3)
+
+  @@id([combo_id, item_id])
+}
+
+// ----------------------------------------------------------------------------------------------------------------------- vendas
+
+enum VendaStatus {
+  PENDENTE
+  PAGA
+  CANCELADA
+}
+
+model Venda {
+  id         Int      @id @default(autoincrement())
+  
+  empresa_id Int
+  empresa Empresa @relation(fields: [empresa_id], references: [id])
+  @@index([empresa_id])
+
+  createdAt  DateTime @default(now())
+  status     VendaStatus @default(PENDENTE)
+  total      Decimal  @db.Decimal(10, 2)
+  desconto   Decimal? @db.Decimal(10, 2) // desconto total da venda
+
+  itens      VendaItem[]
+  
+  usuario_id      Int
+  usuario Usuario @relation(fields: [usuario_id], references: [id])
+  @@index([usuario_id])
+
+}
+
+model VendaItem {
+  id        Int      @id @default(autoincrement())
+  venda_id  Int
+  venda     Venda    @relation(fields: [venda_id], references: [id], onDelete: Cascade)
+
+  item_id   Int
+  item      Item     @relation(fields: [item_id], references: [id])
+
+  quantidade Decimal @db.Decimal(10,3)
+  preco     Decimal  @db.Decimal(10,2) // preço do item original
+  desconto  Decimal? @db.Decimal(10,2) // desconto aplicado nesse item específico
+
+  subitens  VendaItemSubitem[]
+}
+
+model VendaItemSubitem {
+  id              Int      @id @default(autoincrement())
+  venda_item_id   Int
+  venda_item      VendaItem @relation(fields: [venda_item_id], references: [id], onDelete: Cascade)
+
+  subitem_id      Int
+  subitem         Subitem   @relation("VendaItemSubitem_Subitem", fields: [subitem_id], references: [id])
+
+  quantidade      Decimal   @db.Decimal(10,3)
+  preco           Decimal   @db.Decimal(10,2)
+  desconto        Decimal?  @db.Decimal(10,2)
+}
