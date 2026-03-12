@@ -11,18 +11,22 @@ export class ImpressorasService {
     constructor(private prisma: PrismaService) {}
 
     async salvar(data:Impressora) {
-        return await this.prisma.impressora.create({data: data})
+        return await this.prisma.tenantClient.impressora.create({data: data})
     }
 
     async buscarTodos() {
-        return this.prisma.impressora.findMany()
+        return this.prisma.tenantClient.impressora.findMany()
     }
 
     async buscarPorId(id:number) {
-        return this.prisma.impressora.findUnique({where: {id: Number(id)}})
+        return this.prisma.tenantClient.impressora.findUnique({where: {id: Number(id)}})
     }
 
     async update(data:Impressora) {
-        return this.prisma.impressora.update({where: {id: Number(data.id)}, data: data})
+        return this.prisma.tenantClient.impressora.update({where: {id: Number(data.id)}, data: data})
+    }
+
+    async delete(id:number) {
+        return this.prisma.tenantClient.impressora.delete({where: {id: id}})
     }
 }

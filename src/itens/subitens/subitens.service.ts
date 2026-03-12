@@ -7,23 +7,25 @@ export class SubitensService {
     constructor(private prisma: PrismaService) {}
     
     async salvar(data:Subitem) {
-        return this.prisma.subitem.create({data:data})
+        const data2:any = data
+        delete data2.empresa_id
+        return this.prisma.tenantClient.subitem.create({data:data2})
     }
 
     async buscarTodos() {
-        return this.prisma.subitem.findMany()
+        return this.prisma.tenantClient.subitem.findMany()
     }
 
     async buscarPorId(id: number) {
-        return this.prisma.subitem.findUnique({where: {id: Number(id)}})
+        return this.prisma.tenantClient.subitem.findUnique({where: {id: Number(id)}})
     }
 
     async update(data:Subitem) {
-        return this.prisma.subitem.update({where: {id: Number(data.id)}, data: data})
+        return this.prisma.tenantClient.subitem.update({where: {id: Number(data.id)}, data: data})
     }
 
     async delete(id:number) {
-        return this.prisma.subitem.delete({where: {id: Number(id)}})
+        return this.prisma.tenantClient.subitem.delete({where: {id: Number(id)}})
     }
     
 }

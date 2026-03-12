@@ -8,7 +8,7 @@ export class VendasService {
     constructor(private prisma: PrismaService) {}
     
     async salvar(data: CreateVendaDto) {
-        return this.prisma.venda.create({
+        return this.prisma.tenantClient.venda.create({
             data: {
                 total: data.total,
                 desconto: data.desconto,
@@ -41,15 +41,15 @@ export class VendasService {
     }
 
     async buscarTodos() {
-        return this.prisma.venda.findMany()
+        return this.prisma.tenantClient.venda.findMany()
     }
 
     async buscarPorId(id: number) {
-        return this.prisma.venda.findUnique({where: {id: Number(id)}})
+        return this.prisma.tenantClient.venda.findUnique({where: {id: Number(id)}})
     }
 
     async alterarStatus(id:number, status: VendaStatus) {
-        return this.prisma.venda.update({where: {id: Number(id)}, data: {status: status}})
+        return this.prisma.tenantClient.venda.update({where: {id: Number(id)}, data: {status: status}})
     }
     
 }

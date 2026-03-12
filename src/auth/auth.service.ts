@@ -15,7 +15,7 @@ export class AuthService {
 
         const  {senha, ...result} = user;
         
-        const payload = { sub: user.id, username: user.email, empresa_id: user.empresa_id };
+        const payload = { sub: user.id, usuario_id: user.id, usuario_email: user.email, empresa_id: user.empresa_id };
 
         return {
             // 💡 Here the JWT secret key that's used for signing the payload 

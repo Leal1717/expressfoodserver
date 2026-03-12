@@ -19,23 +19,23 @@ export class UsuariosService {
     }
 
     async buscarTodos() {
-        return this.prisma.usuario.findMany()
+        return this.prisma.tenantClient.usuario.findMany()
     }
 
     async buscarPorId(id: number) {
-        return this.prisma.usuario.findUnique({where: {id: Number(id)}})
+        return this.prisma.tenantClient.usuario.findUnique({where: {id: Number(id)}})
     }
 
     async buscarPorEmail(username: string) {
-        return this.prisma.usuario.findFirst({where: { email: username } })
+        return this.prisma.tenantClient.usuario.findFirst({where: { email: username } })
     }
 
     async update(data:Usuario) {
-        return this.prisma.usuario.update({where: {id: Number(data.id)}, data: data})
+        return this.prisma.tenantClient.usuario.update({where: {id: Number(data.id)}, data: data})
     }
 
     async delete(id:number) {
-        return this.prisma.usuario.delete({where: {id: Number(id)}})
+        return this.prisma.tenantClient.usuario.delete({where: {id: Number(id)}})
     }
 
 }

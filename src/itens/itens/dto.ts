@@ -4,7 +4,6 @@ export class CreateItemDto {
     nome: string
     descricao?: string
     preco: number
-    empresa_id: number
     classe_id?: number
 
 

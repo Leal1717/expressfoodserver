@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { ImpressorasService } from './impressoras.service';
 import type { Impressora } from '@prisma/client';
 // import { PlanoEntity } from './planos.entity';
@@ -33,6 +33,14 @@ export class ImpressorasController {
         @Param('id') id: number,
     ) {
         return this.service.buscarPorId(id)
+
+    }
+    
+    @Delete("/delete/:id")
+    delete (
+        @Param('id') id: number,
+    ) {
+        return this.service.delete(id)
 
     }
 }

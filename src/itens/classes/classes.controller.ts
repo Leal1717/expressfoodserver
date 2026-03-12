@@ -1,10 +1,8 @@
-/*
-https://docs.nestjs.com/controllers#controllers
-*/
-
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { ClassesService } from './classes.service';
 import type { Classe } from '@prisma/client';
+import { EmpresaId } from 'src/decorators/empresaid.decorator';
+import { TenantService } from 'src/tenant/tenant.service';
 
 @Controller("api/classes")
 export class ClassesController {

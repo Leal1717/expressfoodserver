@@ -15,7 +15,7 @@ export class ItensService {
         if (data.combo_itens && data.combo_itens.length > 0) {
             tipo = 'COMBO'
         }
-        return this.prisma.item.create({
+        return this.prisma.tenantClient.item.create({
             data: {
                 nome: data.nome,
                 descricao: data.descricao,
@@ -23,7 +23,6 @@ export class ItensService {
 
                 tipo: tipo,
 
-                empresa_id: data.empresa_id,
                 classe_id: data.classe_id,
 
                 subitens: {
@@ -46,7 +45,7 @@ export class ItensService {
 
 
     async update(data:UpdateItemDto) {
-        return this.prisma.item.update({
+        return this.prisma.tenantClient.item.update({
             where: {id: Number(data.id)},
             data: {
                 nome: data.nome,
@@ -74,15 +73,15 @@ export class ItensService {
     }
 
     async buscarTodos() {
-        return this.prisma.item.findMany()
+        return this.prisma.tenantClient.item.findMany()
     }
 
     async buscarPorId(id: number) {
-        return this.prisma.item.findUnique({where: {id: Number(id)}})
+        return this.prisma.tenantClient.item.findUnique({where: {id: Number(id)}})
     }
 
     async delete(id:number) {
-        return this.prisma.item.delete({where: {id: Number(id)}})
+        return this.prisma.tenantClient.item.delete({where: {id: Number(id)}})
     }
     
 }
