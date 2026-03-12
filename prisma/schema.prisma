@@ -16,6 +16,9 @@ datasource db {
 
 
 
+
+
+
 // ----------------------------------------------------------------------------------------------------------------------- nosso
 model Plano {
   id    Int @id @default(autoincrement())
@@ -24,6 +27,12 @@ model Plano {
   qtd_licencas Int
   empresas Empresa[]
 }
+
+
+
+
+
+
 
 // ----------------------------------------------------------------------------------------------------------------------- estrutural
 model Empresa {
@@ -37,8 +46,12 @@ model Empresa {
   classes Classe[]
   subitens Subitem[]
   itens Item[]
-  vendas Venda[]
+  promocoes Promocao[]
+  vendas Pedido[]
   impressoras Impressora[]
+  mesas Mesa[]
+  comandas Comanda[]
+  senhas Senha[]
 }
 
 model Usuario {
@@ -54,7 +67,9 @@ model Usuario {
   empresa Empresa @relation(fields: [empresa_id], references: [id])
   @@index([empresa_id])
 
-  vendas Venda[]
+  vendas Pedido[]
+
+  @@unique([email, empresa_id]) 
 }
 
 model Impressora {
@@ -66,7 +81,16 @@ model Impressora {
   empresa_id Int
   empresa Empresa @relation(fields: [empresa_id], references: [id])
   @@index([empresa_id])
+
+  @@unique([nome, empresa_id]) 
 }
+
+
+
+
+
+
+
 
 // ----------------------------------------------------------------------------------------------------------------------- itens, classes, subitens, vendaveis 
 
@@ -80,6 +104,8 @@ model Classe {
   @@index([empresa_id])
 
   item Item[]
+
+  @@unique([nome, empresa_id]) 
 }
 
 
@@ -93,7 +119,9 @@ model Subitem {
 
   itens ItemSubitem[]
 
-  vendas VendaItemSubitem[] @relation("VendaItemSubitem_Subitem")
+  vendas PedidoItemSubitem[] @relation("PedidoItemSubitem_Subitem")
+
+  @@unique([nome, empresa_id]) 
 
 }
 
@@ -120,12 +148,17 @@ model Item {
   classe_id Int?
   classe Classe? @relation(fields: [classe_id], references: [id])
 
+
+  promocao Promocao[]
+
  // Relação para combos
   combos_as_combo ComboItem[] @relation("ComboItens") // se este item é um combo que contém outros itens
   combos_as_item ComboItem[] @relation("ItemInCombos") // se este item faz parte de algum combo
 
   // relação com vendas
-  vendas VendaItem[]  
+  vendas PedidoItem[]  
+
+  @@unique([nome, empresa_id]) 
   
 }
 
@@ -149,11 +182,12 @@ model ItemSubitem {
   preco Decimal? @db.Decimal(10, 2)
 
   @@id([item_id, subitem_id])
-  
-
 }
 
-// ----------------------------------------------------------------------------------------------------------------------- combos
+
+
+
+// --------- combos
 
 model ComboItem {
   combo_id Int
@@ -165,60 +199,191 @@ model ComboItem {
   quantidade Decimal @db.Decimal(10,3)
 
   @@id([combo_id, item_id])
+  
 }
+
+
+
+
+
+
+//---------- promocoes
+
+model Promocao {
+  id               Int   @id @default(autoincrement())
+  empresa_id     Int
+  empresa       Empresa @relation(fields: [empresa_id], references: [id])
+  
+  preco_promocional Decimal  @db.Decimal(10, 2)
+  hora_inicio        String   // "18:00"
+  hora_fim          String   // "23:59"
+  ativo         Boolean  @default(true)
+
+  dia_da_semana_id    Int
+  dia_da_semana       DiaDaSemana @relation(fields: [dia_da_semana_id], references: [id], onDelete: Cascade)
+
+  item_id       Int
+  item          Item  @relation(fields: [item_id], references: [id], onDelete: Cascade)
+
+  @@index([empresa_id])
+  @@index([item_id])
+}
+
+model DiaDaSemana {
+  id Int @id @default(autoincrement())
+  nome_completo String
+  nome_abreviado String
+  nome_enum DayOfWeek
+  promocoes Promocao[]
+}
+
+enum DayOfWeek {
+  SEGUNDA
+  TERCA
+  QUARTA
+  QUINTA
+  SEXTA
+  SABADO
+  DOMINGO
+}
+
+
+
+
+
+// ----------------------------------------------------------------------------------------------------------------------- formatos de venda
+
+
+// ------------------- mesa
+model Mesa {
+  id            Int   @id @default(autoincrement())
+  nome          String      // Número da mesa (Ex: Mesa 01, Mesa 02)
+
+  empresa_id    Int
+  empresa       Empresa @relation(fields: [empresa_id], references: [id])
+  @@index([empresa_id])
+
+  status        MesaStatus @default(LIVRE)
+
+  pedidos        Pedido[]
+
+  @@unique([nome, empresa_id]) 
+}
+
+
+enum MesaStatus {
+  LIVRE       // Livre
+  OCUPADA     // Ocupada (Cliente sentado)
+  CONTA       // Pediu a conta
+}
+
+
+// ------------------- comanda
+model Comanda {
+  id            String   @id @default(uuid())
+
+  empresa_id    Int
+  empresa       Empresa @relation(fields: [empresa_id], references: [id])
+  @@index([empresa_id])
+
+  status        ComandaStatus @default(OCUPADA)
+
+  pedidos        Pedido[]
+}
+
+
+enum ComandaStatus {
+  OCUPADA     // Ocupada (Cliente sentado)
+  PAGA        // pagou
+}
+
+
+// ------------------- senha
+model Senha {
+  id            String   @id @default(uuid())
+  nome          String
+
+  empresa_id    Int
+  empresa       Empresa @relation(fields: [empresa_id], references: [id])
+  @@index([empresa_id])
+
+  pedidos        Pedido[]
+
+  @@unique([nome, empresa_id])
+}
+
+
+
+
 
 // ----------------------------------------------------------------------------------------------------------------------- vendas
 
-enum VendaStatus {
+enum PedidoStatus {
   PENDENTE
   PAGA
   CANCELADA
 }
 
-model Venda {
-  id         Int      @id @default(autoincrement())
+model Pedido {
+  id            String      @id @default(uuid())
   
-  empresa_id Int
-  empresa Empresa @relation(fields: [empresa_id], references: [id])
+  empresa_id    Int
+  empresa       Empresa @relation(fields: [empresa_id], references: [id])
   @@index([empresa_id])
 
-  createdAt  DateTime @default(now())
-  status     VendaStatus @default(PENDENTE)
-  total      Decimal  @db.Decimal(10, 2)
-  desconto   Decimal? @db.Decimal(10, 2) // desconto total da venda
+  created_at    DateTime @default(now())
+  status        PedidoStatus @default(PENDENTE)
+  total         Decimal  @db.Decimal(10, 2)
+  desconto      Decimal? @db.Decimal(10, 2) // desconto total da venda
 
-  itens      VendaItem[]
-  
-  usuario_id      Int
-  usuario Usuario @relation(fields: [usuario_id], references: [id])
+  itens         PedidoItem[]
+
+  // formato de trabalho = MESAS
+  mesa_id       Int?
+  mesa          Mesa?  @relation(fields: [mesa_id], references: [id])
+
+  // formato de trabalho = COMANDAS
+  comanda_id    String?
+  comanda       Comanda?  @relation(fields: [comanda_id], references: [id])
+
+  // formato de trabalho = SENHAS
+  senha_id    String?
+  senha       Senha?  @relation(fields: [senha_id], references: [id])
+
+  usuario_id    Int
+  usuario       Usuario @relation(fields: [usuario_id], references: [id])
   @@index([usuario_id])
 
+	@@map("Pedido")
 }
 
-model VendaItem {
-  id        Int      @id @default(autoincrement())
-  venda_id  Int
-  venda     Venda    @relation(fields: [venda_id], references: [id], onDelete: Cascade)
+model PedidoItem {
+  id            String      @id @default(uuid())
+  pedido_id     String
+  pedido        Pedido    @relation(fields: [pedido_id], references: [id], onDelete: Cascade)
 
-  item_id   Int
-  item      Item     @relation(fields: [item_id], references: [id])
+  item_id       Int
+  item          Item     @relation(fields: [item_id], references: [id])
 
-  quantidade Decimal @db.Decimal(10,3)
-  preco     Decimal  @db.Decimal(10,2) // preço do item original
-  desconto  Decimal? @db.Decimal(10,2) // desconto aplicado nesse item específico
+  quantidade    Decimal @db.Decimal(10,3)
+  preco         Decimal  @db.Decimal(10,2) // preço do item original
+  desconto      Decimal? @db.Decimal(10,2) // desconto aplicado nesse item específico
 
-  subitens  VendaItemSubitem[]
+  subitens      PedidoItemSubitem[]
+	@@map("PedidoItem")
 }
 
-model VendaItemSubitem {
-  id              Int      @id @default(autoincrement())
-  venda_item_id   Int
-  venda_item      VendaItem @relation(fields: [venda_item_id], references: [id], onDelete: Cascade)
+model PedidoItemSubitem {
+  id              String      @id @default(uuid())
+  pedido_item_id   String
+  pedido_item      PedidoItem @relation(fields: [pedido_item_id], references: [id], onDelete: Cascade)
 
   subitem_id      Int
-  subitem         Subitem   @relation("VendaItemSubitem_Subitem", fields: [subitem_id], references: [id])
+  subitem         Subitem   @relation("PedidoItemSubitem_Subitem", fields: [subitem_id], references: [id])
 
   quantidade      Decimal   @db.Decimal(10,3)
   preco           Decimal   @db.Decimal(10,2)
   desconto        Decimal?  @db.Decimal(10,2)
+
+	@@map("PedidoItemSubitem")
 }

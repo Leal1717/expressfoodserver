@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Classe, Item, ItemTipo, VendaStatus } from '@prisma/client';
+import { Classe, Item, ItemTipo, PedidoStatus  } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateVendaDto } from './dto';
 
@@ -48,7 +48,7 @@ export class VendasService {
         return this.prisma.tenantClient.venda.findUnique({where: {id: Number(id)}})
     }
 
-    async alterarStatus(id:number, status: VendaStatus) {
+    async alterarStatus(id:number, status: PedidoStatus) {
         return this.prisma.tenantClient.venda.update({where: {id: Number(id)}, data: {status: status}})
     }
     

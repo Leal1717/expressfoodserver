@@ -2,6 +2,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { UsuariosService } from './usuarios.service';
 import type { Empresa, Usuario } from '@prisma/client';
+import { Public } from 'src/decorators/public.decorator';
 
 @Controller("api/usuarios")
 export class UsuariosController {
@@ -19,6 +20,7 @@ export class UsuariosController {
         return this.service.buscarTodos()
     }
 
+    @Public()
     @Post("salvar")
     async salvar(
         @Body() data: Usuario

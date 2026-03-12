@@ -1,9 +1,9 @@
-import { VendaStatus } from "@prisma/client"
+import { PedidoStatus,  } from "@prisma/client"
 
 export class CreateVendaDto {
   total: number;               // total da venda (sem desconto)
   desconto?: number;           // desconto total da venda
-  status?: VendaStatus;        // opcional, padrão PENDENTE
+  status?: PedidoStatus;        // opcional, padrão PENDENTE
 
   empresa_id: number;          // ID da empresa
   usuario_id: number;          // ID do usuario

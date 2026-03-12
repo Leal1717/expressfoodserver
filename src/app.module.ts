@@ -1,3 +1,13 @@
+import { SenhasModule } from './formatos/senhas/senhas.module';
+import { SenhasController } from './formatos/senhas/senhas.controller';
+import { SenhasService } from './formatos/senhas/senhas.service';
+import { ComandasModule } from './formatos/comandas/comandas.module';
+import { ComandasController } from './formatos/comandas/comandas.controller';
+import { ComandasService } from './formatos/comandas/comandas.service';
+import { MesasModule } from './formatos/mesas/mesas.module';
+import { MesasController } from './formatos/mesas/mesas.controller';
+import { MesasService } from './formatos/mesas/mesas.service';
+import { PromocoesModule } from './itens/promocoes/promocoes.module';
 import { TenantModule } from './tenant/tenant.module';
 import { TenantService } from './tenant/tenant.service';
 import { ClassesModule } from './itens/classes/classes.module';
@@ -28,6 +38,10 @@ import { TenantMiddleware } from './tenant/tenant.middleware';
 
 @Module({
 	imports: [
+		SenhasModule,
+		ComandasModule,
+		MesasModule,
+		PromocoesModule,
 		TenantModule,
 		JwtModule.register({
 			global: true,
@@ -48,8 +62,14 @@ import { TenantMiddleware } from './tenant/tenant.middleware';
 		VendasModule,
 	],
 	controllers: [
+		SenhasController,
+		ComandasController,
+		MesasController,
 		ClassesController, EmpresasController],
 	providers: [
+		SenhasService,
+		ComandasService,
+		MesasService,
 		TenantService,
 		{ provide: APP_GUARD, useClass: AuthGuard },
 		ClassesService, EmpresasService, PrismaService],
@@ -59,7 +79,7 @@ import { TenantMiddleware } from './tenant/tenant.middleware';
 export class AppModule implements NestModule {
 	configure(consumer: MiddlewareConsumer) {
 		consumer.apply(TenantMiddleware)
-		// O '*' significa que ele vai rodar em todas as rotas da API
-      	.forRoutes({ path: '*', method: RequestMethod.ALL });
+			// O '*' significa que ele vai rodar em todas as rotas da API
+			.forRoutes({ path: '*', method: RequestMethod.ALL });
 	}
 }
