@@ -34,11 +34,11 @@ export class SenhasController {
 
     }
      
-    @Delete("/delete/:id")
+    @Delete("/delete/:numero")
     delete (
-        @Param('id') id: string,
+        @Param('numero') numero: number,
     ) {
-        return this.service.delete(id)
+        return this.service.delete(numero)
 
     }
 }

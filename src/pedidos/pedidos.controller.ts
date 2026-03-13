@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import type {  Subitem, Item } from '@prisma/client';
-import { CreatePedidoDto, PedidoQueryDto } from './dto';
 import { PedidosService } from './pedidos.service';
+import { CreatePedidoDto } from 'src/operacional/dto';
 
 @Controller("api/pedidos")
 export class PedidosController {
@@ -36,20 +36,7 @@ export class PedidosController {
         return this.service.buscarPorId(id)
     }
 
-    @Get("formato")
-    async buscarPorFormato(
-        @Query("tipo") tipo: string,
-        @Query("id") id?: string
-    ) {
-        return this.service.buscarPorFormato(tipo, id)
-    }
 
-    @Get("query")
-    async buscarQuery(
-        @Query() query: PedidoQueryDto
-    ) {
-        return this.service.buscarQuery(query)
-    }
 
 }
 

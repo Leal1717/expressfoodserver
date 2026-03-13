@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Comanda } from '@prisma/client';
+import { Comanda, ComandaStatus } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -24,5 +24,10 @@ export class ComandasService {
 
     async delete(id:string) {
         return this.prisma.tenantClient.comanda.delete({where: {id: id}})
+    }
+
+    // ------------------------------------------------------------------------------ status
+    async setStatus(id: string, status: ComandaStatus) {
+        return this.prisma.tenantClient.comanda.update({where: {id: id}, data: {status: status} })
     }
 }

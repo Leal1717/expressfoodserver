@@ -37,6 +37,7 @@ import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/auth.guard';
 import { TenantMiddleware } from './tenant/tenant.middleware';
+import { OperacionalModule } from './operacional/operacional.module';
 
 @Module({
 	imports: [
@@ -62,6 +63,7 @@ import { TenantMiddleware } from './tenant/tenant.middleware';
 		ItensModule,
 		ItensPdvModule,
 		PedidosModule,
+		OperacionalModule, 
 	],
 	controllers: [
 		SenhasController,

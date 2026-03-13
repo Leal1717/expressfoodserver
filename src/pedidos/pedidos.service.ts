@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Classe, Item, ItemTipo, PedidoStatus  } from '@prisma/client';
+import { CreatePedidoDto } from 'src/operacional/dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreatePedidoDto, PedidoQueryDto } from './dto';
 
 
 /**
@@ -17,13 +17,13 @@ export class PedidosService {
     constructor(private prisma: PrismaService) {}
     
     async salvar(data: CreatePedidoDto) {
-        return this.prisma.pedido.create({
+        return this.prisma.tenantClient.pedido.create({
             data: {
                 total: data.total,
                 desconto: data.desconto,
                 status: data.status ?? 'PENDENTE',
 
-                empresa_id: 1,
+                // empresa_id: 1,
                 usuario_id: data.usuario_id,
 
                 mesa_id: data.mesa_id,
@@ -48,7 +48,10 @@ export class PedidosService {
                 }
             },
             include: {
-                itens: { include: { subitens: true, item: true } }
+                itens: { include: { subitens: true, item: true } },
+                senha: true,
+                mesa: true,
+                comanda: true
             }
         });
     }
@@ -77,57 +80,6 @@ export class PedidosService {
 
 
 
-    async buscarPorFormato(tipo:string, id?: string | number) {
-        if (tipo == "mesa") {
-            if (id) {
-                return this.prisma.tenantClient.pedido.findMany({ where: {  mesa_id: Number(id) } })
-            }
-            return this.prisma.tenantClient.pedido.findMany({ where: { NOT: { mesa_id: null }} })
-        }
-        if (tipo == "comanda") {
-            if (id) {
-                return this.prisma.tenantClient.pedido.findMany({ where: {  comanda_id: id as string } })
-            }
-            return this.prisma.tenantClient.pedido.findMany({ where: { NOT: { comanda_id: null }} })
-        }
-        if (tipo == "senha") {
-            if (id) {
-                return this.prisma.tenantClient.pedido.findMany({ where: {  senha_id: id as string } })
-            }
-            return this.prisma.tenantClient.pedido.findMany({ where: { NOT: { senha_id: null }} })
-        }
-        throw new BadRequestException("Param da query 'tipo' precisa ser informado com: mesa | comanda | senha")
-    }
-
-
-
-    async buscarQuery(query: PedidoQueryDto) {
-        const tipos = [query.mesa, query.comanda, query.senha]
-        const indefinidos = tipos.filter(e => !e)
-        if (indefinidos.length < 2) {
-            throw new BadRequestException("Mais de um formato foi dado (mesa, comanda, senha). Apenas um desses pode vir nao nulo.")
-        }
-
-        return this.prisma.pedido.findMany({
-            where: {
-                usuario_id: query.usuario ? Number(query.usuario) : undefined,
-                status: query.status,
-                mesa_id: query.mesa ? Number(query.mesa) : undefined,
-                comanda_id: query.comanda,
-                senha_id: query.senha,
-            },
-            include: {
-                itens: {
-                    include: {
-                        subitens: {
-                            include: { subitem:true }
-                        },
-                        
-                    }
-                }
-            }
-        })
-    }
 
 
     

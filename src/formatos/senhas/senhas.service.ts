@@ -10,6 +10,12 @@ export class SenhasService {
         return await this.prisma.tenantClient.senha.create({data: data})
     }
 
+    async criarSenhaOrdem() : Promise<Senha> {
+        const counted =  await this.prisma.senha.count()
+        const numero = counted + 10
+        return await this.prisma.tenantClient.senha.create({ data: { nome: `${numero}`, numero: numero} })
+    }
+
     async buscarTodos() {
         return this.prisma.tenantClient.senha.findMany()
     }
@@ -22,7 +28,10 @@ export class SenhasService {
         return this.prisma.tenantClient.senha.update({where: {id: data.id}, data: data})
     }
 
-    async delete(id:string) {
-        return this.prisma.tenantClient.senha.delete({where: {id: id}})
+    async delete(numero: number) {
+        return this.prisma.tenantClient.senha.deleteMany({where: {numero: Number(numero)}})
     }
+
+    // ------------------------------------------------------------------------------ status
+
 }

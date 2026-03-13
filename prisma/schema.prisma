@@ -112,6 +112,7 @@ model Classe {
 model Subitem {
   id    Int @id @default(autoincrement())
   nome String 
+  ativo Boolean @default(true)
 
   empresa_id Int
   empresa Empresa @relation(fields: [empresa_id], references: [id])
@@ -138,6 +139,7 @@ model Item {
   codigo_barras String? 
   preco Decimal @db.Decimal(10, 2)
   tipo  ItemTipo @default(MERCADORIA)
+  ativo Boolean @default(true)
 
   empresa_id Int
   empresa Empresa @relation(fields: [empresa_id], references: [id])
@@ -267,6 +269,8 @@ model Mesa {
 
   pedidos        Pedido[]
 
+  updated_at    DateTime @updatedAt
+
   @@unique([nome, empresa_id]) 
 }
 
@@ -282,18 +286,26 @@ enum MesaStatus {
 model Comanda {
   id            String   @id @default(uuid())
 
+  nome          String?
+
   empresa_id    Int
   empresa       Empresa @relation(fields: [empresa_id], references: [id])
   @@index([empresa_id])
 
   status        ComandaStatus @default(OCUPADA)
 
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
   pedidos        Pedido[]
+
+  @@unique([nome, empresa_id])
 }
 
 
 enum ComandaStatus {
   OCUPADA     // Ocupada (Cliente sentado)
+  CONTA
   PAGA        // pagou
 }
 
@@ -301,7 +313,11 @@ enum ComandaStatus {
 // ------------------- senha
 model Senha {
   id            String   @id @default(uuid())
-  nome          String
+  numero        Int?
+  nome          String?
+  
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
 
   empresa_id    Int
   empresa       Empresa @relation(fields: [empresa_id], references: [id])
@@ -309,7 +325,7 @@ model Senha {
 
   pedidos        Pedido[]
 
-  @@unique([nome, empresa_id])
+  @@unique([numero, empresa_id])
 }
 
 
@@ -332,6 +348,7 @@ model Pedido {
   @@index([empresa_id])
 
   created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
   status        PedidoStatus @default(PENDENTE)
   total         Decimal  @db.Decimal(10, 2)
   desconto      Decimal? @db.Decimal(10, 2) // desconto total da venda
@@ -339,16 +356,16 @@ model Pedido {
   itens         PedidoItem[]
 
   // formato de trabalho = MESAS
-  mesa_id       Int?
-  mesa          Mesa?  @relation(fields: [mesa_id], references: [id])
+  mesa_id       String?
+  mesa          Mesa?  @relation(fields: [mesa_id, empresa_id], references: [nome, empresa_id])
 
   // formato de trabalho = COMANDAS
   comanda_id    String?
-  comanda       Comanda?  @relation(fields: [comanda_id], references: [id])
+  comanda       Comanda?  @relation(fields: [comanda_id, empresa_id], references: [nome, empresa_id])
 
   // formato de trabalho = SENHAS
-  senha_id    String?
-  senha       Senha?  @relation(fields: [senha_id], references: [id])
+  senha_id    Int?
+  senha       Senha?  @relation(fields: [senha_id, empresa_id], references: [numero, empresa_id])
 
   usuario_id    Int
   usuario       Usuario @relation(fields: [usuario_id], references: [id])

@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { Mesa } from '@prisma/client';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Mesa, MesaStatus } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -18,11 +18,25 @@ export class MesasService {
         return this.prisma.tenantClient.mesa.findUnique({where: {id: Number(id)}})
     }
 
+    async buscarPorNome(nome: string) : Promise<Mesa> {
+        return this.prisma.tenantClient.mesa.findFirst({where: {nome: nome}})
+    }
+
     async update(data:Mesa) {
         return this.prisma.tenantClient.mesa.update({where: {id: Number(data.id)}, data: data})
     }
 
     async delete(id:number) {
+        const mesa = await this.prisma.mesa.findUnique({ where: {id: Number(id)}})
+       if (!mesa) throw new NotFoundException()
+        if (mesa!.status !== 'LIVRE') {
+            throw new BadRequestException("Essa mesa não pode ser excluída enquanto estiver com o status " + mesa.status)
+        }
         return this.prisma.tenantClient.mesa.delete({where: {id: Number(id)}})
+    }
+
+    // ------------------------------------------------------------------------------ status
+    async setStatus(nome: string, status: MesaStatus) {
+        return this.prisma.tenantClient.mesa.updateMany({where: {nome: nome}, data: {status: status} })
     }
 }
