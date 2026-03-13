@@ -1,3 +1,5 @@
+import { APP_FILTER } from '@nestjs/core';
+import { PrismaClientExceptionFilter } from './prisma/exception.filter';
 import { SenhasModule } from './formatos/senhas/senhas.module';
 import { SenhasController } from './formatos/senhas/senhas.controller';
 import { SenhasService } from './formatos/senhas/senhas.service';
@@ -27,7 +29,7 @@ import { UsuariosModule } from './usuarios/usuarios.module';
 import { SubitensModule } from './itens/subitens/subitens.module';
 import { ItensModule } from './itens/itens/itens.module';
 import { ItensPdvModule } from './itens/pdv/itenspdv.module';
-import { VendasModule } from './vendas/vendas.module';
+import { PedidosModule } from './pedidos/pedidos.module';
 import { ImpressorasModule } from './impressoras/impressoras.module';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './auth/constants';
@@ -59,7 +61,7 @@ import { TenantMiddleware } from './tenant/tenant.middleware';
 		SubitensModule,
 		ItensModule,
 		ItensPdvModule,
-		VendasModule,
+		PedidosModule,
 	],
 	controllers: [
 		SenhasController,
@@ -67,6 +69,10 @@ import { TenantMiddleware } from './tenant/tenant.middleware';
 		MesasController,
 		ClassesController, EmpresasController],
 	providers: [
+{
+        provide: APP_FILTER,
+        useClass: PrismaClientExceptionFilter,
+      },
 		SenhasService,
 		ComandasService,
 		MesasService,

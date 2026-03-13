@@ -23,6 +23,6 @@ export class MesasService {
     }
 
     async delete(id:number) {
-        return this.prisma.tenantClient.mesa.delete({where: {id: id}})
+        return this.prisma.tenantClient.mesa.delete({where: {id: Number(id)}})
     }
 }

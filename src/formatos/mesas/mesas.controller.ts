@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
 import { MesasService } from './mesas.service';
 import type { Mesa } from '@prisma/client';
 
-@Controller()
+@Controller("api/formatos/mesas")
 export class MesasController {
     constructor(private readonly service : MesasService) {}
 
@@ -42,3 +42,5 @@ export class MesasController {
 
     }
 }
+
+

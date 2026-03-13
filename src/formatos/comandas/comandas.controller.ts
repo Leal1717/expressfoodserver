@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
 import { ComandasService } from './comandas.service';
 import type { Comanda } from '@prisma/client';
 
-@Controller()
+@Controller("api/formatos/comandas")
 export class ComandasController {
     constructor(private readonly service : ComandasService) {}
 

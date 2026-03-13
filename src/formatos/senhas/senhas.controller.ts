@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
 import { SenhasService } from './senhas.service';
 import type { Senha } from '@prisma/client';
 
-@Controller()
+@Controller("api/formatos/senhas")
 export class SenhasController {
     constructor(private readonly service : SenhasService) {}
 
