@@ -1,11 +1,13 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Classe, Item, ItemTipo, PedidoStatus  } from '@prisma/client';
+import { Classe, EstoqueMovimentacao, EstoqueMovimentacaoTipo, Item, ItemTipo, PedidoStatus  } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreatePedidoDto, OperacionalPagarDto, OperacionalPedirContaDto, OperacionalQueryDto } from './dto';
 import { MesasService } from 'src/formatos/mesas/mesas.service';
 import { ComandasService } from 'src/formatos/comandas/comandas.service';
 import { SenhasService } from 'src/formatos/senhas/senhas.service';
 import { PedidosService } from 'src/pedidos/pedidos.service';
+import { MovimentacaoService } from 'src/estoque/movimentacao/movimentacao.service';
+import { MovimentacaoSalvarDto } from 'src/estoque/movimentacao/dto';
 
 
 /**
@@ -19,7 +21,15 @@ import { PedidosService } from 'src/pedidos/pedidos.service';
 @Injectable()
 export class OperacionalService {
 
-    constructor(private prisma: PrismaService, private mesa: MesasService, private comanda: ComandasService, private senha: SenhasService, private pedido: PedidosService) {}
+    constructor(
+        private prisma: PrismaService,
+        private mesa: MesasService,
+        private comanda: ComandasService,
+        private senha: SenhasService,
+        private pedido: PedidosService,
+        private estoque: MovimentacaoService,
+
+    ) {}
     
 
 
@@ -53,18 +63,55 @@ export class OperacionalService {
     
     async pagar(data: OperacionalPagarDto) {
         if (data.mesa) {
-            await this.prisma.tenantClient.pedido.updateMany({ where: { mesa_id: data.mesa }, data: { status: "PAGA", mesa_id: null, comanda_id: null, senha_id: null } })
+            await this.movimentarEstoque("mesa", data.mesa)
+            //
+            await this.prisma.tenantClient.pedido.updateMany({ where: { mesa_id: data.mesa }, data: { status: "PAGA", mesa_id: null, comanda_id: null, senha_id: null, formato: "MESA" } })
             return await this.mesa.setStatus(data.mesa!, "LIVRE")
         }
         if (data.comanda) {
-            await this.prisma.tenantClient.pedido.updateMany({ where: { comanda_id: data.comanda }, data: { status: "PAGA", mesa_id: null, comanda_id: null, senha_id: null } })
+            await this.movimentarEstoque("comanda", data.comanda)
+            //
+            await this.prisma.tenantClient.pedido.updateMany({ where: { comanda_id: data.comanda }, data: { status: "PAGA", mesa_id: null, comanda_id: null, senha_id: null, formato: "COMANDA" } })
             return await this.comanda.setStatus(data.comanda!, "PAGA")
         }
         if (data.senha != undefined) {
-            await this.prisma.tenantClient.pedido.updateMany({ where: { senha_id: data.senha }, data: { status: "PAGA", mesa_id: null, comanda_id: null, senha_id: null } })
+            await this.movimentarEstoque("senha", data.senha)
+            //
+            await this.prisma.tenantClient.pedido.updateMany({ where: { senha_id: data.senha }, data: { status: "PAGA", mesa_id: null, comanda_id: null, senha_id: null, formato: "SENHA" } })
             return await this.senha.delete(data.senha)
         }
+        
         throw new BadRequestException("Param da query precisa ser informado com o id de um dos formatos: mesa | comanda | senha ")
+    }
+
+
+
+    
+    async movimentarEstoque(formato: "mesa" | "comanda" | "senha", formato_id: string | number) {
+        let where = { }
+        if (formato == "mesa") {
+           where = { mesa_id: formato_id as string } 
+        }
+        if (formato == "comanda") {
+           where = { comanda_id: formato_id as string } 
+        }
+        if (formato == "senha") {
+           where = { senha_id: formato_id as number } 
+        }
+
+        const all = await this.prisma.pedido.findMany({ where: where, include: { itens: { include: { subitens: { include: { subitem: true } } } } } })
+
+        const itens = all.map((e) =>  e.itens).flat()
+        const subitens = itens.map((e) => e.subitens).flat()
+        const subintesEstoque = subitens.filter(e => e.subitem.controla_estoque)
+
+        const estoque = subintesEstoque.map((e) => ({
+            subitem_id: e.subitem_id,
+            quantidade: Number(e.quantidade),
+            tipo: EstoqueMovimentacaoTipo.SAIDA
+        }))
+
+        await this.estoque.salvarVarios(estoque)
     }
 
 
@@ -145,6 +192,27 @@ export class OperacionalService {
         return {
             ...item, total: total._sum
         }
+    }
+
+
+    async buscarKds() {
+        const geral = await this.prisma.pedido.findMany({
+            where: {
+                status: "PENDENTE",
+            },
+            orderBy: {
+                updated_at: "asc"
+            },
+            include: {
+                itens: {
+                    include: {
+                        subitens: true
+                    }
+                }
+            }
+        })
+
+        return geral
     }
 
 

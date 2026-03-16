@@ -26,6 +26,10 @@ export class PedidosService {
                 // empresa_id: 1,
                 usuario_id: data.usuario_id,
 
+                terminal_id: data.terminal_id,
+
+                observacao: data.observacao,
+
                 mesa_id: data.mesa_id,
                 comanda_id: data.comanda_id,
                 senha_id: data.senha_id,
@@ -36,6 +40,7 @@ export class PedidosService {
                         quantidade: i.quantidade,
                         preco: i.preco,
                         desconto: i.desconto,
+                        observacao: i.observacao,
                         subitens: {
                             create: i.subitens?.map(s => ({
                                 subitem_id: s.subitem_id,

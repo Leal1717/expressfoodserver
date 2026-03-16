@@ -5,12 +5,17 @@ export class CreatePedidoDto {
   desconto?: number;           // desconto total da venda
   status?: PedidoStatus;        // opcional, padrão PENDENTE
 
+  observacao?: string;
+
   usuario_id: number;          // ID do usuario
+  terminal_id?: number;          // ID do terminal caso exista
 
   mesa_id?: string;          // ID da mesa
   comanda_id?: string;          // ID da comanda
   senha_id?: number;          // ID da senha
   criar_senha?: boolean;          // ID da senha
+
+
 
   itens: CreatePedidoItemDto[]; // itens da venda
 }
@@ -20,6 +25,7 @@ export class CreatePedidoItemDto {
   quantidade: number;          // quantidade vendida
   preco: number;               // preço unitário do item (original)
   desconto?: number;           // desconto aplicado nesse item
+  observacao?: string;
 
   subitens?: CreatePedidoItemSubitemDto[]; // subitens opcionais
 }

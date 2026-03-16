@@ -49,9 +49,13 @@ model Empresa {
   promocoes Promocao[]
   vendas Pedido[]
   impressoras Impressora[]
+  terminais Terminal[]
   mesas Mesa[]
   comandas Comanda[]
   senhas Senha[]
+
+  estoque_movimentacao EstoqueMovimentacao[]
+
 }
 
 model Usuario {
@@ -85,6 +89,26 @@ model Impressora {
   @@unique([nome, empresa_id]) 
 }
 
+enum TerminalTipo {
+  POS 
+  MOBILE
+  PC
+}
+model Terminal {
+  id      Int @id @default(autoincrement())
+  nome    String 
+  tipo    TerminalTipo 
+  modelo  String? 
+
+  pedidos Pedido[]
+  
+  empresa_id Int
+  empresa Empresa @relation(fields: [empresa_id], references: [id])
+  @@index([empresa_id])
+
+  @@unique([nome, empresa_id]) 
+}
+
 
 
 
@@ -96,31 +120,38 @@ model Impressora {
 
 
 model Classe {
-  id    Int @id @default(autoincrement())
-  nome String 
+  id              Int @id @default(autoincrement())
+  nome            String 
 
-  empresa_id Int
-  empresa Empresa @relation(fields: [empresa_id], references: [id])
+  item            Item[]
+
+  empresa_id      Int
+  empresa         Empresa @relation(fields: [empresa_id], references: [id])
   @@index([empresa_id])
-
-  item Item[]
 
   @@unique([nome, empresa_id]) 
 }
 
 
 model Subitem {
-  id    Int @id @default(autoincrement())
-  nome String 
-  ativo Boolean @default(true)
+  id                  Int @id @default(autoincrement())
+  nome                String 
+  unidade             String @default("g")
+  ativo               Boolean @default(true)
 
-  empresa_id Int
-  empresa Empresa @relation(fields: [empresa_id], references: [id])
+  controla_estoque    Boolean @default(true)
+  estoque_atual       Decimal? @db.Decimal(10, 3)
+  estoque_minimo      Decimal? @db.Decimal(10, 3)
+
+  itens               ItemSubitem[]
+
+  vendas              PedidoItemSubitem[] @relation("PedidoItemSubitem_Subitem")
+
+  estoque_movimentacao EstoqueMovimentacao[]
+
+  empresa_id      Int
+  empresa         Empresa @relation(fields: [empresa_id], references: [id])
   @@index([empresa_id])
-
-  itens ItemSubitem[]
-
-  vendas PedidoItemSubitem[] @relation("PedidoItemSubitem_Subitem")
 
   @@unique([nome, empresa_id]) 
 
@@ -149,7 +180,6 @@ model Item {
 
   classe_id Int?
   classe Classe? @relation(fields: [classe_id], references: [id])
-
 
   promocao Promocao[]
 
@@ -209,7 +239,43 @@ model ComboItem {
 
 
 
-//---------- promocoes
+
+
+
+// ----------------------------------------------------------------------------------------------------------------------- estoque
+
+
+enum EstoqueMovimentacaoTipo {
+  ENTRADA
+  SAIDA
+  AJUSTE
+  VENDA
+}
+model EstoqueMovimentacao {
+  id            String   @id @default(uuid())
+
+  subitem_id    Int
+  subitem       Subitem @relation(fields: [subitem_id], references: [id], onDelete: Cascade)
+
+  tipo          EstoqueMovimentacaoTipo @default(ENTRADA)
+  quantidade    Decimal @db.Decimal(10, 3) @default(0)
+  referencia    String?   //    pedido:123    compra:45    inventario:2026-03-16
+
+
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  empresa_id    Int
+  empresa       Empresa @relation(fields: [empresa_id], references: [id])
+  @@index([empresa_id])
+}
+
+
+
+
+
+
+// ----------------------------------------------------------------------------------------------------------------------- promocoes
 
 model Promocao {
   id               Int   @id @default(autoincrement())
@@ -332,12 +398,21 @@ model Senha {
 
 
 
-// ----------------------------------------------------------------------------------------------------------------------- vendas
+
+
+
+// ----------------------------------------------------------------------------------------------------------------------- pedidos (vendas)
 
 enum PedidoStatus {
   PENDENTE
   PAGA
   CANCELADA
+}
+
+enum PedidoFormato {
+  MESA
+  SENHA
+  COMANDA
 }
 
 model Pedido {
@@ -353,6 +428,8 @@ model Pedido {
   total         Decimal  @db.Decimal(10, 2)
   desconto      Decimal? @db.Decimal(10, 2) // desconto total da venda
 
+  observacao    String? // qualquer coisa que o cliente peca pro pedido todo
+
   itens         PedidoItem[]
 
   // formato de trabalho = MESAS
@@ -364,8 +441,15 @@ model Pedido {
   comanda       Comanda?  @relation(fields: [comanda_id, empresa_id], references: [nome, empresa_id])
 
   // formato de trabalho = SENHAS
-  senha_id    Int?
-  senha       Senha?  @relation(fields: [senha_id, empresa_id], references: [numero, empresa_id])
+  senha_id      Int?
+  senha         Senha?  @relation(fields: [senha_id, empresa_id], references: [numero, empresa_id])
+
+  // vai ser preenchido so quando a venda for terminada pra depois usarmos pra filtrar relatorios
+  formato       PedidoFormato? 
+
+  // vai ser preenchido so quando a venda for terminada pra depois usarmos pra filtrar relatorios
+  terminal_id   Int?
+  terminal      Terminal? @relation(fields: [terminal_id], references: [id], onDelete: SetNull) 
 
   usuario_id    Int
   usuario       Usuario @relation(fields: [usuario_id], references: [id])
@@ -378,6 +462,8 @@ model PedidoItem {
   id            String      @id @default(uuid())
   pedido_id     String
   pedido        Pedido    @relation(fields: [pedido_id], references: [id], onDelete: Cascade)
+  
+  observacao    String? // qualquer coisa que o cliente peca pro item do pedido (sem alguma coisa ou esquentar mais , sei la)
 
   item_id       Int
   item          Item     @relation(fields: [item_id], references: [id])
@@ -391,16 +477,16 @@ model PedidoItem {
 }
 
 model PedidoItemSubitem {
-  id              String      @id @default(uuid())
+  id               String      @id @default(uuid())
   pedido_item_id   String
   pedido_item      PedidoItem @relation(fields: [pedido_item_id], references: [id], onDelete: Cascade)
 
-  subitem_id      Int
-  subitem         Subitem   @relation("PedidoItemSubitem_Subitem", fields: [subitem_id], references: [id])
+  subitem_id       Int
+  subitem          Subitem   @relation("PedidoItemSubitem_Subitem", fields: [subitem_id], references: [id])
 
-  quantidade      Decimal   @db.Decimal(10,3)
-  preco           Decimal   @db.Decimal(10,2)
-  desconto        Decimal?  @db.Decimal(10,2)
-
+  quantidade       Decimal   @db.Decimal(10,3)
+  preco            Decimal   @db.Decimal(10,2)
+  desconto         Decimal?  @db.Decimal(10,2)
+ 
 	@@map("PedidoItemSubitem")
 }

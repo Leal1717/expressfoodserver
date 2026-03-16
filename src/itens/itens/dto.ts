@@ -6,8 +6,6 @@ export class CreateItemDto {
     preco: number
     classe_id?: number
 
-
-
     subitens: {
         subitem_id: number
         quantidade: number
@@ -17,8 +15,9 @@ export class CreateItemDto {
 
     combo_itens?: { item_id: number; quantidade: number }[]; // novos
 
-
 }
+
+
 
 export class UpdateItemDto {
     id: number

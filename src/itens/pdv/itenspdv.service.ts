@@ -6,11 +6,11 @@ export class ItensPdvService {
     constructor(private prisma: PrismaService) {}
 
     async buscarProdutos() {
-        return this.prisma.tenantClient.item.findMany({include: {classe:true, subitens: true,  promocao:{where: {ativo: true}}}})
+        return this.prisma.item.findMany({include: {classe:true, subitens: true,  promocao:{where: {ativo: true}} }})
     }
 
     async buscarEmClasses() {
-        const classes = await this.prisma.tenantClient.classe.findMany({include: {item: {include:{subitens: true, promocao:{where: {ativo: true}}, combos_as_combo: {include: {item: true}}}}}})
+        const classes = await this.prisma.classe.findMany({include: {item: {include:{subitens: true, promocao:{where: {ativo: true}}, combos_as_combo: {include: {item: true}} }}}})
         return  classes
     }
 

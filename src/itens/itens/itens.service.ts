@@ -34,11 +34,10 @@ export class ItensService {
                     ? { create: data.combo_itens.map(ci => ({item_id: ci.item_id, quantidade: ci.quantidade})) }
                     : undefined
 
-
             },
             include: {
                 subitens: true,
-                combos_as_combo: { include: { item: true } }
+                combos_as_combo: { include: { item: true } },
             }
         })
     }

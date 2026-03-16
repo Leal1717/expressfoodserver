@@ -70,4 +70,11 @@ export class OperacionalController {
     }
     
 
+    @Get("kds")
+    async buscarKds(
+    ) {
+        return this.service.buscarKds()
+    }
+    
+
 }

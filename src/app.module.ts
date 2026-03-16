@@ -1,5 +1,8 @@
+import { MovimentacaoModule } from './estoque/movimentacao/movimentacao.module';
+import { MovimentacaoController } from './estoque/movimentacao/movimentacao.controller';
+import { MovimentacaoService } from './estoque/movimentacao/movimentacao.service';
 import { APP_FILTER } from '@nestjs/core';
-import { PrismaClientExceptionFilter } from './prisma/exception.filter';
+import { PrismaClientExceptionFilter, PrismaClientValidationException } from './prisma/exception.filter';
 import { SenhasModule } from './formatos/senhas/senhas.module';
 import { SenhasController } from './formatos/senhas/senhas.controller';
 import { SenhasService } from './formatos/senhas/senhas.service';
@@ -38,9 +41,11 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/auth.guard';
 import { TenantMiddleware } from './tenant/tenant.middleware';
 import { OperacionalModule } from './operacional/operacional.module';
+import { TerminaisModule } from './terminais/terminais.module';
 
 @Module({
 	imports: [
+		MovimentacaoModule,
 		SenhasModule,
 		ComandasModule,
 		MesasModule,
@@ -59,22 +64,29 @@ import { OperacionalModule } from './operacional/operacional.module';
 		PlanosModule,
 		EmpresasModule,
 		ImpressorasModule,
+		TerminaisModule,
 		SubitensModule,
 		ItensModule,
 		ItensPdvModule,
 		PedidosModule,
-		OperacionalModule, 
+		OperacionalModule,
 	],
 	controllers: [
+		MovimentacaoController,
 		SenhasController,
 		ComandasController,
 		MesasController,
 		ClassesController, EmpresasController],
 	providers: [
-{
-        provide: APP_FILTER,
-        useClass: PrismaClientExceptionFilter,
-      },
+		MovimentacaoService,
+		{
+			provide: APP_FILTER,
+			useClass: PrismaClientExceptionFilter,
+		},
+		{
+			provide: APP_FILTER,
+			useClass: PrismaClientValidationException,
+		},
 		SenhasService,
 		ComandasService,
 		MesasService,
