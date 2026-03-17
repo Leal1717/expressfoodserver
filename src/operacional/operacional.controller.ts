@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/
 import type {  Subitem, Item } from '@prisma/client';
 import { CreatePedidoDto, OperacionalPagarDto, OperacionalPedirContaDto, OperacionalQueryDto } from './dto';
 import { OperacionalService } from './operacional.service';
+import { MovimentacaoSalvarDto } from 'src/estoque/movimentacao/dto';
 
 @Controller("api/operacional")
 export class OperacionalController {
@@ -74,6 +75,33 @@ export class OperacionalController {
     async buscarKds(
     ) {
         return this.service.buscarKds()
+    }
+    
+
+
+
+    // ------------------------------------------------------------------------------------------------------------------- estoque
+
+    @Get("estoque/atual")
+    async buscarEstoqueAtual(
+    ) {
+        return this.service.buscarEstoqueAtual()
+    }
+    
+    
+    @Get("estoque/subitem/:id")
+    async buscarMovimentacaoPorSubitem(
+        @Param("id") id: number
+    ) {
+        return this.service.buscarMovimentacaoPorSubitem(Number(id))
+    }
+    
+    
+    @Post("estoque/entrada")
+    async darEntradaNoEstoque(
+        @Body() data: MovimentacaoSalvarDto
+    ) {
+        return this.service.movimentarEstoque(data)
     }
     
 

@@ -1,3 +1,6 @@
+import { RelatorialModule } from './relatorial/relatorial.module';
+import { RelatorialController } from './relatorial/relatorial.controller';
+import { RelatorialService } from './relatorial/relatorial.service';
 import { MovimentacaoModule } from './estoque/movimentacao/movimentacao.module';
 import { MovimentacaoController } from './estoque/movimentacao/movimentacao.controller';
 import { MovimentacaoService } from './estoque/movimentacao/movimentacao.service';
@@ -45,6 +48,7 @@ import { TerminaisModule } from './terminais/terminais.module';
 
 @Module({
 	imports: [
+		RelatorialModule,
 		MovimentacaoModule,
 		SenhasModule,
 		ComandasModule,
@@ -72,12 +76,14 @@ import { TerminaisModule } from './terminais/terminais.module';
 		OperacionalModule,
 	],
 	controllers: [
+		RelatorialController,
 		MovimentacaoController,
 		SenhasController,
 		ComandasController,
 		MesasController,
 		ClassesController, EmpresasController],
 	providers: [
+		RelatorialService,
 		MovimentacaoService,
 		{
 			provide: APP_FILTER,

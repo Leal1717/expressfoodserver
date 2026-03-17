@@ -34,6 +34,7 @@ export class OperacionalService {
 
 
 
+
     async inserirPedido(data: CreatePedidoDto) {
         if (data.mesa_id) {
             const mesa = await this.mesa.buscarPorNome(data.mesa_id)
@@ -51,6 +52,7 @@ export class OperacionalService {
 
 
 
+
     
     async conta(data: OperacionalPedirContaDto) {
         if (data.mesa) return this.mesa.setStatus(data.mesa!, "CONTA")
@@ -60,22 +62,24 @@ export class OperacionalService {
 
 
 
+
+
     
     async pagar(data: OperacionalPagarDto) {
         if (data.mesa) {
-            await this.movimentarEstoque("mesa", data.mesa)
+            await this.movimentarEstoqueNaVenda("mesa", data.mesa)
             //
             await this.prisma.tenantClient.pedido.updateMany({ where: { mesa_id: data.mesa }, data: { status: "PAGA", mesa_id: null, comanda_id: null, senha_id: null, formato: "MESA" } })
             return await this.mesa.setStatus(data.mesa!, "LIVRE")
         }
         if (data.comanda) {
-            await this.movimentarEstoque("comanda", data.comanda)
+            await this.movimentarEstoqueNaVenda("comanda", data.comanda)
             //
             await this.prisma.tenantClient.pedido.updateMany({ where: { comanda_id: data.comanda }, data: { status: "PAGA", mesa_id: null, comanda_id: null, senha_id: null, formato: "COMANDA" } })
             return await this.comanda.setStatus(data.comanda!, "PAGA")
         }
         if (data.senha != undefined) {
-            await this.movimentarEstoque("senha", data.senha)
+            await this.movimentarEstoqueNaVenda("senha", data.senha)
             //
             await this.prisma.tenantClient.pedido.updateMany({ where: { senha_id: data.senha }, data: { status: "PAGA", mesa_id: null, comanda_id: null, senha_id: null, formato: "SENHA" } })
             return await this.senha.delete(data.senha)
@@ -86,8 +90,10 @@ export class OperacionalService {
 
 
 
+
+
     
-    async movimentarEstoque(formato: "mesa" | "comanda" | "senha", formato_id: string | number) {
+    async movimentarEstoqueNaVenda(formato: "mesa" | "comanda" | "senha", formato_id: string | number) {
         let where = { }
         if (formato == "mesa") {
            where = { mesa_id: formato_id as string } 
@@ -108,11 +114,67 @@ export class OperacionalService {
         const estoque = subintesEstoque.map((e) => ({
             subitem_id: e.subitem_id,
             quantidade: Number(e.quantidade),
-            tipo: EstoqueMovimentacaoTipo.SAIDA
+            tipo: EstoqueMovimentacaoTipo.VENDA
         }))
 
+        // salvamos na movimentacao de estoque
         await this.estoque.salvarVarios(estoque)
+
+
+        // damos um update no estoque atual ed cada subitem
+        const results = await this.prisma.$transaction(
+            estoque.map(e => 
+                this.prisma.subitem.update({
+                    where: { id: e.subitem_id },
+                    data: { estoque_atual: { decrement: e.quantidade } }
+                })
+            )
+        );
+
+        return results
+
     }
+
+
+
+
+
+
+    async buscarEstoqueAtual() {
+        return this.prisma.tenantClient.subitem.findMany({
+            where: { ativo: true, controla_estoque: true },
+            include: {  }
+        })
+    }
+
+
+    async buscarMovimentacaoPorSubitem(id: number) {
+        return this.prisma.subitem.findFirst({
+            where: { id: id },
+            include: { estoque_movimentacao: { orderBy: { created_at: "asc" } } }
+        })
+    }
+
+    /**
+     * aqui vamos inserir uma movimentacao
+     * 
+     * pode ser ENTRADA: quando adicionamso um item no estoque (compra, recebimento)
+     * pode ser SAIDA: perda, despercidcio, roubo, uso interno, transferencia entre estoques
+     * pode ser AJUSTE: corrigindo o estoque manualmente, corrigir erro antigo, sincronizar, etc
+     */
+    async movimentarEstoque(dto: MovimentacaoSalvarDto) {
+        await this.estoque.salvar(dto)
+        let tipoCalculo = {}
+        if (dto.tipo == "AJUSTE") tipoCalculo = { increment: dto.quantidade }
+        if (dto.tipo == "ENTRADA") tipoCalculo = { increment: dto.quantidade }
+        if (dto.tipo == "SAIDA") tipoCalculo = { decrement: dto.quantidade }
+        return this.prisma.subitem.update({
+            where: { id: dto.subitem_id },
+            data: { estoque_atual: tipoCalculo }
+        })
+    }
+
+
 
 
 

@@ -7,6 +7,9 @@ import { MovimentacaoSalvarDto, MovimentacaoUpdateDto } from './dto';
 export class MovimentacaoService { 
     constructor(private prisma: PrismaService) {}
 
+    /**
+     * tipo padrao sempre vai ser ENTRADA
+     */
     async salvar(data: MovimentacaoSalvarDto) {
         return this.prisma.tenantClient.estoqueMovimentacao.create({ 
             data: {
@@ -18,6 +21,9 @@ export class MovimentacaoService {
         })
     }
 
+    /**
+     * tipo padrao sempre vai ser ENTRADA
+     */
     async salvarVarios(data: MovimentacaoSalvarDto[]) {
         const dados:any[] = data.map((e) => ({
             quantidade: e.quantidade,

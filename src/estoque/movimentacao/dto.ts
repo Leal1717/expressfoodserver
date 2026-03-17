@@ -14,3 +14,4 @@ export class MovimentacaoUpdateDto {
     quantidade: number
     referencia?: string;
 }
+
