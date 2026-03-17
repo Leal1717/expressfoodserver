@@ -426,7 +426,7 @@ model Pedido {
   updated_at    DateTime @updatedAt
   status        PedidoStatus @default(PENDENTE)
   total         Decimal  @db.Decimal(10, 2)
-  desconto      Decimal? @db.Decimal(10, 2) // desconto total da venda
+  desconto      Decimal @db.Decimal(10, 2) @default(0) // desconto total da venda
 
   observacao    String? // qualquer coisa que o cliente peca pro pedido todo
 
@@ -470,7 +470,7 @@ model PedidoItem {
 
   quantidade    Decimal @db.Decimal(10,3)
   preco         Decimal  @db.Decimal(10,2) // preço do item original
-  desconto      Decimal? @db.Decimal(10,2) // desconto aplicado nesse item específico
+  desconto      Decimal @db.Decimal(10,2)  @default(0) // desconto aplicado nesse item específico
 
   subitens      PedidoItemSubitem[]
 	@@map("PedidoItem")
@@ -486,7 +486,7 @@ model PedidoItemSubitem {
 
   quantidade       Decimal   @db.Decimal(10,3)
   preco            Decimal   @db.Decimal(10,2)
-  desconto         Decimal?  @db.Decimal(10,2)
+  desconto         Decimal   @db.Decimal(10,2) @default(0)
  
 	@@map("PedidoItemSubitem")
 }

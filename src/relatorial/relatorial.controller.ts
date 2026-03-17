@@ -22,4 +22,20 @@ export class RelatorialController {
     ) {
         return this.service.buscarDiario(new Date(inicio), new Date(fim))
     }
+
+    @Get("itens")
+    buscarPorItem(
+        @Query("inicio") inicio: string,
+        @Query("fim") fim: string,
+    ) {
+        return this.service.buscarPorItem(new Date(inicio), new Date(fim))
+    }
+    
+    @Get("subitens")
+    buscarPorSubitem(
+        @Query("inicio") inicio: string,
+        @Query("fim") fim: string,
+    ) {
+        return this.service.buscarPorSubitem(new Date(inicio), new Date(fim))
+    }
 }
