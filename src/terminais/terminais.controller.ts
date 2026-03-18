@@ -1,8 +1,10 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { TerminaisService } from './terminais.service';
-import type { Terminal } from '@prisma/client';
+import { Role, type Terminal } from '@prisma/client';
+import { Roles } from 'src/decorators/role.decorator';
 // import { PlanoEntity } from './planos.entity';
 
+@Roles(Role.ADMIN_GERAL ,Role.ADMIN_SEM_FINANCEIRO)
 @Controller("api/terminais")
 export class TerminaisController {
 

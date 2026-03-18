@@ -1,8 +1,10 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { MovimentacaoService } from './movimentacao.service';
-import type { EstoqueMovimentacao } from '@prisma/client';
+import { Role, type EstoqueMovimentacao } from '@prisma/client';
 import { MovimentacaoSalvarDto, MovimentacaoUpdateDto } from './dto';
+import { Roles } from 'src/decorators/role.decorator';
 
+@Roles(Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.OPERADOR_GERAL, Role.OPERADOR_COM_FINANCEIRO)
 @Controller("api/estoque/movimentacao")
 export class MovimentacaoController {
     constructor(private readonly service : MovimentacaoService) {}

@@ -1,8 +1,11 @@
 
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { PromocoesService } from './promocoes.service';
-import type { Promocao } from '@prisma/client';
+import { Role, type Promocao } from '@prisma/client';
+import { Roles } from 'src/decorators/role.decorator';
 
+
+@Roles(Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
 @Controller("api/promocoes")
 export class PromocoesController {
     constructor(private service: PromocoesService) {}

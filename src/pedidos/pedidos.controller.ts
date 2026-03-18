@@ -1,8 +1,10 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
-import type {  Subitem, Item } from '@prisma/client';
+import {  type Subitem, type Item, Role } from '@prisma/client';
 import { PedidosService } from './pedidos.service';
 import { CreatePedidoDto } from 'src/operacional/dto';
+import { Roles } from 'src/decorators/role.decorator';
 
+@Roles(Role.ADMIN_GERAL,Role.OPERADOR_COM_FINANCEIRO)
 @Controller("api/pedidos")
 export class PedidosController {
     constructor(private readonly service: PedidosService) {}

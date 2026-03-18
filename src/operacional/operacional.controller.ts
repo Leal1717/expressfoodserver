@@ -1,9 +1,11 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
-import type {  Subitem, Item } from '@prisma/client';
+import {  type Subitem, type Item, Role } from '@prisma/client';
 import { CreatePedidoDto, OperacionalPagarDto, OperacionalPedirContaDto, OperacionalQueryDto } from './dto';
 import { OperacionalService } from './operacional.service';
 import { MovimentacaoSalvarDto } from 'src/estoque/movimentacao/dto';
+import { Roles } from 'src/decorators/role.decorator';
 
+@Roles(Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.OPERADOR_COM_FINANCEIRO, Role.OPERADOR_GERAL, Role.OPERADOR_SEM_ESTOQUE)
 @Controller("api/operacional")
 export class OperacionalController {
     constructor(private readonly service: OperacionalService) {}

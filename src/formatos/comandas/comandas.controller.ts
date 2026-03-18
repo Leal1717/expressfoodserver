@@ -1,7 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { ComandasService } from './comandas.service';
-import type { Comanda } from '@prisma/client';
+import { Role, type Comanda } from '@prisma/client';
+import { Roles } from 'src/decorators/role.decorator';
 
+@Roles(Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
 @Controller("api/formatos/comandas")
 export class ComandasController {
     constructor(private readonly service : ComandasService) {}

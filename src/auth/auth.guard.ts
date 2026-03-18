@@ -1,10 +1,12 @@
 
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
+import { Role } from '@prisma/client';
 import { Request } from 'express';
 import { Observable } from 'rxjs';
 import { IS_PUBLIC_KEY } from 'src/decorators/public.decorator';
+import { ROLES_KEY } from 'src/decorators/role.decorator';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -22,6 +24,8 @@ export class AuthGuard implements CanActivate {
 		}
 
 
+
+
 		// agora caso nao seja @isPublic()
 		const request = context.switchToHttp().getRequest();
 		const token = this.extractTokenFromHeader(request)
@@ -35,6 +39,23 @@ export class AuthGuard implements CanActivate {
 		} catch (error) {
 			throw new UnauthorizedException()
 		}
+
+
+		// primeiro vamos resolver o decorator @Roles()
+		const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
+			context.getHandler(),
+			context.getClass()
+		])
+		if (!requiredRoles) return true; // Se a rota não tem @Roles, é pública
+
+		// se tem ROLES entao checar
+		const user = request['user'];
+		const hasRole = requiredRoles.some((role) => user.role === role);
+
+		if (!hasRole) {
+			throw new ForbiddenException('Você não tem permissão para acessar este recurso');
+		}
+
 		return true;
     }
 

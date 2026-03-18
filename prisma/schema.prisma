@@ -58,24 +58,6 @@ model Empresa {
 
 }
 
-model Usuario {
-  id    Int @id @default(autoincrement())
-  nome String 
-  senha String 
-  email String 
-  telefone String 
-
-  ativo Boolean @default(true)
-  
-  empresa_id Int
-  empresa Empresa @relation(fields: [empresa_id], references: [id])
-  @@index([empresa_id])
-
-  vendas Pedido[]
-
-  @@unique([email, empresa_id]) 
-}
-
 model Impressora {
   id    Int @id @default(autoincrement())
   nome String 
@@ -107,6 +89,40 @@ model Terminal {
   @@index([empresa_id])
 
   @@unique([nome, empresa_id]) 
+}
+
+
+
+
+
+model Usuario {
+  id    Int @id @default(autoincrement())
+  nome String 
+  senha String 
+  email String 
+  telefone String 
+  role Role @default(ADMIN_GERAL)
+
+  ativo Boolean @default(true)
+  
+  empresa_id Int
+  empresa Empresa @relation(fields: [empresa_id], references: [id])
+  @@index([empresa_id])
+
+  vendas Pedido[]
+
+  @@unique([email, empresa_id]) 
+}
+
+
+enum Role {
+  ADMIN_GERAL
+  ADMIN_SEM_FINANCEIRO
+  
+  OPERADOR_GERAL
+  OPERADOR_SEM_ESTOQUE
+  OPERADOR_COM_FINANCEIRO
+
 }
 
 

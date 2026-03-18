@@ -1,7 +1,10 @@
 
 import { Controller, Get, Query } from '@nestjs/common';
 import { RelatorialService } from './relatorial.service';
+import { Roles } from 'src/decorators/role.decorator';
+import { Role } from '@prisma/client';
 
+@Roles(Role.ADMIN_GERAL, Role.OPERADOR_COM_FINANCEIRO)
 @Controller("api/relatorial")
 export class RelatorialController { 
     constructor(private service: RelatorialService) {}
@@ -23,19 +26,27 @@ export class RelatorialController {
         return this.service.buscarDiario(new Date(inicio), new Date(fim))
     }
 
-    @Get("itens")
-    buscarPorItem(
+    @Get("classes")
+    buscarClasses(
         @Query("inicio") inicio: string,
         @Query("fim") fim: string,
     ) {
-        return this.service.buscarPorItem(new Date(inicio), new Date(fim))
+        return this.service.buscarClasses(new Date(inicio), new Date(fim))
+    }
+
+    @Get("itens")
+    buscarItens(
+        @Query("inicio") inicio: string,
+        @Query("fim") fim: string,
+    ) {
+        return this.service.buscarItens(new Date(inicio), new Date(fim))
     }
     
     @Get("subitens")
-    buscarPorSubitem(
+    buscarSubitens(
         @Query("inicio") inicio: string,
         @Query("fim") fim: string,
     ) {
-        return this.service.buscarPorSubitem(new Date(inicio), new Date(fim))
+        return this.service.buscarSubitens(new Date(inicio), new Date(fim))
     }
 }

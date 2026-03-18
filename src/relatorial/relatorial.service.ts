@@ -25,7 +25,6 @@ export class RelatorialService {
 // ---------------------------------------------------------------------------------------------------------------------------- DIARIO
 
     async buscarDiario(inicio: Date, fim: Date) {
-
         const groupedByDay = await this.prisma.$queryRaw`
             SELECT 
                 DATE(p.updated_at) AS dia,
@@ -41,7 +40,6 @@ export class RelatorialService {
             WHERE p.updated_at >= DATE(${inicio}) AND p.updated_at < DATE(${fim})
             GROUP BY dia
             ORDER BY dia asc;
- 
         `;
         return this.formatBigInt(groupedByDay)
     }
@@ -145,88 +143,75 @@ export class RelatorialService {
 
     
 // ---------------------------------------------------------------------------------------------------------------------------- DADOS FILTRADOS POR ITENS
-    async buscarPorItem(inicio: Date, fim: Date) {
+    async buscarClasses(inicio: Date, fim: Date) {
         const groupedByDay = await this.prisma.$queryRaw`
-
             SELECT 
-                pit.item_id,
-                i.nome,
-                COUNT(pit.item_id) AS contagem,
-                SUM(pit.quantidade) AS quantidade,
-                SUM(pit.preco) AS preco,
-                SUM(pit.desconto) AS desconto,
-                ( SUM(pit.quantidade) * SUM(pit.preco)) - SUM(pit.desconto) AS liquido
-
-            FROM pedidoitem pit
-            JOIN pedido p ON pit.pedido_id = p.id
-            JOIN item i ON i.id = pit.item_id
+                c.id,
+                c.nome,
+                SUM(pis.quantidade) AS qtd,
+                SUM(pis.quantidade * pis.preco) AS preco_total,
+                SUM(pis.desconto) AS desconto_total,
+                (SUM(pis.quantidade * pis.preco)) - SUM(pis.desconto) AS final
+            FROM pedidoitem pis
+            JOIN item s ON pis.item_id = s.id
+            JOIN pedido p ON pis.pedido_id = p.id
+            JOIN classe c ON s.classe_id = c.id
             WHERE p.updated_at >= DATE(${inicio}) AND p.updated_at < DATE(${fim}) AND p.status = 'PAGA'
-            GROUP BY pit.item_id;
- 
+            GROUP BY c.id;
         `;
 
-        /**
-         * 
-        SELECT 
-	pis.item_id,
-	s.nome,
-	SUM(pis.quantidade) AS qtd,
-	SUM(pis.quantidade * pis.preco) AS preco_total,
-	SUM(pis.desconto) AS desconto_total,
-	(SUM(pis.quantidade * pis.preco)) - SUM(pis.desconto) AS final
-FROM pedidoitem pis
-JOIN item s ON pis.item_id = s.id
-JOIN pedido p ON pis.pedido_id = p.id
-WHERE p.status = 'PAGA'
-GROUP BY pis.item_id;
-
-         */
         return this.formatBigInt(groupedByDay)
     }
 
-    async buscarPorSubitem(inicio: Date, fim: Date) {
+    async buscarItens(inicio: Date, fim: Date) {
         const groupedByDay = await this.prisma.$queryRaw`
-
             SELECT 
-                pit.subitem_id,
+                pis.item_id,
                 s.nome,
-                COUNT(pit.subitem_id) AS contagem,
-                SUM(pit.quantidade) AS quantidade,
-                SUM(pit.preco) AS preco,
-                SUM(pit.desconto) AS desconto,
-                ( SUM(pit.quantidade) * SUM(pit.preco)) - SUM(pit.desconto) AS liquido
-
-            FROM 
-                pedidoitemsubitem pit JOIN subitem s ON pit.subitem_id = s.id,
-                pedidoitem pp JOIN pedido p ON p.id = pp.pedido_id
-
+                SUM(pis.quantidade) AS qtd,
+                SUM(pis.quantidade * pis.preco) AS preco_total,
+                SUM(pis.desconto) AS desconto_total,
+                (SUM(pis.quantidade * pis.preco)) - SUM(pis.desconto) AS final
+            FROM pedidoitem pis
+            JOIN item s ON pis.item_id = s.id
+            JOIN pedido p ON pis.pedido_id = p.id
             WHERE p.updated_at >= DATE(${inicio}) AND p.updated_at < DATE(${fim}) AND p.status = 'PAGA'
-            GROUP BY pit.subitem_id;
+            GROUP BY pis.item_id;
+        `;
+
+        return this.formatBigInt(groupedByDay)
+    }
+
+    async buscarSubitens(inicio: Date, fim: Date) {
+        const groupedByDay = await this.prisma.$queryRaw`
+            SELECT 
+                s.nome,
+                SUM(pis.quantidade) AS qtd,
+                SUM(pis.preco * pis.quantidade) AS preco_total,
+                SUM(pis.desconto) AS desconto_total,
+                SUM(pis.preco * pis.quantidade) - SUM(pis.desconto) AS final
+            FROM pedidoitemsubitem pis
+            JOIN subitem s ON pis.subitem_id = s.id
+            JOIN pedidoitem pp ON pp.id = pis.pedido_item_id
+            JOIN pedido p ON pp.pedido_id = p.id
+            WHERE p.updated_at >= DATE(${inicio}) AND p.updated_at < DATE(${fim}) AND p.status = 'PAGA'
+            GROUP BY pis.subitem_id;
             
         `;
 
-        /**
-         * 
-         SELECT 
-	s.nome,
-	SUM(pis.quantidade) AS qtd,
-	SUM(pis.preco * pis.quantidade) AS preco_total,
-	SUM(pis.desconto) AS desconto_total,
-	SUM(pis.preco * pis.quantidade) - SUM(pis.desconto) AS final
-FROM pedidoitemsubitem pis
-JOIN subitem s ON pis.subitem_id = s.id
-JOIN pedidoitem pp ON pp.id = pis.pedido_item_id
-JOIN pedido p ON pp.pedido_id = p.id
-WHERE p.status = 'PAGA'
-GROUP BY pis.subitem_id;
-
-         */
         return this.formatBigInt(groupedByDay)
     }
 
 }
 
+/**
+ 
+Acesse sua conta PagBank, com e-mail e senha; Em Maquininhas acesse Gerenciar Maquininhas; 
+Clique em Problema na ativação e use seu código de ativação; Preencha o número de série e 
+código de identificação da máquina e clique em continuar; Para auxiliar o cliente a localizar 
+essas informações, ao lado tem o passo a passo por modelo. Pronto agora basta seguir com a ativação da máquina.
 
+ */
  
  
  

@@ -1,7 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
-import type {  Subitem } from '@prisma/client';
+import {  Role, type Subitem } from '@prisma/client';
 import { SubitensService } from './subitens.service';
+import { Roles } from 'src/decorators/role.decorator';
 
+@Roles(Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
 @Controller("api/subitens")
 export class SubitensController {
     constructor(private readonly service: SubitensService) {}

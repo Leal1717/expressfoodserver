@@ -1,9 +1,11 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { ClassesService } from './classes.service';
-import type { Classe } from '@prisma/client';
+import { Role, type Classe } from '@prisma/client';
 import { EmpresaId } from 'src/decorators/empresaid.decorator';
 import { TenantService } from 'src/tenant/tenant.service';
+import { Roles } from 'src/decorators/role.decorator';
 
+@Roles(Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
 @Controller("api/classes")
 export class ClassesController {
     constructor(private readonly service: ClassesService) {}
