@@ -7,10 +7,11 @@ import { Request } from 'express';
 import { Observable } from 'rxjs';
 import { IS_PUBLIC_KEY } from 'src/decorators/public.decorator';
 import { ROLES_KEY } from 'src/decorators/role.decorator';
+import { SessionService } from './session.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-	constructor(private jwtService: JwtService, private reflector: Reflector) {}
+	constructor(private jwtService: JwtService, private reflector: Reflector, private session: SessionService) {}
 
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -41,10 +42,13 @@ export class AuthGuard implements CanActivate {
 		}
 
 
+
+
+
 		// primeiro vamos resolver o decorator @Roles()
 		const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
 			context.getHandler(),
-			context.getClass()
+			context.getClass() 
 		])
 		if (!requiredRoles) return true; // Se a rota não tem @Roles, é pública
 
@@ -56,7 +60,15 @@ export class AuthGuard implements CanActivate {
 			throw new ForbiddenException('Você não tem permissão para acessar este recurso');
 		}
 
-		return true;
+
+		
+		// vamos checar a sessa (se nao logou duas vezes ao mesmo tempo)
+		const currentSid = this.session.getSession(user.sub)
+		if (!currentSid || currentSid != user.sid) {
+			throw new ForbiddenException('Sessão expirada ou logada em outro terminal.')
+		}
+		return true
+
     }
 
 

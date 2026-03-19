@@ -1,3 +1,5 @@
+import { ViewsModule } from './views/views.module';
+import { ViewsController } from './views/views.controller';
 import { RelatorialModule } from './relatorial/relatorial.module';
 import { RelatorialController } from './relatorial/relatorial.controller';
 import { RelatorialService } from './relatorial/relatorial.service';
@@ -45,9 +47,11 @@ import { AuthGuard } from './auth/auth.guard';
 import { TenantMiddleware } from './tenant/tenant.middleware';
 import { OperacionalModule } from './operacional/operacional.module';
 import { TerminaisModule } from './terminais/terminais.module';
+import { SessionService } from './auth/session.service';
 
 @Module({
 	imports: [
+		ViewsModule,
 		RelatorialModule,
 		MovimentacaoModule,
 		SenhasModule,
@@ -76,6 +80,7 @@ import { TerminaisModule } from './terminais/terminais.module';
 		OperacionalModule,
 	],
 	controllers: [
+		ViewsController,
 		RelatorialController,
 		MovimentacaoController,
 		SenhasController,
