@@ -35,14 +35,6 @@ export class OperacionalController {
 
 
 
-    @Get("formato")
-    async buscarPorFormato(
-        @Query("tipo") tipo: string
-    ) {
-        return this.service.buscarPorFormato(tipo)
-    }
-
-
 
     @Get("query")
     async buscarQuery(
@@ -50,6 +42,22 @@ export class OperacionalController {
     ) {
         return this.service.buscarQuery(query)
     }
+
+    // ------------------------------------------------------------------------------------------------------------------- formatos
+
+    @Get("formato")
+    async buscarPorFormato(
+        @Query("tipo") tipo: string
+    ) {
+        return this.service.buscarPorFormato(tipo)
+    }
+
+    @Get("mesas/mapa")
+    async mapaDeMesas() {
+        return this.service.mapaDeMesas()
+    }
+
+
 
     @Get("mesa/:nome")
     async buscarMesa(
@@ -73,6 +81,7 @@ export class OperacionalController {
     }
     
 
+    // ------------------------------------------------------------------------------------------------------------------- cozinha
     @Get("kds")
     async buscarKds(
     ) {

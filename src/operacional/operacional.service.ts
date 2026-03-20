@@ -231,6 +231,12 @@ export class OperacionalService {
         })
     }
 
+    async mapaDeMesas() {
+        return await this.prisma.mesa.findMany({
+            include: { pedidos: true }
+        })
+    }
+
     async buscarMesa(nome: string) {
         const total = await this.prisma.tenantClient.pedido.aggregate({_sum: { total: true , desconto: true}, where: { mesa_id : nome } })
         const item = await this.prisma.tenantClient.mesa.findFirst({ where: {  nome: nome }, include: {  pedidos: { include: { itens: { include: { subitens: true } } } } } })

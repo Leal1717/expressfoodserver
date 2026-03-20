@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExpFood</title>
+
+
+
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100dvh;
+            margin: 0;
+        }
+
+        #itens {
+        }
+
+        #itens > * {
+        }
+    </style>
+</head>
+<body>
+
+    
+    <div style="height: 20%;">
+        <%- include('../components/header') %>
+    </div>
+    
+    <div style="height: 60%; overflow-y: scroll">
+        <div id="itens"></div>
+        <hr>
+        <div id="total"></div>
+    </div>
+
+    
+
+    <!-- <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> -->
+    <script type="module" src="/carrinho/events.js"></script>
+
+</body>
+</html>

@@ -15,7 +15,7 @@ export class AuthService {
         }
 
         const  {senha, ...result} = user;
-
+ 
         const sessionId = crypto.randomUUID();
         this.session.setSession(user.id, sessionId)
 
