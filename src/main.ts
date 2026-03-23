@@ -23,7 +23,7 @@ async function bootstrap() {
 
 
   const port = process.env.PORT || 3000;
-  const host = process.env.HOST || 'localhost';
+  const host = process.env.HOST || '0.0.0.0';
   await app.listen(port, host);
   console.log(__dirname)
 }
