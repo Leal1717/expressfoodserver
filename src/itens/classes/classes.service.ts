@@ -8,7 +8,7 @@ export class ClassesService {
     constructor(private prisma: PrismaService) {}
     
     async salvar(data:Classe) {
-        return this.prisma.tenantClient.classe.create(data)
+        return this.prisma.tenantClient.classe.create({data: data})
     }
 
     async buscarTodos() {
