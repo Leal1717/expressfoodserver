@@ -8,9 +8,7 @@ export class ClassesService {
     constructor(private prisma: PrismaService) {}
     
     async salvar(data:Classe) {
-        const data2:any = data
-        delete data2.empresa_id
-        return this.prisma.tenantClient.classe.create({data:data2})
+        return this.prisma.tenantClient.classe.create(data)
     }
 
     async buscarTodos() {
