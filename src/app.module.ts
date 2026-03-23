@@ -48,6 +48,7 @@ import { TenantMiddleware } from './tenant/tenant.middleware';
 import { OperacionalModule } from './operacional/operacional.module';
 import { TerminaisModule } from './terminais/terminais.module';
 import { SessionService } from './auth/session.service';
+import { LoggerMiddleware } from './logger/logger.middleware';
 
 @Module({
 	imports: [
@@ -109,8 +110,10 @@ import { SessionService } from './auth/session.service';
 
 export class AppModule implements NestModule {
 	configure(consumer: MiddlewareConsumer) {
-		consumer.apply(TenantMiddleware)
-			// O '*' significa que ele vai rodar em todas as rotas da API
-			.forRoutes({ path: '*', method: RequestMethod.ALL });
+		//logger - pra dev aqui
+		consumer.apply(LoggerMiddleware).forRoutes({path: '*', method: RequestMethod.ALL})
+
+		// tenant - para pegar o id da empresa em cada request
+		consumer.apply(TenantMiddleware).forRoutes({ path: '*', method: RequestMethod.ALL });
 	}
 }
