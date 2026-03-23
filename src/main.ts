@@ -20,7 +20,11 @@ async function bootstrap() {
     origin: "http://localhost:3001",
     credentials: true
   })
-  await app.listen(process.env.PORT ?? 3000);
+
+
+  const port = process.env.PORT || 3000;
+  const host = process.env.HOST || 'localhost';
+  await app.listen(port, host);
   console.log(__dirname)
 }
 bootstrap();
