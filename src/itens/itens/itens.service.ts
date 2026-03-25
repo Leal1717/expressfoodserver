@@ -72,11 +72,17 @@ export class ItensService {
     }
 
     async buscarTodos() {
-        return this.prisma.tenantClient.item.findMany()
+        return this.prisma.item.findMany({include: { classe: true }})
     }
 
     async buscarPorId(id: number) {
-        return this.prisma.tenantClient.item.findUnique({where: {id: Number(id)}})
+        return this.prisma.item.findUnique({
+            where: {id: Number(id)},
+            include: {
+                subitens: true,
+                combos_as_combo: { include: { item: true } }
+            }
+        })
     }
 
     async delete(id:number) {
