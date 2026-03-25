@@ -44,7 +44,15 @@ export class ItensService {
 
 
     async update(data:UpdateItemDto) {
-        return this.prisma.tenantClient.item.update({
+        let tipo: ItemTipo = 'PRODUTO'
+        if (!data.subitens || data.subitens.length == 0) {
+            tipo = 'MERCADORIA'
+        }
+        if (data.combo_itens && data.combo_itens.length > 0) {
+            tipo = 'COMBO'
+        }
+        console.log("tipo: ", tipo)
+        return this.prisma.item.update({
             where: {id: Number(data.id)},
             data: {
                 nome: data.nome,
@@ -52,6 +60,8 @@ export class ItensService {
                 preco: data.preco,
 
                 classe_id: data.classe_id,
+
+                tipo: tipo,
 
                 subitens: {
                     deleteMany: {},
