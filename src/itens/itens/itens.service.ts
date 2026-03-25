@@ -52,7 +52,7 @@ export class ItensService {
             tipo = 'COMBO'
         }
         console.log("tipo: ", tipo)
-        return this.prisma.item.update({
+        return this.prisma.tenantClient.item.update({
             where: {id: Number(data.id)},
             data: {
                 nome: data.nome,
@@ -82,11 +82,11 @@ export class ItensService {
     }
 
     async buscarTodos() {
-        return this.prisma.item.findMany({include: { classe: true }})
+        return this.prisma.tenantClient.item.findMany({include: { classe: true }})
     }
 
     async buscarPorId(id: number) {
-        return this.prisma.item.findUnique({
+        return this.prisma.tenantClient.item.findUnique({
             where: {id: Number(id)},
             include: {
                 subitens: true,
