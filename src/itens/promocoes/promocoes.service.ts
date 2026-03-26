@@ -56,7 +56,7 @@ export class PromocoesService {
     }   
     
     async updateAtivo(id:number) {
-        return this.prisma.$queryRaw`UPDATE promocao SET ativo = NOT ativo WHERE id = ${id}`
+        return this.prisma.$queryRaw`UPDATE Promocao SET ativo = NOT ativo WHERE id = ${id}`
     }   
 
     async buscarTodos() {
