@@ -8,15 +8,22 @@ export class UsuariosService {
     constructor(private prisma: PrismaService) {}
 
     async salvar(data:Usuario) {
-        const res = await this.prisma.empresa.findUnique({ where: { id: Number(data.empresa_id) }, include: {plano: true, usuarios: true} })
+        const user = await this.prisma.tenantClient.usuario.create({data: data})
+        console.log(user);
+        
+        const empresa_id = user.empresa_id
+
+        const res = await this.prisma.empresa.findFirst({ where: { id: Number(empresa_id) }, include: {plano: true, usuarios: true} })
         if (!res) {
+            await this.prisma.usuario.delete({where: { id: user.id }})
             throw new NotFoundException("Empresa nao encontrada");
         }
         if ( res.usuarios.length >= res.plano.qtd_licencas) {
+            await this.prisma.usuario.delete({where: { id: user.id }})
             throw new BadRequestException("Limite de usuarios atingido");
         }
-        return this.prisma.usuario.create({data:data})
-    }
+
+    }//P2002
 
     async buscarTodos() {
         return this.prisma.tenantClient.usuario.findMany()

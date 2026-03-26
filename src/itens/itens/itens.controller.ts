@@ -36,6 +36,13 @@ export class ItensController {
         return this.service.update(data)
     }
 
+    @Put("update-ativo/:id")
+    async updateAtivo(
+        @Param('id') id : string       
+    ) {
+        return this.service.updateAtivo(Number(id))
+    }
+
     @Delete("delete/:id")
     async delete(
         @Param("id") id: number

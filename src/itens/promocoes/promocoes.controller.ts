@@ -17,6 +17,7 @@ export class PromocoesController {
         return this.service.salvar(data)
     }
 
+
     @Get("todos")
     async buscarTodos() {
         return this.service.buscarTodos()
@@ -36,11 +37,18 @@ export class PromocoesController {
         return this.service.update(data)
     }
 
+    @Put("update-ativo/:id")
+    async updateAtivo(
+        @Param("id") id: number | string      
+    ) {
+        return this.service.updateAtivo(Number(id))
+    }
+
     @Delete("delete/:id")
     async delete(
-        @Param("id") id: number
+        @Param("id") id: number | string
     ) {
-        return this.service.delete(id)
+        return this.service.delete(Number(id))
     }
     
 }

@@ -81,6 +81,11 @@ export class ItensService {
         })
     }
 
+        
+    async updateAtivo(id: number) {
+        return this.prisma.$queryRaw`UPDATE item SET ativo = NOT ativo WHERE id = ${id}`
+    }
+
     async buscarTodos() {
         return this.prisma.tenantClient.item.findMany({include: { classe: true }})
     }

@@ -23,7 +23,6 @@ export class UsuariosController {
         return this.service.buscarTodos()
     }
 
-    @Public()
     @Post("salvar")
     async salvar(
         @Body() data: Usuario
