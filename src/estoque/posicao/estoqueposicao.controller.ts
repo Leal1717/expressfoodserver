@@ -4,7 +4,7 @@ import { Roles } from 'src/decorators/role.decorator';
 import { EstoqueposicaoService } from './estoqueposicao.service';
 
 @Roles(Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.OPERADOR_GERAL, Role.OPERADOR_COM_FINANCEIRO)
-@Controller("api/estoque/movimentacao")
+@Controller("api/estoque/posicao")
 export class EstoqueposicaoController {
     constructor(private readonly service : EstoqueposicaoService) {}
 
