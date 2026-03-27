@@ -43,7 +43,9 @@ export class MovimentacaoService {
 
 
     async buscarTodos() {
-        return this.prisma.estoqueMovimentacao.findMany()
+        return this.prisma.estoqueMovimentacao.findMany({
+            include: { subitem: { select: { nome: true } } }
+        })
     }
 
 

@@ -91,94 +91,6 @@ export class OperacionalService {
 
 
 
-
-    
-    async movimentarEstoqueNaVenda(formato: "mesa" | "comanda" | "senha", formato_id: string | number) {
-        let where = { }
-        if (formato == "mesa") {
-           where = { mesa_id: formato_id as string } 
-        }
-        if (formato == "comanda") {
-           where = { comanda_id: formato_id as string } 
-        }
-        if (formato == "senha") {
-           where = { senha_id: formato_id as number } 
-        }
-
-        const all = await this.prisma.pedido.findMany({ where: where, include: { itens: { include: { subitens: { include: { subitem: true } } } } } })
-
-        const itens = all.map((e) =>  e.itens).flat()
-        const subitens = itens.map((e) => e.subitens).flat()
-        const subintesEstoque = subitens.filter(e => e.subitem.controla_estoque)
-
-        const estoque = subintesEstoque.map((e) => ({
-            subitem_id: e.subitem_id,
-            quantidade: Number(e.quantidade),
-            tipo: EstoqueMovimentacaoTipo.VENDA
-        }))
-
-        // salvamos na movimentacao de estoque
-        await this.estoque.salvarVarios(estoque)
-
-
-        // damos um update no estoque atual ed cada subitem
-        const results = await this.prisma.$transaction(
-            estoque.map(e => 
-                this.prisma.subitem.update({
-                    where: { id: e.subitem_id },
-                    data: { estoque_atual: { decrement: e.quantidade } }
-                })
-            )
-        );
-
-        return results
-
-    }
-
-
-
-
-
-
-    async buscarEstoqueAtual() {
-        return this.prisma.tenantClient.subitem.findMany({
-            where: { ativo: true, controla_estoque: true },
-            include: {  }
-        })
-    }
-
-
-    async buscarMovimentacaoPorSubitem(id: number) {
-        return this.prisma.subitem.findFirst({
-            where: { id: id },
-            include: { estoque_movimentacao: { orderBy: { created_at: "asc" } } }
-        })
-    }
-
-    /**
-     * aqui vamos inserir uma movimentacao
-     * 
-     * pode ser ENTRADA: quando adicionamso um item no estoque (compra, recebimento)
-     * pode ser SAIDA: perda, despercidcio, roubo, uso interno, transferencia entre estoques
-     * pode ser AJUSTE: corrigindo o estoque manualmente, corrigir erro antigo, sincronizar, etc
-     */
-    async movimentarEstoque(dto: MovimentacaoSalvarDto) {
-        await this.estoque.salvar(dto)
-        let tipoCalculo = {}
-        if (dto.tipo == "AJUSTE") tipoCalculo = { increment: dto.quantidade }
-        if (dto.tipo == "ENTRADA") tipoCalculo = { increment: dto.quantidade }
-        if (dto.tipo == "SAIDA") tipoCalculo = { decrement: dto.quantidade }
-        return this.prisma.subitem.update({
-            where: { id: dto.subitem_id },
-            data: { estoque_atual: tipoCalculo }
-        })
-    }
-
-
-
-
-
-
     
     async buscarPorFormato(tipo:string) {
         if (tipo == "mesa") {
@@ -282,6 +194,97 @@ export class OperacionalService {
 
         return geral
     }
+
+
+    // ------------------------------------------------------------------------------------------------------------------------------------------------------ OPERACOES DE ESTOQUE
+    
+
+
+
+    async buscarMovimentacaoAtual() {
+        return this.prisma.tenantClient.subitem.findMany({
+            where: { ativo: true, controla_estoque: true },
+            include: {  }
+        })
+    }
+
+
+    async buscarMovimentacaoPorSubitem(id: number) {
+        return this.prisma.subitem.findFirst({
+            where: { id: id },
+            include: { estoque_movimentacao: { orderBy: { created_at: "asc" } } }
+        })
+    }
+
+
+    /**
+     * aqui vamos inserir uma movimentacao
+     * 
+     * pode ser ENTRADA: quando adicionamso um item no estoque (compra, recebimento)
+     * pode ser SAIDA: perda, despercidcio, roubo, uso interno, transferencia entre estoques
+     * pode ser AJUSTE: corrigindo o estoque manualmente, corrigir erro antigo, sincronizar, etc
+     */
+    async movimentarEstoque(dto: MovimentacaoSalvarDto) {
+        await this.estoque.salvar(dto)
+        let tipoCalculo = {}
+        if (dto.tipo == "AJUSTE") tipoCalculo = { increment: dto.quantidade }
+        if (dto.tipo == "ENTRADA") tipoCalculo = { increment: dto.quantidade }
+        if (dto.tipo == "SAIDA") tipoCalculo = { decrement: dto.quantidade }
+        return this.prisma.estoquePosicao.updateMany({
+            where: { subitem_id: dto.subitem_id },
+            data: { quantidade_fisica: tipoCalculo }
+        })
+    }
+
+
+
+    /**
+     * 
+     * Usado aqui na funcao venda pra ja criar essa movimentacao
+     */
+    async movimentarEstoqueNaVenda(formato: "mesa" | "comanda" | "senha", formato_id: string | number) {
+        let where = { }
+        if (formato == "mesa") {
+           where = { mesa_id: formato_id as string } 
+        }
+        if (formato == "comanda") {
+           where = { comanda_id: formato_id as string } 
+        }
+        if (formato == "senha") {
+           where = { senha_id: formato_id as number } 
+        }
+
+        const all = await this.prisma.pedido.findMany({ where: where, include: { itens: { include: { subitens: { include: { subitem: true } } } } } })
+
+        const itens = all.map((e) =>  e.itens).flat()
+        const subitens = itens.map((e) => e.subitens).flat()
+        const subintesEstoque = subitens.filter(e => e.subitem.controla_estoque)
+
+        const estoque = subintesEstoque.map((e) => ({
+            subitem_id: e.subitem_id,
+            quantidade: Number(e.quantidade),
+            tipo: EstoqueMovimentacaoTipo.VENDA
+        }))
+
+        // salvamos na movimentacao de estoque
+        await this.estoque.salvarVarios(estoque)
+
+
+        // damos um update no estoque atual ed cada subitem
+        const results = await this.prisma.$transaction(
+            estoque.map(e => 
+                this.prisma.estoquePosicao.updateMany({
+                    where: { subitem_id: e.subitem_id },
+                    data: { quantidade_fisica: { decrement: e.quantidade } },
+
+                })
+            )
+        );
+
+        return results
+
+    }
+
 
 
 

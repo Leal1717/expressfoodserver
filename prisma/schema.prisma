@@ -56,6 +56,7 @@ model Empresa {
   comandas Comanda[]
   senhas Senha[]
   estoque_movimentacao EstoqueMovimentacao[]
+  estoque_posicao EstoquePosicao[]
 }
 
 
@@ -163,22 +164,46 @@ model Classe {
   @@unique([nome, empresa_id]) 
 }
 
+enum UnidadeMedida {
+  // Unidades Contáveis (Mais comuns)
+  UN    // Unidade
+  CX    // Caixa
+  PC    // Peça
+  KT    // Kit
+  DZ    // Dúzia
+  FD    // Fardo
+
+  // Unidades de Peso (Massa)
+  KG    // Quilograma
+  G     // Grama
+
+  // Unidades de Volume (Líquidos/Gases)
+  L     // Litro
+  ML    // Mililitro
+
+}
 
 model Subitem {
   id                  Int @id @default(autoincrement())
   nome                String 
-  unidade             String @default("g")
   ativo               Boolean @default(true)
 
-  controla_estoque    Boolean @default(true)
-  estoque_atual       Decimal? @db.Decimal(10, 3)
-  estoque_minimo      Decimal? @db.Decimal(10, 3)
+
+  // Unidades de Medida
+  unidade_compra      UnidadeMedida?   // Ex: "CX" (Caixa), "FARDO", "KG"
+  unidade_venda       UnidadeMedida?   // Ex: "UN" (Unidade), "UN", "G"
+  
+  // O "pulo do gato": Quantas unidades de venda vem em uma unidade de compra?
+  // Ex: Se uma caixa vem 12 latas, o fator é 12.000
+  fator_conversao    Decimal? @db.Decimal(10, 3)
 
   itens               ItemSubitem[]
 
   vendas              PedidoItemSubitem[] @relation("PedidoItemSubitem_Subitem")
 
-  estoque_movimentacao EstoqueMovimentacao[]
+  controla_estoque      Boolean @default(true)
+  estoque_posicao       EstoquePosicao?
+  estoque_movimentacao  EstoqueMovimentacao[]
 
   empresa_id      Int
   empresa         Empresa @relation(fields: [empresa_id], references: [id])
@@ -292,6 +317,12 @@ model EstoqueMovimentacao {
   quantidade    Decimal @db.Decimal(10, 3) @default(0)
   referencia    String?   //    pedido:123    compra:45    inventario:2026-03-16
 
+  // Por que isso? Porque o custo do item muda. 
+  // Daqui a um ano, você vai querer saber quanto pagou 
+  // naquela ENTRADA específica de 2024.
+  // REGRA DE OURO: O saldo no banco de dados deve ser SEMPRE na Unidade de Venda.
+  custo_unitario_momento Decimal? @db.Decimal(10, 2) 
+
 
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
@@ -301,6 +332,40 @@ model EstoqueMovimentacao {
   @@index([empresa_id])
 }
 
+
+model EstoquePosicao {
+  id               Int   @id @default(autoincrement())
+  
+  // Relação com o seu Item/Produto existente
+  subitem_id          Int   @unique // @unique garante que cada item tenha apenas uma linha de posição
+  subitem             Subitem     @relation(fields: [subitem_id], references: [id], onDelete: Cascade)
+
+  // Quantidades
+  // REGRA DE OURO: O saldo no banco de dados deve ser SEMPRE na Unidade de Venda.
+  // Se você tem 2 caixas de 12, no banco deve constar 24.
+  // o ESTOQUE_ATUAL deve ser a quantidade_fisica - quantidade_reserva (reserva serve par deliveries, por exemplo)
+  quantidade_fisica Decimal  @default(0) @db.Decimal(10, 3) // Usar Decimal para evitar erros de precisão (ex: kg)
+  quantidade_reserva Decimal  @default(0) @db.Decimal(10, 3) // Itens vendidos mas não despachados
+  
+  // Controle de Reposição
+  estoque_minimo    Decimal  @default(0) @db.Decimal(10, 3)
+  estoque_maximo    Decimal? @db.Decimal(10, 3)
+
+  // Valores Financeiros (Opcional, mas recomendado para Posição de Estoque) REGRA DE OURO: O saldo no banco de dados deve ser SEMPRE na Unidade de Venda.
+  // custoUnitario: É o valor que você pagou por uma unidade de venda do produto (já considerando o fator de conversão).
+  custo_unitario    Decimal  @default(0) @db.Decimal(10, 2)
+
+  // Auditoria
+  ultima_contagem   DateTime? // Data do último inventário físico
+  updated_at        DateTime  @updatedAt
+  created_at        DateTime  @default(now())
+
+  
+  empresa_id    Int
+  empresa       Empresa @relation(fields: [empresa_id], references: [id])
+  @@index([empresa_id])
+
+}
 
 
 

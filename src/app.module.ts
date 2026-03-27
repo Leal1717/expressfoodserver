@@ -1,3 +1,6 @@
+import { EstoqueposicaoModule } from './estoque/posicao/estoqueposicao.module';
+import { EstoqueposicaoController } from './estoque/posicao/estoqueposicao.controller';
+import { EstoqueposicaoService } from './estoque/posicao/estoqueposicao.service';
 import { ViewsModule } from './views/views.module';
 import { ViewsController } from './views/views.controller';
 import { RelatorialModule } from './relatorial/relatorial.module';
@@ -52,6 +55,7 @@ import { LoggerMiddleware } from './logger/logger.middleware';
 
 @Module({
 	imports: [
+		EstoqueposicaoModule,
 		ViewsModule,
 		RelatorialModule,
 		MovimentacaoModule,
@@ -81,6 +85,7 @@ import { LoggerMiddleware } from './logger/logger.middleware';
 		OperacionalModule,
 	],
 	controllers: [
+		EstoqueposicaoController,
 		ViewsController,
 		RelatorialController,
 		MovimentacaoController,
@@ -89,6 +94,7 @@ import { LoggerMiddleware } from './logger/logger.middleware';
 		MesasController,
 		ClassesController, EmpresasController],
 	providers: [
+		EstoqueposicaoService,
 		RelatorialService,
 		MovimentacaoService,
 		{
@@ -111,7 +117,7 @@ import { LoggerMiddleware } from './logger/logger.middleware';
 export class AppModule implements NestModule {
 	configure(consumer: MiddlewareConsumer) {
 		//logger - pra dev aqui
-		consumer.apply(LoggerMiddleware).forRoutes({path: '*', method: RequestMethod.ALL})
+		consumer.apply(LoggerMiddleware).forRoutes({ path: '*', method: RequestMethod.ALL })
 
 		// tenant - para pegar o id da empresa em cada request
 		consumer.apply(TenantMiddleware).forRoutes({ path: '*', method: RequestMethod.ALL });

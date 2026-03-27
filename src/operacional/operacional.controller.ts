@@ -96,7 +96,7 @@ export class OperacionalController {
     @Get("estoque/atual")
     async buscarEstoqueAtual(
     ) {
-        return this.service.buscarEstoqueAtual()
+        return this.service.buscarMovimentacaoAtual()
     }
     
     

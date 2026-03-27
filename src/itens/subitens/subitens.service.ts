@@ -7,9 +7,7 @@ export class SubitensService {
     constructor(private prisma: PrismaService) {}
     
     async salvar(data:Subitem) {
-        const data2:any = data
-        delete data2.empresa_id
-        return this.prisma.tenantClient.subitem.create({data:data2})
+        await this.prisma.tenantClient.subitem.create({data:data})
     }
 
     async buscarTodos() {
