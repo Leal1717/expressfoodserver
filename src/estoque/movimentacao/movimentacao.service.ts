@@ -43,18 +43,18 @@ export class MovimentacaoService {
 
 
     async buscarTodos() {
-        return this.prisma.estoqueMovimentacao.findMany({
-            include: { subitem: { select: { nome: true } } }
+        return this.prisma.tenantClient.estoqueMovimentacao.findMany({
+            include: { subitem: true }
         })
     }
 
 
     async buscarPorId(id: string) {
-        return this.prisma.estoqueMovimentacao.findUnique({ where: { id: id } })
+        return this.prisma.tenantClient.estoqueMovimentacao.findUnique({ where: { id: id } })
     }
 
 
     async delete(id: string) {
-        return this.prisma.estoqueMovimentacao.delete({ where: { id: id } })
+        return this.prisma.tenantClient.estoqueMovimentacao.delete({ where: { id: id } })
     }
 }
