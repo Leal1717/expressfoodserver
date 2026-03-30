@@ -154,6 +154,7 @@ enum Role {
 model Classe {
   id              Int @id @default(autoincrement())
   nome            String 
+  index           Int @default(0)  // para order
 
   item            Item[]
 
@@ -187,6 +188,7 @@ model Subitem {
   id                  Int @id @default(autoincrement())
   nome                String 
   ativo               Boolean @default(true)
+  index Int @default(0) // para order
 
 
   // Unidades de Medida
@@ -227,6 +229,7 @@ model Item {
   preco Decimal @db.Decimal(10, 2)
   tipo  ItemTipo @default(MERCADORIA)
   ativo Boolean @default(true)
+  index Int @default(0)  // para order
 
   empresa_id Int
   empresa Empresa @relation(fields: [empresa_id], references: [id])

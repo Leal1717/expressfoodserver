@@ -35,6 +35,14 @@ export class ItensController {
     ) {
         return this.service.update(data)
     }
+    
+    @Put("reorder")
+    async reorderTask(
+        @Body('id') id:any,      
+        @Body('index') index:any       
+    ) {
+        return this.service.reorderTask(id, index)
+    }
 
     @Put("update-ativo/:id")
     async updateAtivo(

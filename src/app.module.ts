@@ -1,3 +1,6 @@
+import { HorarioModule } from './empresas/horario/horario.module';
+import { HorarioController } from './empresas/horario/horario.controller';
+import { HorarioService } from './empresas/horario/horario.service';
 import { EstoqueposicaoModule } from './estoque/posicao/estoqueposicao.module';
 import { EstoqueposicaoController } from './estoque/posicao/estoqueposicao.controller';
 import { EstoqueposicaoService } from './estoque/posicao/estoqueposicao.service';
@@ -55,6 +58,14 @@ import { LoggerMiddleware } from './logger/logger.middleware';
 
 @Module({
 	imports: [
+
+		JwtModule.register({
+			global: true,
+			secret: jwtConstants.secret,
+			signOptions: { expiresIn: '1day' },
+		}),
+		AuthModule,
+		HorarioModule,
 		EstoqueposicaoModule,
 		ViewsModule,
 		RelatorialModule,
@@ -64,12 +75,6 @@ import { LoggerMiddleware } from './logger/logger.middleware';
 		MesasModule,
 		PromocoesModule,
 		TenantModule,
-		JwtModule.register({
-			global: true,
-			secret: jwtConstants.secret,
-			signOptions: { expiresIn: '1day' },
-		}),
-		AuthModule,
 		ClassesModule,
 		PrismaModule,
 		ConfigModule.forRoot({ isGlobal: true }),
@@ -85,6 +90,7 @@ import { LoggerMiddleware } from './logger/logger.middleware';
 		OperacionalModule,
 	],
 	controllers: [
+		HorarioController,
 		EstoqueposicaoController,
 		ViewsController,
 		RelatorialController,
@@ -94,6 +100,7 @@ import { LoggerMiddleware } from './logger/logger.middleware';
 		MesasController,
 		ClassesController, EmpresasController],
 	providers: [
+		HorarioService,
 		EstoqueposicaoService,
 		RelatorialService,
 		MovimentacaoService,

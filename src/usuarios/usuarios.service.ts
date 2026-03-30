@@ -42,6 +42,10 @@ export class UsuariosService {
     }
 
     async delete(id:number) {
+        const usuarios_antes = await this.prisma.usuario.findMany({where: {role: "ADMIN_GERAL"}})
+        if (usuarios_antes.length == 1) {
+            throw new BadRequestException("Voce nao pode deletar o ultimo usuairo admin")
+        }
         return this.prisma.tenantClient.usuario.delete({where: {id: Number(id)}})
     }
 

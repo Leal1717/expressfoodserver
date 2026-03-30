@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
 import {  Role, type Subitem } from '@prisma/client';
 import { SubitensService } from './subitens.service';
 import { Roles } from 'src/decorators/role.decorator';
+import { SubitemCriarDto, SubitemUpdateDto } from './dto';
 
 @Roles(Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
 @Controller("api/subitens")
@@ -10,7 +11,7 @@ export class SubitensController {
 
     @Post("salvar")
     async salvar(
-        @Body() data: Subitem
+        @Body() data: SubitemCriarDto
     ) {
         return this.service.salvar(data)
     }
@@ -29,10 +30,19 @@ export class SubitensController {
 
     @Put("update")
     async update(
-        @Body() data: Subitem        
+        @Body() data: SubitemUpdateDto        
     ) {
         return this.service.update(data)
     }
+
+    @Put("reorder")
+    async reorderTask(
+        @Body('id') id:any,      
+        @Body('index') index:any       
+    ) {
+        return this.service.reorderTask(id, index)
+    }
+    
 
     @Delete("delete/:id")
     async delete(

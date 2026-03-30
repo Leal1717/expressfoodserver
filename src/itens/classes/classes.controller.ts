@@ -36,6 +36,14 @@ export class ClassesController {
         return this.service.update(data)
     }
 
+    @Put("reorder")
+    async reorderTask(
+        @Body('id') id:any,      
+        @Body('index') index:any       
+    ) {
+        return this.service.reorderTask(id, index)
+    }
+
     @Delete("delete/:id")
     async delete(
         @Param("id") id: number
