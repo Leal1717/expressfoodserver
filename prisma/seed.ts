@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 async function main() {
   await planos()
   await diasDaSemana()
+  await bandeirasCartao()
 
   console.log('Seed finalizado com sucesso!');
 }
@@ -66,6 +67,37 @@ async function diasDaSemana() {
     // Se o seu banco for PostgreSQL, use:
     // INSERT INTO "DiaDaSemana" (id, name) VALUES (${day.id}, ${day.name}) ON CONFLICT DO NOTHING;
   }
+}
+
+
+
+
+/** bandeiras */
+async function bandeirasCartao() { 
+  console.log(`Tentando inserir: bandeiras cartao`);
+  await prisma.bandeira.createMany({
+    data: [
+      { nome: 'VISA' },
+      { nome: 'MASTERCARD' },
+      { nome: 'ELO' },
+      { nome: 'AMEX' },
+      { nome: 'HIPERCARD' },
+
+      { nome: 'DINERS CLUB' },
+      { nome: 'DISCOVER' },
+      { nome: 'JCB' },
+      { nome: 'AURA' },
+
+      { nome: 'SODEXO' },
+      { nome: 'TICKET' },
+      { nome: 'VR' },
+      { nome: 'ALELO' },
+      { nome: 'BEN' },
+
+      { nome: 'CABAL' }
+    ],
+    skipDuplicates: true,
+  });
 }
 
 

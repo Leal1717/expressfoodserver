@@ -9,7 +9,7 @@ export class AuthService {
     constructor(private userService: UsuariosService, private jwtService : JwtService, private session: SessionService) {}
 
     async signIn(data:SignInDto) {
-        const user = await this.userService.buscarPorEmail(data.username)
+        const user = await this.userService.buscarPorEmail(data.email)
         if (user?.senha !== data.senha) {
             throw new UnauthorizedException()
         }

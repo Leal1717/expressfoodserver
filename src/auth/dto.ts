@@ -1,4 +1,11 @@
+import { IsEmail, IsString } from "class-validator";
+
+
 export class SignInDto {
-    username: string
-    senha: string
+    @IsEmail()
+    email: string;
+
+    @IsString()
+    senha: string;
+
 }

@@ -1,3 +1,9 @@
+import { BandeirasCartaoController } from './formasPagamento/bandeiras-cartao.controller';
+import { TaxasCartaoController } from './formasPagamento/taxas-cartao.controller';
+import { FormasPagamentoController } from './formasPagamento/formas-pagamento.controller';
+import { BandeirasCartaoService } from './formasPagamento/bandeiras-cartao.service';
+import { TaxasCartaoService } from './formasPagamento/taxas-cartao.service';
+import { FormasPagamentoService } from './formasPagamento/formas-pagamento.service';
 import { HorarioModule } from './empresas/horario/horario.module';
 import { HorarioController } from './empresas/horario/horario.controller';
 import { HorarioService } from './empresas/horario/horario.service';
@@ -90,6 +96,9 @@ import { LoggerMiddleware } from './logger/logger.middleware';
 		OperacionalModule,
 	],
 	controllers: [
+		BandeirasCartaoController,
+		TaxasCartaoController,
+		FormasPagamentoController,
 		HorarioController,
 		EstoqueposicaoController,
 		ViewsController,
@@ -100,6 +109,9 @@ import { LoggerMiddleware } from './logger/logger.middleware';
 		MesasController,
 		ClassesController, EmpresasController],
 	providers: [
+		BandeirasCartaoService,
+		TaxasCartaoService,
+		FormasPagamentoService,
 		HorarioService,
 		EstoqueposicaoService,
 		RelatorialService,

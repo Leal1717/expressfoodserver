@@ -2,18 +2,11 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create(AppModule);
 
-  // app.useStaticAssets(join(__dirname , "..",  "public/outros"))
-  // app.setBaseViewsDir(join(__dirname , "..",  "public/views"))
-
-  app.useStaticAssets(join(process.cwd(),  "public/outros"))
-  app.setBaseViewsDir(join(process.cwd(), "public/views"))
-
-
-  app.setViewEngine('ejs')
 
 
   app.enableCors({
@@ -21,6 +14,15 @@ async function bootstrap() {
     // origin: "http://localhost:3001",
     // credentials: true
   })
+
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,           // remove campos não permitidos
+      forbidNonWhitelisted: false, // (opcional) erro se vier campo extra
+      transform: false,           // transforma tipos automaticamente
+    }),
+  )
 
 
   const port = process.env.PORT || 3000;
