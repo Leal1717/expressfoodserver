@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -19,8 +20,7 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,           // remove campos não permitidos
-      forbidNonWhitelisted: false, // (opcional) erro se vier campo extra
-      transform: false,           // transforma tipos automaticamente
+      transform: true,           // transforma tipos automaticamente
     }),
   )
 

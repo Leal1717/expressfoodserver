@@ -5,7 +5,7 @@ import { Role, type Promocao } from '@prisma/client';
 import { Roles } from 'src/decorators/role.decorator';
 
 
-@Roles(Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
+@Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
 @Controller("api/promocoes")
 export class PromocoesController {
     constructor(private service: PromocoesService) {}

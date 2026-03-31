@@ -6,7 +6,7 @@ import { Public } from 'src/decorators/public.decorator';
 import { Roles } from 'src/decorators/role.decorator';
 
 
-@Roles(Role.ADMIN_GERAL,Role.ADMIN_SEM_FINANCEIRO)
+@Roles(Role.OWNER, Role.ADMIN_GERAL,Role.ADMIN_SEM_FINANCEIRO)
 @Controller("api/usuarios")
 export class UsuariosController {
     constructor(private readonly service: UsuariosService) {}

@@ -4,7 +4,7 @@ import { RelatorialService } from './relatorial.service';
 import { Roles } from 'src/decorators/role.decorator';
 import { Role } from '@prisma/client';
 
-@Roles(Role.ADMIN_GERAL, Role.OPERADOR_COM_FINANCEIRO)
+@Roles(Role.OWNER, Role.ADMIN_GERAL, Role.OPERADOR_COM_FINANCEIRO)
 @Controller("api/relatorial")
 export class RelatorialController { 
     constructor(private service: RelatorialService) {}

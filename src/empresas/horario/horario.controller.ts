@@ -7,7 +7,7 @@ import { HorarioService } from './horario.service';
 import { Roles } from 'src/decorators/role.decorator';
 import { type  HorarioDeFuncionamento, Role } from '@prisma/client';
 
-@Roles(Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
+@Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
 @Controller("api/empresa/horario")
 export class HorarioController {
     constructor (private service: HorarioService) {}

@@ -3,6 +3,7 @@ import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
 import { EmpresasService } from './empresas.service';
 import type { Empresa } from '@prisma/client';
 import { Public } from 'src/decorators/public.decorator';
+import { SalvarEmpresaDto } from './dto';
 
 @Controller("api/empresas")
 export class EmpresasController {
@@ -25,7 +26,7 @@ export class EmpresasController {
     @Public()
     @Post("salvar")
     async salvar(
-        @Body() data: Empresa
+        @Body() data: SalvarEmpresaDto
     ) {
         return this.service.salvar(data)
     }

@@ -4,7 +4,7 @@ import { SubitensService } from './subitens.service';
 import { Roles } from 'src/decorators/role.decorator';
 import { SubitemCriarDto, SubitemUpdateDto } from './dto';
 
-@Roles(Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
+@Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
 @Controller("api/subitens")
 export class SubitensController {
     constructor(private readonly service: SubitensService) {}

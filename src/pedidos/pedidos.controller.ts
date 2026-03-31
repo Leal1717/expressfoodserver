@@ -4,7 +4,7 @@ import { PedidosService } from './pedidos.service';
 import { CreatePedidoDto } from 'src/operacional/dto';
 import { Roles } from 'src/decorators/role.decorator';
 
-@Roles(Role.ADMIN_GERAL,Role.OPERADOR_COM_FINANCEIRO)
+@Roles(Role.OWNER, Role.ADMIN_GERAL,Role.OPERADOR_COM_FINANCEIRO)
 @Controller("api/pedidos")
 export class PedidosController {
     constructor(private readonly service: PedidosService) {}

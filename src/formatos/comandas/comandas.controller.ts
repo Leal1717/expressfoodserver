@@ -3,7 +3,7 @@ import { ComandasService } from './comandas.service';
 import { Role, type Comanda } from '@prisma/client';
 import { Roles } from 'src/decorators/role.decorator';
 
-@Roles(Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
+@Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
 @Controller("api/formatos/comandas")
 export class ComandasController {
     constructor(private readonly service : ComandasService) {}

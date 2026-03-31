@@ -4,7 +4,7 @@ import { Roles } from 'src/decorators/role.decorator';
 import { Role } from '@prisma/client';
 
 
-@Roles(Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
+@Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
 @Controller("api/itenspdv")
 export class ItensPdvController {
     constructor(private readonly service: ItensPdvService) {}

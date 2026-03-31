@@ -4,7 +4,7 @@ import { Roles } from "src/decorators/role.decorator";
 import { BandeirasCartaoService } from "./bandeiras-cartao.service";
 import { CreateBandeiraDto, UpdateBandeiraDto } from "./dtos/bandeiras-cartao-dto";
 
-@Roles(Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
+@Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
 @Controller('api/bandeiras-cartao')
 export class BandeirasCartaoController {
     constructor(private readonly service: BandeirasCartaoService) {}

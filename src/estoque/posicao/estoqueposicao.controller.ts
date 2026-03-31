@@ -3,7 +3,7 @@ import { type EstoquePosicao, Role } from '@prisma/client';
 import { Roles } from 'src/decorators/role.decorator';
 import { EstoqueposicaoService } from './estoqueposicao.service';
 
-@Roles(Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.OPERADOR_GERAL, Role.OPERADOR_COM_FINANCEIRO)
+@Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.OPERADOR_GERAL, Role.OPERADOR_COM_FINANCEIRO)
 @Controller("api/estoque/posicao")
 export class EstoqueposicaoController {
     constructor(private readonly service : EstoqueposicaoService) {}

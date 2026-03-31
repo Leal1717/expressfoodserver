@@ -5,7 +5,7 @@ import { CreateItemDto, UpdateItemDto } from './dto';
 import { Roles } from 'src/decorators/role.decorator';
 
 
-@Roles(Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
+@Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
 @Controller("api/itens")
 export class ItensController {
     constructor(private readonly service: ItensService) {}

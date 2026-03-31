@@ -3,7 +3,7 @@ import { MesasService } from './mesas.service';
 import { Role, type Mesa } from '@prisma/client';
 import { Roles } from 'src/decorators/role.decorator';
 
-@Roles(Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
+@Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
 @Controller("api/formatos/mesas")
 export class MesasController {
     constructor(private readonly service : MesasService) {}

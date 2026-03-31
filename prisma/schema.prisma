@@ -28,7 +28,7 @@ model Empresa {
   id                    Int                      @id @default(autoincrement())
   nome_fantasia         String
   razao_social          String
-  cnpj                  String
+  cnpj                  String                   @unique
   ativo                 Boolean                  @default(true)
   plano_id              Int
   plano                 Plano                    @relation(fields: [plano_id], references: [id])
@@ -104,22 +104,23 @@ model Usuario {
   id       Int    @id @default(autoincrement())
   nome     String
   senha    String
-  email    String
+  email    String 
   telefone String
   role     Role   @default(ADMIN_GERAL)
 
   ativo Boolean @default(true)
 
   empresa_id Int
-  empresa    Empresa @relation(fields: [empresa_id], references: [id])
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
 
   vendas Pedido[]
 
-  @@unique([email, empresa_id])
+  @@unique([email])
   @@index([empresa_id])
 }
 
 enum Role {
+  OWNER
   ADMIN_GERAL
   ADMIN_SEM_FINANCEIRO
 
@@ -154,7 +155,7 @@ model FormaPagamento {
   pedido_pagamentos PedidoPagamento[]
 
   empresa_id Int
-  empresa    Empresa @relation(fields: [empresa_id], references: [id])
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
 
   @@index([empresa_id])
 }
