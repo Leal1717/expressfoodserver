@@ -1,41 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateFormaPagamentoDto, UpdateFormaPagamentoDto } from './dtos/formas-pagamento-dto';
+import { IsNumberOptions } from 'class-validator';
 
 
 @Injectable()
 export class FormasPagamentoService {
     constructor(private prisma: PrismaService) {}
 
-    create(data: CreateFormaPagamentoDto) {
-        return this.prisma.tenantClient.formaPagamento.create({
-        data,
-        });
-    }
-
     findAll() {
-        return this.prisma.tenantClient.formaPagamento.findMany({
-        orderBy: { id: 'asc' },
+        return this.prisma.empresaFormaPagamento.findMany({
+            orderBy: { id: 'asc' },
+            include: { forma_pagamento: true }
         });
     }
 
     findOne(id: number) {
-        return this.prisma.tenantClient.formaPagamento.findFirst({
-        where: { id },
-        });
+        return this.prisma.empresaFormaPagamento.findFirst({where: { id },include: { forma_pagamento: true }});
     }
 
-    update(id: number, data: UpdateFormaPagamentoDto) {
-        return this.prisma.tenantClient.formaPagamento.update({
-        where: { id },
-        data,
-        });
+    updateAtivo(id: number) {
+        return this.prisma.$queryRaw`UPDATE empresaformapagamento SET ativo = NOT ativo WHERE id = ${id}`
     }
 
-    remove(id: number) {
-        return this.prisma.tenantClient.formaPagamento.update({
-        where: { id },
-        data: { ativo: false },
-        });
-    }
+
 }

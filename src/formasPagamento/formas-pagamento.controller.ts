@@ -1,7 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common";
 import { Role } from "@prisma/client";
 import { Roles } from "src/decorators/role.decorator";
-import { CreateFormaPagamentoDto, UpdateFormaPagamentoDto } from "./dtos/formas-pagamento-dto";
 import { FormasPagamentoService } from "./formas-pagamento.service";
 
 @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
@@ -9,10 +8,6 @@ import { FormasPagamentoService } from "./formas-pagamento.service";
 export class FormasPagamentoController {
     constructor(private readonly service: FormasPagamentoService) {}
 
-    @Post('salvar')
-    async salvar(@Body() data: CreateFormaPagamentoDto) {
-        return this.service.create(data);
-    }
 
     @Get('todos')
     async buscarTodos() {
@@ -24,13 +19,9 @@ export class FormasPagamentoController {
         return this.service.findOne(Number(id));
     }
 
-    @Put('update')
-    async update(@Body() data: UpdateFormaPagamentoDto & { id: number }) {
-        return this.service.update(data.id, data);
+    @Put('update-ativo')
+    async updateAtivo(@Body() data: { id: number }) {
+        return this.service.updateAtivo(data.id);
     }
 
-    @Delete('delete/:id')
-    async delete(@Param('id') id: number) {
-        return this.service.remove(Number(id));
-    }
 }

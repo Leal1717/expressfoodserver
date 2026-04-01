@@ -24,6 +24,13 @@ export class TaxasCartaoService {
             throw new BadRequestException('Taxa já cadastrada');
         }
 
+        const terminalExists = await this.prisma.tenantClient.terminal.findFirst({where: { id: data.terminal_id } })
+        console.log(terminalExists)
+        if (!terminalExists) {
+            throw new BadRequestException('Terminal nao cadastrado');
+
+        }
+
         return this.prisma.tenantClient.taxaCartao.create({
             data,
         });

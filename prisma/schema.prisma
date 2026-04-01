@@ -16,7 +16,7 @@ datasource db {
 
 // ----------------------------------------------------------------------------------------------------------------------- nosso
 model Plano {
-  id           Int       @id @default(autoincrement())
+  id           Int       @id
   nome         String
   preco        Decimal   @db.Decimal(10, 2)
   qtd_licencas Int
@@ -25,29 +25,29 @@ model Plano {
 
 // ----------------------------------------------------------------------------------------------------------------------- estrutural
 model Empresa {
-  id                    Int                      @id @default(autoincrement())
-  nome_fantasia         String
-  razao_social          String
-  cnpj                  String                   @unique
-  ativo                 Boolean                  @default(true)
-  plano_id              Int
-  plano                 Plano                    @relation(fields: [plano_id], references: [id])
-  horario_funcionamento HorarioDeFuncionamento[]
-  usuarios              Usuario[]
-  classes               Classe[]
-  subitens              Subitem[]
-  itens                 Item[]
-  promocoes             Promocao[]
-  vendas                Pedido[]
-  impressoras           Impressora[]
-  terminais             Terminal[]
-  mesas                 Mesa[]
-  comandas              Comanda[]
-  senhas                Senha[]
-  estoque_movimentacao  EstoqueMovimentacao[]
-  estoque_posicao       EstoquePosicao[]
-  forma_pagamentos      FormaPagamento[]
-  taxas_cartao          TaxaCartao[]
+  id                        Int                      @id @default(autoincrement())
+  nome_fantasia             String
+  razao_social              String
+  cnpj                      String                   @unique
+  ativo                     Boolean                  @default(true)
+  plano_id                  Int
+  plano                     Plano                    @relation(fields: [plano_id], references: [id])
+  horario_funcionamento     HorarioDeFuncionamento[]
+  usuarios                  Usuario[]
+  classes                   Classe[]
+  subitens                  Subitem[]
+  itens                     Item[]
+  promocoes                 Promocao[]
+  vendas                    Pedido[]
+  impressoras               Impressora[]
+  terminais                 Terminal[]
+  mesas                     Mesa[]
+  comandas                  Comanda[]
+  senhas                    Senha[]
+  estoque_movimentacao      EstoqueMovimentacao[]
+  estoque_posicao           EstoquePosicao[]
+  forma_pagamentos          EmpresaFormaPagamento[]
+  taxas_cartao              TaxaCartao[]
 }
 
 model HorarioDeFuncionamento {
@@ -61,6 +61,7 @@ model HorarioDeFuncionamento {
   empresa_id Int
   empresa    Empresa @relation(fields: [empresa_id], references: [id])
 
+  @@unique([dia_id, empresa_id])
   @@index([empresa_id])
 }
 
@@ -71,7 +72,7 @@ model Impressora {
   modelo String
 
   empresa_id Int
-  empresa    Empresa @relation(fields: [empresa_id], references: [id])
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
 
   @@unique([nome, empresa_id])
   @@index([empresa_id])
@@ -92,7 +93,7 @@ model Terminal {
   pedidos Pedido[]
 
   empresa_id        Int
-  empresa           Empresa           @relation(fields: [empresa_id], references: [id])
+  empresa           Empresa           @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
   taxas_cartao      TaxaCartao[]
   pedido_pagamentos PedidoPagamento[]
 
@@ -104,7 +105,7 @@ model Usuario {
   id       Int    @id @default(autoincrement())
   nome     String
   senha    String
-  email    String 
+  email    String
   telefone String
   role     Role   @default(ADMIN_GERAL)
 
@@ -140,24 +141,30 @@ enum TipoFormaPagamento {
   OUTRO
 }
 
-model FormaPagamento {
-  id    Int                @id @default(autoincrement())
-  nome  String // Ex: Dinheiro, PIX, Crédito
-  tipo  TipoFormaPagamento
-  ativo Boolean            @default(true)
-
-  exige_troco          Boolean @default(false)
-  permite_parcelamento Boolean @default(false)
+model FormaPagamentoGlobal {
+  id                   Int                @id 
+  nome                 String             // Ex: Dinheiro, PIX, Crédito
+  tipo                 TipoFormaPagamento 
+  exige_troco          Boolean            @default(false)
+  permite_parcelamento Boolean            @default(false)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  pedido_pagamentos PedidoPagamento[]
+  empresas EmpresaFormaPagamento[] // relação many-to-many
+}
 
-  empresa_id Int
-  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+model EmpresaFormaPagamento {
+  id                    Int     @id @default(autoincrement())
+  empresa_id            Int
+  forma_pagamento_id    Int
+  ativo                 Boolean @default(true) // ativo para a empresa
 
-  @@index([empresa_id])
+  empresa               Empresa              @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  forma_pagamento       FormaPagamentoGlobal @relation(fields: [forma_pagamento_id], references: [id], onDelete: Cascade)
+  pedidos_pagamentos    PedidoPagamento[]
+
+  @@unique([empresa_id, forma_pagamento_id]) // chave composta
 }
 
 enum TipoCartao {
@@ -171,7 +178,6 @@ model Bandeira {
 
   taxas             TaxaCartao[]
   pedido_pagamentos PedidoPagamento[]
-
 }
 
 model TaxaCartao {
@@ -190,7 +196,7 @@ model TaxaCartao {
   bandeira Bandeira @relation(fields: [bandeira_id], references: [id])
 
   empresa_id Int
-  empresa    Empresa @relation(fields: [empresa_id], references: [id])
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
 
   @@index([empresa_id])
 }
@@ -212,8 +218,8 @@ model PedidoPagamento {
   parcelas      Int?
   taxa_aplicada Decimal? @db.Decimal(10, 2)
 
-  pedido          Pedido         @relation(fields: [pedido_id], references: [id])
-  forma_pagamento FormaPagamento @relation(fields: [forma_pagamento_id], references: [id])
+  pedido          Pedido                @relation(fields: [pedido_id], references: [id])
+  forma_pagamento EmpresaFormaPagamento @relation(fields: [forma_pagamento_id], references: [id])
 
   terminal Terminal? @relation(fields: [terminal_id], references: [id])
   bandeira Bandeira? @relation(fields: [bandeira_id], references: [id])
@@ -229,7 +235,7 @@ model Classe {
   item Item[]
 
   empresa_id Int
-  empresa    Empresa @relation(fields: [empresa_id], references: [id])
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
 
   @@unique([nome, empresa_id])
   @@index([empresa_id])
@@ -276,7 +282,7 @@ model Subitem {
   estoque_movimentacao EstoqueMovimentacao[]
 
   empresa_id Int
-  empresa    Empresa @relation(fields: [empresa_id], references: [id])
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
 
   @@unique([nome, empresa_id])
   @@index([empresa_id])
@@ -299,7 +305,7 @@ model Item {
   index         Int      @default(0) // para order
 
   empresa_id Int
-  empresa    Empresa @relation(fields: [empresa_id], references: [id])
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
 
   subitens ItemSubitem[]
 
@@ -384,7 +390,7 @@ model EstoqueMovimentacao {
   updated_at DateTime @updatedAt
 
   empresa_id Int
-  empresa    Empresa @relation(fields: [empresa_id], references: [id])
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
 
   @@index([empresa_id])
 }
@@ -417,7 +423,7 @@ model EstoquePosicao {
   created_at      DateTime  @default(now())
 
   empresa_id Int
-  empresa    Empresa @relation(fields: [empresa_id], references: [id])
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
 
   @@index([empresa_id])
 }
@@ -427,7 +433,7 @@ model EstoquePosicao {
 model Promocao {
   id         Int     @id @default(autoincrement())
   empresa_id Int
-  empresa    Empresa @relation(fields: [empresa_id], references: [id])
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
 
   preco_promocional Decimal @db.Decimal(10, 2)
   hora_inicio       String // "18:00"
@@ -452,7 +458,7 @@ model Promocao {
 }
 
 model DiaDaSemana {
-  id             Int       @id @default(autoincrement())
+  id             Int       @id 
   nome_completo  String
   nome_abreviado String
   nome_enum      DayOfWeek
@@ -478,7 +484,7 @@ model Mesa {
   nome String // Número da mesa (Ex: Mesa 01, Mesa 02)
 
   empresa_id Int
-  empresa    Empresa @relation(fields: [empresa_id], references: [id])
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
 
   status MesaStatus @default(LIVRE)
 
@@ -503,7 +509,7 @@ model Comanda {
   nome String?
 
   empresa_id Int
-  empresa    Empresa @relation(fields: [empresa_id], references: [id])
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
 
   status ComandaStatus @default(OCUPADA)
 
@@ -532,7 +538,7 @@ model Senha {
   updated_at DateTime @updatedAt
 
   empresa_id Int
-  empresa    Empresa @relation(fields: [empresa_id], references: [id])
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
 
   pedidos Pedido[]
 
@@ -558,7 +564,7 @@ model Pedido {
   id String @id @default(uuid())
 
   empresa_id Int
-  empresa    Empresa @relation(fields: [empresa_id], references: [id])
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
 
   created_at DateTime     @default(now())
   updated_at DateTime     @updatedAt
@@ -590,7 +596,7 @@ model Pedido {
   terminal    Terminal? @relation(fields: [terminal_id], references: [id], onDelete: SetNull)
 
   usuario_id        Int
-  usuario           Usuario           @relation(fields: [usuario_id], references: [id])
+  usuario           Usuario           @relation(fields: [usuario_id], references: [id], onDelete: SetNull)
   pedido_pagamentos PedidoPagamento[]
 
   @@index([empresa_id])

@@ -9,7 +9,6 @@ export class UsuariosService {
 
     async salvar(data:Usuario) {
         const user = await this.prisma.tenantClient.usuario.create({data: data})
-        console.log(user);
         
         const empresa_id = user.empresa_id
 
@@ -23,7 +22,7 @@ export class UsuariosService {
             throw new BadRequestException("Limite de usuarios atingido");
         }
 
-    }//P2002
+    }
 
     async buscarTodos() {
         return this.prisma.tenantClient.usuario.findMany()
@@ -42,9 +41,9 @@ export class UsuariosService {
     }
 
     async delete(id:number) {
-        const usuarios_antes = await this.prisma.usuario.findMany({where: {role: "ADMIN_GERAL"}})
-        if (usuarios_antes.length == 1) {
-            throw new BadRequestException("Voce nao pode deletar o ultimo usuairo admin")
+        const usuarios_antes = await this.prisma.tenantClient.usuario.findFirst({where: {role: "OWNER"}})
+        if (usuarios_antes && usuarios_antes.id == id) {
+            throw new BadRequestException("Voce nao pode deletar o OWNER")
         }
         return this.prisma.tenantClient.usuario.delete({where: {id: Number(id)}})
     }

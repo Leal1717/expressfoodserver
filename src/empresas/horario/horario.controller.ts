@@ -1,11 +1,10 @@
-/*
-https://docs.nestjs.com/controllers#controllers
-*/
+
 
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { HorarioService } from './horario.service';
 import { Roles } from 'src/decorators/role.decorator';
 import { type  HorarioDeFuncionamento, Role } from '@prisma/client';
+import { Public } from 'src/decorators/public.decorator';
 
 @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
 @Controller("api/empresa/horario")
@@ -15,16 +14,17 @@ export class HorarioController {
 
     @Post("/salvar")
     async create(
-        @Body() data: HorarioDeFuncionamento
+        @Body() data: HorarioDeFuncionamento[]
     ) {
         return this.service.create(data)
     }
     
-    
-    @Put("/udpate")
+
+    @Put("/update")
     async update(
-        @Body() data: HorarioDeFuncionamento
+        @Body() data: HorarioDeFuncionamento[]
     ) {
+        console.log("asd")
         return this.service.update(data)
     }
     
