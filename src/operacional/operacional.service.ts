@@ -65,28 +65,149 @@ export class OperacionalService {
 
 
     
+
+
+
+
+
+
+
+
+
     async pagar(data: OperacionalPagarDto) {
-        if (data.mesa) {
-            await this.movimentarEstoqueNaVenda("mesa", data.mesa)
-            //
-            await this.prisma.tenantClient.pedido.updateMany({ where: { mesa_id: data.mesa }, data: { status: "PAGA", mesa_id: null, comanda_id: null, senha_id: null, formato: "MESA" } })
-            return await this.mesa.setStatus(data.mesa!, "LIVRE")
-        }
-        if (data.comanda) {
-            await this.movimentarEstoqueNaVenda("comanda", data.comanda)
-            //
-            await this.prisma.tenantClient.pedido.updateMany({ where: { comanda_id: data.comanda }, data: { status: "PAGA", mesa_id: null, comanda_id: null, senha_id: null, formato: "COMANDA" } })
-            return await this.comanda.setStatus(data.comanda!, "PAGA")
-        }
-        if (data.senha != undefined) {
-            await this.movimentarEstoqueNaVenda("senha", data.senha)
-            //
-            await this.prisma.tenantClient.pedido.updateMany({ where: { senha_id: data.senha }, data: { status: "PAGA", mesa_id: null, comanda_id: null, senha_id: null, formato: "SENHA" } })
-            return await this.senha.delete(data.senha)
-        }
-        
-        throw new BadRequestException("Param da query precisa ser informado com o id de um dos formatos: mesa | comanda | senha ")
+        // 1. Identifica o filtro do pedido
+        let wherePedido: any = {};
+        if (data.mesa) wherePedido = { mesa_id: data.mesa };
+        else if (data.comanda) wherePedido = { comanda_id: data.comanda };
+        else if (data.senha) wherePedido = { senha_id: data.senha };
+        else throw new BadRequestException("Informe mesa, comanda ou senha.");
+
+        // 2. Iniciamos UMA ÚNICA transação para tudo
+        return await this.prisma.$transaction(async (tx) => {
+            
+            // A. BUSCA DADOS COMPLETOS (Para Estoque e Histórico)
+            const pedidos = await tx.pedido.findMany({
+                where: { ...wherePedido, status: "PENDENTE" },
+                include: {
+                    usuario: true,
+                    itens: {
+                        include: {
+                            item: true,
+                            subitens: { include: { subitem: true } }
+                        }
+                    }
+                }
+            });
+
+            if (pedidos.length === 0) throw new BadRequestException("Nenhum pedido pendente encontrado.");
+
+            const totalVenda = pedidos.reduce((acc, p) => acc + Number(p.total), 0);
+            const totalDesconto = pedidos.reduce((acc, p) => acc + Number(p.desconto), 0);
+
+            // B. MOVIMENTAÇÃO DE ESTOQUE (Integrada na tx)
+            const todosItens = pedidos.flatMap(p => p.itens);
+            const todosSubitens = todosItens.flatMap(i => i.subitens);
+            const subitensParaEstoque = todosSubitens.filter(si => si.subitem.controla_estoque);
+
+            for (const si of subitensParaEstoque) {
+                // Registra a movimentação
+                await tx.estoqueMovimentacao.create({
+                    data: {
+                        subitem_id: si.subitem_id,
+                        quantidade: si.quantidade,
+                        tipo: "VENDA",
+                        empresa_id: pedidos[0].empresa_id,
+                        referencia: `venda:${pedidos[0].id}`
+                    }
+                });
+
+                // Baixa a posição física
+                await tx.estoquePosicao.update({
+                    where: { subitem_id: si.subitem_id },
+                    data: { quantidade_fisica: { decrement: si.quantidade } }
+                });
+            }
+
+            // C. GERAÇÃO DO HISTÓRICO (SNAPSHOT)
+            const historico = await tx.vendaHistorico.create({
+                data: {
+                    empresa_id: pedidos[0].empresa_id,
+                    total: totalVenda,
+                    desconto: totalDesconto,
+                    status: "PAGA",
+                    usuario_nome: pedidos[0].usuario.nome,
+                    usuario_email: pedidos[0].usuario.email,
+                    itens_json: todosItens as any,
+                    pagamento_json: data.pagamentos as any // Assumindo que seu DTO de pagar recebe os pagamentos
+                }
+            });
+
+            // Grava Itens e Subitens no histórico (para os seus relatórios flat)
+            for (const item of todosItens) {
+                await tx.vendaHistoricoItem.create({
+                    data: {
+                        venda_historico_id: historico.id,
+                        nome: item.item.nome,
+                        preco: item.preco,
+                        quantidade: Number(item.quantidade)
+                    }
+                });
+            }
+
+            for (const si of todosSubitens) {
+                await tx.vendaHistoricoSubitem.create({
+                    data: {
+                        venda_historico_id: historico.id,
+                        nome: si.subitem.nome,
+                        preco: si.preco,
+                        quantidade: Number(si.quantidade)
+                    }
+                });
+            }
+
+            // D. ATUALIZA STATUS OPERACIONAIS
+            // Marca pedidos como pagos e limpa vínculos
+            await tx.pedido.updateMany({
+                where: wherePedido,
+                data: { 
+                    status: "PAGA", 
+                    mesa_id: null, 
+                    comanda_id: null, 
+                    senha_id: null,
+                    formato: data.mesa ? "MESA" : data.comanda ? "COMANDA" : "SENHA"
+                }
+            });
+
+            // Libera Mesa/Comanda/Senha usando seus serviços existentes (mas dentro da transação tx)
+            if (data.mesa) await tx.mesa.update({ where: { nome_empresa_id: { nome: data.mesa, empresa_id: pedidos[0].empresa_id } }, data: { status: "LIVRE" } });
+            if (data.comanda) await tx.comanda.update({ where: { nome_empresa_id: { nome: data.comanda, empresa_id: pedidos[0].empresa_id } }, data: { status: "PAGA" } });
+            if (data.senha) await tx.senha.delete({ where: { numero_empresa_id: { numero: data.senha, empresa_id: pedidos[0].empresa_id } } });
+
+            return historico;
+        });
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -238,52 +359,6 @@ export class OperacionalService {
 
 
 
-    /**
-     * 
-     * Usado aqui na funcao venda pra ja criar essa movimentacao
-     */
-    async movimentarEstoqueNaVenda(formato: "mesa" | "comanda" | "senha", formato_id: string | number) {
-        let where = { }
-        if (formato == "mesa") {
-           where = { mesa_id: formato_id as string } 
-        }
-        if (formato == "comanda") {
-           where = { comanda_id: formato_id as string } 
-        }
-        if (formato == "senha") {
-           where = { senha_id: formato_id as number } 
-        }
-
-        const all = await this.prisma.pedido.findMany({ where: where, include: { itens: { include: { subitens: { include: { subitem: true } } } } } })
-
-        const itens = all.map((e) =>  e.itens).flat()
-        const subitens = itens.map((e) => e.subitens).flat()
-        const subintesEstoque = subitens.filter(e => e.subitem.controla_estoque)
-
-        const estoque = subintesEstoque.map((e) => ({
-            subitem_id: e.subitem_id,
-            quantidade: Number(e.quantidade),
-            tipo: EstoqueMovimentacaoTipo.VENDA
-        }))
-
-        // salvamos na movimentacao de estoque
-        await this.estoque.salvarVarios(estoque)
-
-
-        // damos um update no estoque atual ed cada subitem
-        const results = await this.prisma.$transaction(
-            estoque.map(e => 
-                this.prisma.estoquePosicao.updateMany({
-                    where: { subitem_id: e.subitem_id },
-                    data: { quantidade_fisica: { decrement: e.quantidade } },
-
-                })
-            )
-        );
-
-        return results
-
-    }
 
 
 

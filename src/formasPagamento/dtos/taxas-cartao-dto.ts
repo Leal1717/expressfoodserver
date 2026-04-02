@@ -9,6 +9,7 @@ export enum TipoCartao {
 }
 
 export class CreateTaxaCartaoDto {
+
     @IsInt()
     terminal_id: number;
 

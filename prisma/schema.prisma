@@ -167,6 +167,7 @@ model EmpresaFormaPagamento {
   @@unique([empresa_id, forma_pagamento_id]) // chave composta
 }
 
+
 enum TipoCartao {
   DEBITO
   CREDITO
@@ -208,6 +209,7 @@ model PedidoPagamento {
   forma_pagamento_id Int
 
   valor Decimal @db.Decimal(10, 2)
+  valor_liquido Decimal @db.Decimal(10, 2) // valor - taxa aplicada (para facilitar para relatorios)
 
   // dinheiro
   troco_para Decimal? @db.Decimal(10, 2)
@@ -216,7 +218,7 @@ model PedidoPagamento {
   terminal_id   Int?
   bandeira_id   Int?
   parcelas      Int?
-  taxa_aplicada Decimal? @db.Decimal(10, 2)
+  taxa_aplicada Decimal? @db.Decimal(10, 2) // taxa usada nezta venda (pq na tabela Terminal tbm tem taxa, mas aquela eh a taxa atual que pode mudar, e aqui eh ums snapshot)
 
   pedido          Pedido                @relation(fields: [pedido_id], references: [id])
   forma_pagamento EmpresaFormaPagamento @relation(fields: [forma_pagamento_id], references: [id])
@@ -486,6 +488,10 @@ model Mesa {
   empresa_id Int
   empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
 
+  // posicionamento no mapa de mesas
+  pos_x Float?
+  pos_y Float?
+
   status MesaStatus @default(LIVRE)
 
   pedidos Pedido[]
@@ -596,7 +602,7 @@ model Pedido {
   terminal    Terminal? @relation(fields: [terminal_id], references: [id], onDelete: SetNull)
 
   usuario_id        Int
-  usuario           Usuario           @relation(fields: [usuario_id], references: [id], onDelete: SetNull)
+  usuario           Usuario           @relation(fields: [usuario_id], references: [id])
   pedido_pagamentos PedidoPagamento[]
 
   @@index([empresa_id])
@@ -637,3 +643,75 @@ model PedidoItemSubitem {
 
   @@map("PedidoItemSubitem")
 }
+
+
+
+
+// ----------------------------------------------------------------------------------------------------------------------- pedidos (historico)
+model VendaHistorico {
+  id            String       @id @default(uuid())
+  empresa_id    Int
+  created_at    DateTime     @default(now())
+  status        PedidoStatus @default(PENDENTE)
+  total         Decimal      @db.Decimal(10, 2)
+  desconto      Decimal      @default(0) @db.Decimal(10, 2)
+  
+  // O Snapshot Completo (Segurança extra)
+  itens_json        Json
+  pagamento_json    Json?
+
+  // Dados do Usuário (Texto puro para não depender da tabela User)
+  usuario_nome  String
+  usuario_email String
+
+  // Relações para Relatórios (Opcionais no DB, mas úteis no Prisma)
+  itens         VendaHistoricoItem[]
+  subitens      VendaHistoricoSubitem[]
+  pagamentos    VendaHistoricoPagamento[]
+
+  @@index([empresa_id])
+}
+
+
+model VendaHistoricoItem {
+  id                String         @id @default(uuid())
+  venda_historico_id String
+  venda_historico    VendaHistorico @relation(fields: [venda_historico_id], references: [id], onDelete: Cascade)
+
+  nome       String
+  preco      Decimal @db.Decimal(10, 2)
+  quantidade Int
+
+  @@index([venda_historico_id])
+}
+
+model VendaHistoricoSubitem {
+  id                String         @id @default(uuid())
+  venda_historico_id String
+  venda_historico    VendaHistorico @relation(fields: [venda_historico_id], references: [id], onDelete: Cascade)
+
+  nome       String
+  preco      Decimal @db.Decimal(10, 2)
+  quantidade Int
+
+  @@index([venda_historico_id])
+}
+
+model VendaHistoricoPagamento {
+  id                String         @id @default(uuid())
+  venda_historico_id String
+  venda_historico    VendaHistorico @relation(fields: [venda_historico_id], references: [id], onDelete: Cascade)
+
+  valor            Decimal @db.Decimal(10, 2)
+  forma_pagamento  String? // "Dinheiro", "Cartão"
+  bandeira_cartao  String?
+  taxa_percentual  Decimal? @db.Decimal(5, 2)
+  
+  // Dados do terminal na hora da venda
+  terminal_nome    String?
+
+  @@index([venda_historico_id])
+}
+
+
+

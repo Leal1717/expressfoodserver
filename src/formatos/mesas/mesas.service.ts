@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Mesa, MesaStatus } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { MesaUpdatePosDto } from './dto';
 
 @Injectable()
 export class MesasService {
@@ -24,6 +25,17 @@ export class MesasService {
 
     async update(data:Mesa) {
         return this.prisma.tenantClient.mesa.update({where: {id: Number(data.id)}, data: data})
+    }
+
+    async updatePosicionamento(data: MesaUpdatePosDto[]) {
+        return this.prisma.tenantClient.$transaction(
+            data.map((mesa) =>
+                this.prisma.tenantClient.mesa.update({
+                    where: { id: Number(mesa.id) },
+                    data: {pos_x: mesa.pos_x,pos_y: mesa.pos_y,},
+                })
+            )
+        );
     }
 
     async delete(id:number) {
