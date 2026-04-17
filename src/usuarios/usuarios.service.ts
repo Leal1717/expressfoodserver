@@ -33,7 +33,8 @@ export class UsuariosService {
     }
 
     async buscarPorEmail(username: string) {
-        return this.prisma.tenantClient.usuario.findFirst({where: { email: username } })
+        const user = await this.prisma.usuario.findFirst({where: { email: username } })
+        return user
     }
 
     async update(data:Usuario) {

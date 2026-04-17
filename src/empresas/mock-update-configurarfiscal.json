@@ -1,0 +1,9 @@
+{
+  "usa_fiscal": true,
+  "inscricao_estadual": "1234567890",
+  "inscricao_municipal": null,
+  "crt": "SIMPLES_NACIONAL",
+  "ambiente_fiscal": "HOMOLOGACAO",
+  "serie_nfce": 1,
+  "proximo_numero_nfce": 1
+}

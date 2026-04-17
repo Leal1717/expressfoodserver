@@ -1,37 +1,73 @@
-
-import { IsEnum, IsInt, Min, Max, IsOptional, IsNumber } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  Min,
+  Max,
+  IsOptional,
+  IsNumber,
+  IsString,
+  IsArray,
+  ValidateNested
+} from 'class-validator';
 import { Type } from 'class-transformer';
-import { PartialType } from '@nestjs/mapped-types';
 
 export enum TipoCartao {
   DEBITO = 'DEBITO',
   CREDITO = 'CREDITO',
 }
 
-export class CreateTaxaCartaoDto {
+//
+// 👉 BASE (reaproveitável)
+//
+export class BaseTaxaCartaoDto {
 
-    @IsInt()
-    terminal_id: number;
+  @IsInt()
+  bandeira_id: number;
 
-    @IsInt()
-    bandeira_id: number;
+  @IsEnum(TipoCartao)
+  tipo: TipoCartao;
 
-    @IsEnum(TipoCartao)
-    tipo: TipoCartao;
+  @IsInt()
+  @Min(1)
+  @Max(12)
+  parcelas: number;
 
-    @IsInt()
-    @Min(1)
-    @Max(12)
-    parcelas: number;
+  @IsInt()
+  prazo_recebimento: number // dias (2, 14, 30...): number;
 
-    @Type(() => Number)
-    @IsNumber({ maxDecimalPlaces: 2 })
-    taxa_percentual: number;
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2 })
+  taxa_percentual: number;
 
-    @IsOptional()
-    @Type(() => Number)
-    @IsNumber({ maxDecimalPlaces: 2 })
-    taxa_fixa?: number;
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2 })
+  taxa_fixa?: number;
 }
 
-export class UpdateTaxaCartaoDto extends PartialType(CreateTaxaCartaoDto) {}
+//
+// 👉 CREATE taxa (quando já tem provedor)
+//
+export class CreateTaxaCartaoDto extends BaseTaxaCartaoDto {
+
+  @IsInt()
+  provedor_id: number;
+}
+
+//
+// 👉 CREATE taxa (sem provedor - usado no createComTaxas)
+//
+export class CreateTaxaCartaoInputDto extends BaseTaxaCartaoDto {}
+
+
+
+//
+// 👉 UPSERT taxa (usado no update)
+//
+export class UpsertTaxaCartaoDto extends BaseTaxaCartaoDto {
+
+  @IsOptional()
+  @IsInt()
+  id?: number;
+}
+

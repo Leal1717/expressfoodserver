@@ -40,6 +40,9 @@ export class CreateItemDto {
   @Type(() => Number)
   preco: number;
 
+  @IsInt()
+  tempo_prepaeo: number;
+
   @IsOptional()
   @IsInt()
   @Type(() => Number)
@@ -71,6 +74,9 @@ export class UpdateItemDto {
   @IsNumber({ maxDecimalPlaces: 2 })
   @Type(() => Number)
   preco: number;
+
+  @IsInt()
+  tempo_preparo: number;
 
   @IsOptional()
   @IsInt()

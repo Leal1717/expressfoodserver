@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
 import { TerminaisService } from './terminais.service';
 import { Role, type Terminal } from '@prisma/client';
 import { Roles } from 'src/decorators/role.decorator';
+import { SalvarTerminalDto, UpdateTerminalDto, UpdateTerminalLoginDto } from './dto';
 // import { PlanoEntity } from './planos.entity';
 
 @Roles(Role.OWNER, Role.ADMIN_GERAL ,Role.ADMIN_SEM_FINANCEIRO)
@@ -10,18 +11,32 @@ export class TerminaisController {
 
     constructor(private readonly service : TerminaisService) {}
 
+    @Post("/login")
+    logar(
+        @Body() data: UpdateTerminalLoginDto
+    ) {
+        return this.service.logar(data)
+    }
+
     @Post("/salvar")
     salvar(
-        @Body() data: Terminal
+        @Body() data: SalvarTerminalDto
     ) {
         return this.service.salvar(data)
     }
 
     @Put("/update")
     update(
-        @Body() data: Terminal
+        @Body() data: UpdateTerminalDto
     ) {
         return this.service.update(data)
+    }
+
+    @Patch("/update-ativo/:id")
+    updateAtivo(
+        @Param('id') id : any
+    ) {
+        return this.service.updateAtivo(Number(id))
     }
     
     @Get("/todos")

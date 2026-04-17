@@ -23,31 +23,91 @@ model Plano {
   empresas     Empresa[]
 }
 
+enum CRT {
+  SIMPLES_NACIONAL         // 1
+  SIMPLES_NACIONAL_EXCESSO // 2
+  REGIME_NORMAL            // 3
+}
+
+enum AmbienteFiscal {
+  PRODUCAO
+  HOMOLOGACAO
+}
+
 // ----------------------------------------------------------------------------------------------------------------------- estrutural
 model Empresa {
-  id                        Int                      @id @default(autoincrement())
-  nome_fantasia             String
-  razao_social              String
-  cnpj                      String                   @unique
-  ativo                     Boolean                  @default(true)
-  plano_id                  Int
-  plano                     Plano                    @relation(fields: [plano_id], references: [id])
-  horario_funcionamento     HorarioDeFuncionamento[]
-  usuarios                  Usuario[]
-  classes                   Classe[]
-  subitens                  Subitem[]
-  itens                     Item[]
-  promocoes                 Promocao[]
-  vendas                    Pedido[]
-  impressoras               Impressora[]
-  terminais                 Terminal[]
-  mesas                     Mesa[]
-  comandas                  Comanda[]
-  senhas                    Senha[]
-  estoque_movimentacao      EstoqueMovimentacao[]
-  estoque_posicao           EstoquePosicao[]
-  forma_pagamentos          EmpresaFormaPagamento[]
-  taxas_cartao              TaxaCartao[]
+  id            Int     @id @default(autoincrement())
+  nome_fantasia String
+  razao_social  String
+  cnpj          String  @unique
+  ativo         Boolean @default(true)
+
+  // Fiscal
+  usa_fiscal          Boolean        @default(false) // se false, sistema não exige dados fiscais nos itens
+  inscricao_estadual  String?        // "ISENTO" se isento
+  inscricao_municipal String?        // para NFS-e (serviços)
+  crt                 CRT            @default(SIMPLES_NACIONAL)
+  ambiente_fiscal     AmbienteFiscal @default(HOMOLOGACAO)
+  serie_nfce          Int            @default(1)
+  proximo_numero_nfce Int            @default(1)
+
+  endereco_id Int      @unique
+  endereco    Endereco @relation(fields: [endereco_id], references: [id])
+
+  plano_id              Int
+  plano                 Plano                    @relation(fields: [plano_id], references: [id])
+  horario_funcionamento HorarioDeFuncionamento[]
+  usuarios              Usuario[]
+  classes               Classe[]
+  subitens              Subitem[]
+  itens                 Item[]
+  promocoes             Promocao[]
+  vendas                Pedido[]
+  impressoras           Impressora[]
+  terminais             Terminal[]
+  mesas                 Mesa[]
+  comandas              Comanda[]
+  senhas                Senha[]
+  estoque_movimentacao  EstoqueMovimentacao[]
+  estoque_posicao       EstoquePosicao[]
+  forma_pagamentos      EmpresaFormaPagamento[]
+  taxas_cartao          TaxaCartao[]
+  provedores_pagamento  ProvedorPagamento[]
+  clientes              Cliente[]
+  grupos_fiscais        GrupoFiscal[]
+  motoboys              Motoboy[]
+  zonas_entrega         ZonaEntrega[]
+  eventos               Evento[]
+}
+
+model Endereco {
+  id         Int       @id @default(autoincrement())
+  rua        String
+  numero     String   // string pq pode ser 150a ou 150-B 
+  cep        String
+  bairro     String
+  cidade     String
+  estado     String
+  pais       String    @default("Brasil")
+  empresa    Empresa?
+  cliente    Cliente?  @relation(fields: [cliente_id], references: [id])
+  cliente_id Int?
+
+  pedidos_entrega Pedido[] @relation("EnderecoEntrega")
+}
+
+model Cliente {
+  id        Int        @id @default(autoincrement())
+  nome      String
+  cpf       String
+  telefone  String
+  enderecos Endereco[]
+  pedidos   Pedido[]
+
+  empresa_id Int
+  empresa    Empresa @relation(fields: [empresa_id], references: [id])
+
+  @@index([empresa_id])
 }
 
 model HorarioDeFuncionamento {
@@ -61,7 +121,6 @@ model HorarioDeFuncionamento {
   empresa_id Int
   empresa    Empresa @relation(fields: [empresa_id], references: [id])
 
-  @@unique([dia_id, empresa_id])
   @@index([empresa_id])
 }
 
@@ -78,29 +137,6 @@ model Impressora {
   @@index([empresa_id])
 }
 
-enum TerminalTipo {
-  POS
-  MOBILE
-  PC
-}
-
-model Terminal {
-  id     Int          @id @default(autoincrement())
-  nome   String
-  tipo   TerminalTipo
-  modelo String?
-
-  pedidos Pedido[]
-
-  empresa_id        Int
-  empresa           Empresa           @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
-  taxas_cartao      TaxaCartao[]
-  pedido_pagamentos PedidoPagamento[]
-
-  @@unique([nome, empresa_id])
-  @@index([empresa_id])
-}
-
 model Usuario {
   id       Int    @id @default(autoincrement())
   nome     String
@@ -110,6 +146,8 @@ model Usuario {
   role     Role   @default(ADMIN_GERAL)
 
   ativo Boolean @default(true)
+
+  ultimo_login_terminal_id Int?
 
   empresa_id Int
   empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
@@ -128,6 +166,56 @@ enum Role {
   OPERADOR_GERAL
   OPERADOR_SEM_ESTOQUE
   OPERADOR_COM_FINANCEIRO
+
+  CONTADOR
+}
+
+enum TerminalTipo {
+  POS
+  ADM
+  PDV
+  DELIVERY
+}
+
+enum DeliveryStatus {
+  RECEBIDO
+  CONFIRMADO
+  EM_PRODUCAO
+  AGUARDANDO_MOTOBOY
+  A_CAMINHO
+  ENTREGUE
+  CANCELADO
+}
+
+enum CanalOrigem {
+  WHATSAPP
+  TELEFONE
+  APP_PROPRIO
+  BALCAO
+}
+
+model Terminal {
+  id     Int          @id @default(autoincrement())
+  nome   String
+  tipo   TerminalTipo
+  modelo String?
+  ativo  Boolean      @default(true)
+
+  pedidos Pedido[]
+
+  empresa_id Int
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+
+  provedor_padrao_id Int?
+  provedor_padrao    ProvedorPagamento? @relation(fields: [provedor_padrao_id], references: [id])
+
+  pedido_pagamentos PedidoPagamento[]
+
+  ultimo_login_data       DateTime?
+  ultimo_login_usuario_id Int?
+
+  @@unique([nome, empresa_id])
+  @@index([empresa_id])
 }
 
 // ----------------------------------------------------------------------------------------------------------------------- moedas
@@ -142,9 +230,9 @@ enum TipoFormaPagamento {
 }
 
 model FormaPagamentoGlobal {
-  id                   Int                @id 
-  nome                 String             // Ex: Dinheiro, PIX, Crédito
-  tipo                 TipoFormaPagamento 
+  id                   Int                @id
+  nome                 String // Ex: Dinheiro, PIX, Crédito
+  tipo                 TipoFormaPagamento
   exige_troco          Boolean            @default(false)
   permite_parcelamento Boolean            @default(false)
 
@@ -155,18 +243,17 @@ model FormaPagamentoGlobal {
 }
 
 model EmpresaFormaPagamento {
-  id                    Int     @id @default(autoincrement())
-  empresa_id            Int
-  forma_pagamento_id    Int
-  ativo                 Boolean @default(true) // ativo para a empresa
+  id                 Int     @id @default(autoincrement())
+  empresa_id         Int
+  forma_pagamento_id Int
+  ativo              Boolean @default(true) // ativo para a empresa
 
-  empresa               Empresa              @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
-  forma_pagamento       FormaPagamentoGlobal @relation(fields: [forma_pagamento_id], references: [id], onDelete: Cascade)
-  pedidos_pagamentos    PedidoPagamento[]
+  empresa            Empresa              @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  forma_pagamento    FormaPagamentoGlobal @relation(fields: [forma_pagamento_id], references: [id], onDelete: Cascade)
+  pedidos_pagamentos PedidoPagamento[]
 
   @@unique([empresa_id, forma_pagamento_id]) // chave composta
 }
-
 
 enum TipoCartao {
   DEBITO
@@ -181,50 +268,68 @@ model Bandeira {
   pedido_pagamentos PedidoPagamento[]
 }
 
-model TaxaCartao {
-  id Int @id @default(autoincrement())
-
-  terminal_id Int // <- usa Terminal (POS)
-  bandeira_id Int
-
-  tipo     TipoCartao
-  parcelas Int
-
-  taxa_percentual Decimal  @db.Decimal(5, 2)
-  taxa_fixa       Decimal? @db.Decimal(10, 2)
-
-  terminal Terminal @relation(fields: [terminal_id], references: [id])
-  bandeira Bandeira @relation(fields: [bandeira_id], references: [id])
+model ProvedorPagamento {
+  id               Int    @id @default(autoincrement())
+  nome             String
+  nome_normalizado String
 
   empresa_id Int
   empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
 
+  terminais         Terminal[]
+  taxas             TaxaCartao[]
+  pedido_pagamentos PedidoPagamento[]
+
+  @@unique([nome_normalizado, empresa_id])
+}
+
+model TaxaCartao {
+  id Int @id @default(autoincrement())
+
+  provedor_id Int
+  provedor    ProvedorPagamento @relation(fields: [provedor_id], references: [id], onDelete: Cascade)
+
+  bandeira_id       Int
+  bandeira          Bandeira   @relation(fields: [bandeira_id], references: [id])
+  tipo              TipoCartao
+  parcelas          Int
+  prazo_recebimento Int        @default(30) // dias (2, 14, 30...)
+
+  taxa_percentual Decimal  @db.Decimal(5, 2)
+  taxa_fixa       Decimal? @db.Decimal(10, 2)
+
+  empresa_id Int
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+
+  @@unique([provedor_id, bandeira_id, tipo, parcelas])
   @@index([empresa_id])
 }
 
 model PedidoPagamento {
   id Int @id @default(autoincrement())
 
-  pedido_id          String
-  forma_pagamento_id Int
-
-  valor Decimal @db.Decimal(10, 2)
+  valor         Decimal @db.Decimal(10, 2)
   valor_liquido Decimal @db.Decimal(10, 2) // valor - taxa aplicada (para facilitar para relatorios)
 
-  // dinheiro
-  troco_para Decimal? @db.Decimal(10, 2)
+  troco_para Decimal?
 
-  // cartão
-  terminal_id   Int?
-  bandeira_id   Int?
+  terminal_id Int?
+  terminal    Terminal? @relation(fields: [terminal_id], references: [id])
+
+  // 🔥 NOVO
+  provedor_id Int?
+  provedor    ProvedorPagamento? @relation(fields: [provedor_id], references: [id])
+
+  bandeira_id Int?
+  bandeira    Bandeira? @relation(fields: [bandeira_id], references: [id])
+
   parcelas      Int?
-  taxa_aplicada Decimal? @db.Decimal(10, 2) // taxa usada nezta venda (pq na tabela Terminal tbm tem taxa, mas aquela eh a taxa atual que pode mudar, e aqui eh ums snapshot)
+  taxa_aplicada Decimal? // taxa usada nezta venda (pq na tabela Terminal tbm tem taxa, mas aquela eh a taxa atual que pode mudar, e aqui eh ums snapshot)
 
-  pedido          Pedido                @relation(fields: [pedido_id], references: [id])
-  forma_pagamento EmpresaFormaPagamento @relation(fields: [forma_pagamento_id], references: [id])
-
-  terminal Terminal? @relation(fields: [terminal_id], references: [id])
-  bandeira Bandeira? @relation(fields: [bandeira_id], references: [id])
+  pedido_id                  String
+  pedido                     Pedido                @relation(fields: [pedido_id], references: [id])
+  empresa_forma_pagamento_id Int
+  forma_pagamento            EmpresaFormaPagamento @relation(fields: [empresa_forma_pagamento_id], references: [id])
 }
 
 // ----------------------------------------------------------------------------------------------------------------------- itens, classes, subitens, vendaveis 
@@ -296,6 +401,56 @@ enum ItemTipo {
   COMBO
 }
 
+
+/**
+Minha recomendação (não é pra fazer agora, só pra você decidir)
+Frontend constants para: cfop, csosn, cst_icms, cst_pis, cst_cofins, origem
+
+→ São listas pequenas, extremamente estáveis. Profissionais de fiscal já conhecem esses códigos. Não justifica nenhuma tabela.
+
+Para restaurante, o CFOP se resume a 3 opções práticas:
+
+5101 — venda do que foi produzido no estabelecimento
+5102 — venda de mercadoria adquirida de terceiros (revenda)
+5405 — venda com substituição tributária
+Campo de texto livre para: ncm e cest
+
+→ São milhares de códigos. O profissional de fiscal/contador da empresa sabe o NCM dos produtos dela. Um dropdown de 10.000 itens é pior que digitar.
+
+Opcional no futuro: autocomplete de NCM via API do governo (têm APIs públicas gratuitas para consulta de NCM por descrição) — mas isso é feature, não necessidade inicial.
+*/
+
+// Perfil fiscal reutilizável — o usuário cria uma vez e aplica em vários itens
+model GrupoFiscal {
+  id   Int    @id @default(autoincrement())
+  nome String // Ex: "Alimentos", "Bebidas", "Sobremesas"
+
+  // NCM / CFOP / CEST
+  ncm  String  // 8 dígitos: ex "21069090" (tabela TIPI)
+  cfop String  // 4 dígitos: ex "5102" (venda mercadoria no estado)
+  cest String? // 7 dígitos: só quando há Substituição Tributária
+  origem Int @default(0) // 0=Nacional, 1=Estrangeira importação direta...
+
+  // ICMS — preenche csosn OU cst_icms dependendo do CRT da empresa
+  csosn         String?  // Simples Nacional: "400", "500", "900"...
+  cst_icms      String?  // Regime Normal: "00", "20", "40"...
+  aliquota_icms Decimal? @db.Decimal(5, 2)
+
+  // PIS / COFINS
+  cst_pis         String?
+  aliquota_pis    Decimal? @db.Decimal(5, 2)
+  cst_cofins      String?
+  aliquota_cofins Decimal? @db.Decimal(5, 2)
+
+  empresa_id Int
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+
+  itens Item[]
+
+  @@unique([nome, empresa_id])
+  @@index([empresa_id])
+}
+
 model Item {
   id            Int      @id @default(autoincrement())
   nome          String
@@ -305,6 +460,7 @@ model Item {
   tipo          ItemTipo @default(MERCADORIA)
   ativo         Boolean  @default(true)
   index         Int      @default(0) // para order
+  tempo_preparo Int      @default(0) // em minutos
 
   empresa_id Int
   empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
@@ -322,6 +478,9 @@ model Item {
 
   // relação com vendas
   vendas PedidoItem[]
+
+  grupo_fiscal_id Int?
+  grupo_fiscal    GrupoFiscal? @relation(fields: [grupo_fiscal_id], references: [id])
 
   @@unique([nome, empresa_id])
   @@index([empresa_id])
@@ -460,7 +619,7 @@ model Promocao {
 }
 
 model DiaDaSemana {
-  id             Int       @id 
+  id             Int       @id
   nome_completo  String
   nome_abreviado String
   nome_enum      DayOfWeek
@@ -552,6 +711,58 @@ model Senha {
   @@index([empresa_id])
 }
 
+// ----------------------------------------------------------------------------------- EVENTOS
+model Evento {
+  id Int @id @default(autoincrement())
+
+  nome      String
+  descricao String?
+
+  created_at DateTime @default(now())
+
+  inicio DateTime
+  final  DateTime
+
+  imagem String?
+
+  empresa_id Int
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+
+  @@index([empresa_id])
+}
+
+// ----------------------------------------------------------------------------------------------------------------------- delivery
+
+model Motoboy {
+  id       Int     @id @default(autoincrement())
+  nome     String
+  telefone String
+  ativo    Boolean @default(true)
+
+  empresa_id Int
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+
+  pedidos Pedido[]
+
+  @@index([empresa_id])
+}
+
+model ZonaEntrega {
+  id             Int     @id @default(autoincrement())
+  nome           String  // "Centro", "Água Verde", "Zona Sul"
+  taxa           Decimal @db.Decimal(10, 2)
+  tempo_estimado Int     @default(30) // em minutos
+  ativo          Boolean @default(true)
+
+  empresa_id Int
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+
+  pedidos Pedido[]
+
+  @@unique([nome, empresa_id])
+  @@index([empresa_id])
+}
+
 // ----------------------------------------------------------------------------------------------------------------------- pedidos (vendas)
 
 enum PedidoStatus {
@@ -561,9 +772,11 @@ enum PedidoStatus {
 }
 
 enum PedidoFormato {
+  BALCAO
   MESA
   SENHA
   COMANDA
+  DELIVERY
 }
 
 model Pedido {
@@ -600,6 +813,24 @@ model Pedido {
   // vai ser preenchido so quando a venda for terminada pra depois usarmos pra filtrar relatorios
   terminal_id Int?
   terminal    Terminal? @relation(fields: [terminal_id], references: [id], onDelete: SetNull)
+
+  cliente_id Int? // cliente quando for delivery
+  cliente    Cliente? @relation(fields: [cliente_id], references: [id], onDelete: SetNull)
+
+  // Delivery
+  delivery_status     DeliveryStatus?
+  canal_origem        CanalOrigem?
+  taxa_entrega        Decimal?        @db.Decimal(10, 2)
+  endereco_entrega_id Int?
+  endereco_entrega    Endereco?       @relation("EnderecoEntrega", fields: [endereco_entrega_id], references: [id])
+  motoboy_id          Int?
+  motoboy             Motoboy?        @relation(fields: [motoboy_id], references: [id], onDelete: SetNull)
+  zona_entrega_id     Int?
+  zona_entrega        ZonaEntrega?    @relation(fields: [zona_entrega_id], references: [id], onDelete: SetNull)
+  producao_inicio_at  DateTime?
+  producao_fim_at     DateTime?
+  saiu_at             DateTime?
+  entregue_at         DateTime?
 
   usuario_id        Int
   usuario           Usuario           @relation(fields: [usuario_id], references: [id])
@@ -644,37 +875,33 @@ model PedidoItemSubitem {
   @@map("PedidoItemSubitem")
 }
 
-
-
-
 // ----------------------------------------------------------------------------------------------------------------------- pedidos (historico)
 model VendaHistorico {
-  id            String       @id @default(uuid())
-  empresa_id    Int
-  created_at    DateTime     @default(now())
-  status        PedidoStatus @default(PENDENTE)
-  total         Decimal      @db.Decimal(10, 2)
-  desconto      Decimal      @default(0) @db.Decimal(10, 2)
-  
+  id         String       @id @default(uuid())
+  empresa_id Int
+  created_at DateTime     @default(now())
+  status     PedidoStatus @default(PENDENTE)
+  total      Decimal      @db.Decimal(10, 2)
+  desconto   Decimal      @default(0) @db.Decimal(10, 2)
+
   // O Snapshot Completo (Segurança extra)
-  itens_json        Json
-  pagamento_json    Json?
+  itens_json     Json
+  pagamento_json Json?
 
   // Dados do Usuário (Texto puro para não depender da tabela User)
   usuario_nome  String
   usuario_email String
 
   // Relações para Relatórios (Opcionais no DB, mas úteis no Prisma)
-  itens         VendaHistoricoItem[]
-  subitens      VendaHistoricoSubitem[]
-  pagamentos    VendaHistoricoPagamento[]
+  itens      VendaHistoricoItem[]
+  subitens   VendaHistoricoSubitem[]
+  pagamentos VendaHistoricoPagamento[]
 
   @@index([empresa_id])
 }
 
-
 model VendaHistoricoItem {
-  id                String         @id @default(uuid())
+  id                 String         @id @default(uuid())
   venda_historico_id String
   venda_historico    VendaHistorico @relation(fields: [venda_historico_id], references: [id], onDelete: Cascade)
 
@@ -686,7 +913,7 @@ model VendaHistoricoItem {
 }
 
 model VendaHistoricoSubitem {
-  id                String         @id @default(uuid())
+  id                 String         @id @default(uuid())
   venda_historico_id String
   venda_historico    VendaHistorico @relation(fields: [venda_historico_id], references: [id], onDelete: Cascade)
 
@@ -698,20 +925,17 @@ model VendaHistoricoSubitem {
 }
 
 model VendaHistoricoPagamento {
-  id                String         @id @default(uuid())
+  id                 String         @id @default(uuid())
   venda_historico_id String
   venda_historico    VendaHistorico @relation(fields: [venda_historico_id], references: [id], onDelete: Cascade)
 
-  valor            Decimal @db.Decimal(10, 2)
-  forma_pagamento  String? // "Dinheiro", "Cartão"
-  bandeira_cartao  String?
-  taxa_percentual  Decimal? @db.Decimal(5, 2)
-  
+  valor           Decimal  @db.Decimal(10, 2)
+  forma_pagamento String? // "Dinheiro", "Cartão"
+  bandeira_cartao String?
+  taxa_percentual Decimal? @db.Decimal(5, 2)
+
   // Dados do terminal na hora da venda
-  terminal_nome    String?
+  terminal_nome String?
 
   @@index([venda_historico_id])
 }
-
-
-

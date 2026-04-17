@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common";
 import { Role } from "@prisma/client";
 import { Roles } from "src/decorators/role.decorator";
-import { CreateTaxaCartaoDto, UpdateTaxaCartaoDto } from "./dtos/taxas-cartao-dto";
+import { CreateTaxaCartaoDto,  } from "./dtos/taxas-cartao-dto";
 import { TaxasCartaoService } from "./taxas-cartao.service";
 
 @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
@@ -9,12 +9,14 @@ import { TaxasCartaoService } from "./taxas-cartao.service";
 export class TaxasCartaoController {
     constructor(private readonly service: TaxasCartaoService) {}
 
-    @Post('salvar')
+    @Post('CreateProvedorComTaxasDto')
     async salvar(
         @Body() data: CreateTaxaCartaoDto,
     ) {
         return this.service.create(data);
     }
+
+
 
     @Get('todos')
     async buscarTodos() {
@@ -30,7 +32,7 @@ export class TaxasCartaoController {
 
     @Put('update')
     async update(
-        @Body() data: UpdateTaxaCartaoDto & { id: number },
+        @Body() data: any & { id: number },
     ) {
         return this.service.update(data.id, data);
     }

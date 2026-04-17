@@ -1,5 +1,7 @@
 import { Type } from "class-transformer";
-import { IsEmail, IsInt, IsString, Length, MinLength, ValidateNested } from "class-validator";
+import { IsBoolean, IsEmail, IsEnum, IsInt, IsOptional, IsString, Length, MinLength, ValidateNested } from "class-validator";
+import { SalvarEnderecoDto } from "src/clientes/dto";
+import { AmbienteFiscal, CRT } from "@prisma/client";
 
 
 
@@ -41,10 +43,47 @@ export class SalvarEmpresaDto {
     @ValidateNested()
     @Type(() => SalvarEmpresaDadosEmpresaDto)
     empresa: SalvarEmpresaDadosEmpresaDto
-    
+
     // ----------------------------------------------------- parte do usuario principal
     @ValidateNested()
     @Type(() => SalvarEmpresaDadosUsuarioDto)
     usuario: SalvarEmpresaDadosUsuarioDto
+
+    //--------- parte do endereco
+    @ValidateNested()
+    @Type(() => SalvarEnderecoDto)
+    endereco: SalvarEnderecoDto
+}
+
+// ----------------------------------------------------- configuração fiscal (feita depois do cadastro)
+export class ConfigurarFiscalEmpresaDto {
+    @IsBoolean()
+    usa_fiscal: boolean;
+
+    @IsOptional()
+    @IsString()
+    inscricao_estadual?: string; // "ISENTO" se isento
+
+    @IsOptional()
+    @IsString()
+    inscricao_municipal?: string;
+
+    @IsOptional()
+    @IsEnum(CRT)
+    crt?: CRT;
+
+    @IsOptional()
+    @IsEnum(AmbienteFiscal)
+    ambiente_fiscal?: AmbienteFiscal;
+
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    serie_nfce?: number;
+
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    proximo_numero_nfce?: number;
 }
 

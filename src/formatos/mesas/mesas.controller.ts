@@ -16,6 +16,13 @@ export class MesasController {
         return this.service.salvar(data)
     }
 
+    @Post("/salvar-varias")
+    salvarVarias(
+        @Body() data: Mesa[]
+    ) {
+        return this.service.salvarVarias(data)
+    }
+
     @Put("/update")
     update(
         @Body() data: Mesa

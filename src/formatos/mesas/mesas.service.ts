@@ -2,13 +2,28 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { Mesa, MesaStatus } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MesaUpdatePosDto } from './dto';
+import CustomException from 'src/exceptions/exceptions';
 
 @Injectable()
 export class MesasService {
     constructor(private prisma: PrismaService) {}
 
     async salvar(data:Mesa) {
-        return await this.prisma.tenantClient.mesa.create({data: data})
+        try {
+            const mesa = await this.prisma.tenantClient.mesa.create({data: data})
+            return mesa
+        } catch (error) {
+            return CustomException(error)
+        }
+    }
+
+    async salvarVarias(data:Mesa[]) {
+        try {
+            const mesas= await this.prisma.tenantClient.mesa.createMany({data: data})
+            return mesas
+        } catch (error) {
+            return CustomException(error)
+        }
     }
 
     async buscarTodos() {

@@ -1,9 +1,10 @@
 
 import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
 import { EmpresasService } from './empresas.service';
-import type { Empresa } from '@prisma/client';
+import { Role, type Empresa } from '@prisma/client';
 import { Public } from 'src/decorators/public.decorator';
-import { SalvarEmpresaDto } from './dto';
+import { ConfigurarFiscalEmpresaDto, SalvarEmpresaDto } from './dto';
+import { Roles } from 'src/decorators/role.decorator';
 
 @Controller("api/empresas")
 export class EmpresasController {
@@ -15,6 +16,12 @@ export class EmpresasController {
         @Param('id') id:number
     ) {
         return this.service.buscarPorId(id)
+    }
+
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
+    @Get("logada")
+    async buscarLogada() {
+        return this.service.buscarLogada()
     }
     
     @Public()
@@ -37,6 +44,14 @@ export class EmpresasController {
         @Body() data: Empresa
     ) {
         return this.service.update(data)
+    }
+
+    @Roles(Role.OWNER)
+    @Put("configurar-fiscal")
+    async configurarFiscal(
+        @Body() data: ConfigurarFiscalEmpresaDto
+    ) {
+        return this.service.configurarFiscal(data)
     }
 
 }

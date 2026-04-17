@@ -3,30 +3,45 @@ import { UsuariosService } from 'src/usuarios/usuarios.service';
 import { SignInDto } from './dto';
 import { JwtService } from '@nestjs/jwt';
 import { SessionService } from './session.service';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { ROLE_TERMINAL_MAP } from './role-terminal-map';
 
 @Injectable()
 export class AuthService {
-    constructor(private userService: UsuariosService, private jwtService : JwtService, private session: SessionService) {}
+    constructor(
+        private userService: UsuariosService,
+        private jwtService: JwtService,
+        private session: SessionService,
+        private prisma: PrismaService,
+    ) {}
 
-    async signIn(data:SignInDto) {
+    async signIn(data: SignInDto) {
         const user = await this.userService.buscarPorEmail(data.email)
         if (user?.senha !== data.senha) {
             throw new UnauthorizedException()
         }
 
-        const  {senha, ...result} = user;
- 
+        const { senha, ...result } = user;
+
         const sessionId = crypto.randomUUID();
         this.session.setSession(user.id, sessionId)
 
-        
-        
-        const payload = { sub: user.id, sid:sessionId, usuario_id: user.id, usuario_email: user.email, empresa_id: user.empresa_id, role: user.role };
+        const payload = { sub: user.id, sid: sessionId, usuario_id: user.id, usuario_email: user.email, empresa_id: user.empresa_id, role: user.role };
+
+        const tiposPermitidos = ROLE_TERMINAL_MAP[user.role];
+        const terminais = await this.prisma.terminal.findMany({
+            where: {
+                empresa_id: user.empresa_id,
+                ativo: true,
+                tipo: { in: tiposPermitidos },
+            },
+            select: { id: true, nome: true, tipo: true, modelo: true },
+        });
 
         return {
-            // 💡 Here the JWT secret key that's used for signing the payload 
-            // is the key that was passsed in the JwtModule
             access_token: await this.jwtService.signAsync(payload),
-        }
+            usuario: result,
+            terminais,
+        };
     }
 }

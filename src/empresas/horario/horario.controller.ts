@@ -11,27 +11,23 @@ import { Public } from 'src/decorators/public.decorator';
 export class HorarioController {
     constructor (private service: HorarioService) {}
 
-
-    @Post("/salvar")
+    /** aqui chamamos de SYNC pq ele faz create, update e delete. Ele pega a lista toda e reatualiza tudo no banco */
+    @Post("/sync")
     async create(
         @Body() data: HorarioDeFuncionamento[]
     ) {
-        return this.service.create(data)
-    }
-    
-
-    @Put("/update")
-    async update(
-        @Body() data: HorarioDeFuncionamento[]
-    ) {
-        console.log("asd")
-        return this.service.update(data)
+        return this.service.sync(data)
     }
     
     
     @Get("/todos")
     async buscarTodos() {
         return this.service.buscarTodos()
+    }
+    
+    @Get("/todos-por-dia")
+    async buscarTodosPorDia() {
+        return this.service.buscarTodosPorDia()
     }
     
     

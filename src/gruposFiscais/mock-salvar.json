@@ -1,0 +1,14 @@
+{
+  "nome": "Bebida Alcoólica",
+  "ncm": "22030000",
+  "cfop": "5102",
+  "cest": "0300700",
+  "origem": 0,
+  "csosn": "500",
+  "cst_icms": null,
+  "aliquota_icms": null,
+  "cst_pis": "07",
+  "aliquota_pis": null,
+  "cst_cofins": "07",
+  "aliquota_cofins": null
+}

@@ -1,3 +1,15 @@
+import { ZonasEntregaModule } from './zonasEntrega/zonas-entrega.module';
+import { ZonasEntregaController } from './zonasEntrega/zonas-entrega.controller';
+import { ZonasEntregaService } from './zonasEntrega/zonas-entrega.service';
+import { MotoboyModule } from './motoboys/motoboys.module';
+import { MotoboyController } from './motoboys/motoboys.controller';
+import { MotoboyService } from './motoboys/motoboys.service';
+import { GruposfiscaisModule } from './gruposFiscais/gruposfiscais.module';
+import { GruposfiscaisController } from './gruposFiscais/gruposfiscais.controller';
+import { GruposfiscaisService } from './gruposFiscais/gruposfiscais.service';
+import { ClientesModule } from './clientes/clientes.module';
+import { ClientesController } from './clientes/clientes.controller';
+import { ClientesService } from './clientes/clientes.service';
 import { BandeirasCartaoController } from './formasPagamento/bandeiras-cartao.controller';
 import { TaxasCartaoController } from './formasPagamento/taxas-cartao.controller';
 import { FormasPagamentoController } from './formasPagamento/formas-pagamento.controller';
@@ -61,9 +73,15 @@ import { OperacionalModule } from './operacional/operacional.module';
 import { TerminaisModule } from './terminais/terminais.module';
 import { SessionService } from './auth/session.service';
 import { LoggerMiddleware } from './logger/logger.middleware';
+import { ProvedoresService } from './formasPagamento/provedores.service';
+import { ProvedoresController } from './formasPagamento/provedores.controller';
 
 @Module({
 	imports: [
+		ZonasEntregaModule,
+		MotoboyModule,
+		GruposfiscaisModule,
+		ClientesModule,
 
 		JwtModule.register({
 			global: true,
@@ -96,8 +114,13 @@ import { LoggerMiddleware } from './logger/logger.middleware';
 		OperacionalModule,
 	],
 	controllers: [
+		ZonasEntregaController,
+		MotoboyController,
+		GruposfiscaisController,
+		ClientesController,
 		BandeirasCartaoController,
 		TaxasCartaoController,
+		ProvedoresController,
 		FormasPagamentoController,
 		HorarioController,
 		EstoqueposicaoController,
@@ -109,8 +132,13 @@ import { LoggerMiddleware } from './logger/logger.middleware';
 		MesasController,
 		ClassesController, EmpresasController],
 	providers: [
+		ZonasEntregaService,
+		MotoboyService,
+		GruposfiscaisService,
+		ClientesService,
 		BandeirasCartaoService,
 		TaxasCartaoService,
+		ProvedoresService,
 		FormasPagamentoService,
 		HorarioService,
 		EstoqueposicaoService,
