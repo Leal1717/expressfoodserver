@@ -1,4 +1,5 @@
-import { IsBoolean, IsOptional, IsString, Length } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, IsString, Length } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CriarMotoboyDto {
     @IsString()
@@ -14,5 +15,7 @@ export class CriarMotoboyDto {
 }
 
 export class AtualizarMotoboyDto extends CriarMotoboyDto {
+    @Type(() => Number)
+    @IsInt()
     id: number;
 }

@@ -1,0 +1,6 @@
+{
+  "_comentario": "PUT /api/operacional/delivery/:pedidoId/status — avança o status do delivery. Fluxo normal: RECEBIDO → CONFIRMADO → EM_PRODUCAO → AGUARDANDO_MOTOBOY → A_CAMINHO → ENTREGUE. Pode pular para CANCELADO a qualquer momento.",
+  "_rota": "PUT /api/operacional/delivery/{{pedidoId}}/status",
+  "_valores_possiveis": ["RECEBIDO", "CONFIRMADO", "EM_PRODUCAO", "AGUARDANDO_MOTOBOY", "A_CAMINHO", "ENTREGUE", "CANCELADO"],
+  "status": "CONFIRMADO"
+}

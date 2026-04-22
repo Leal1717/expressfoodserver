@@ -1,0 +1,31 @@
+{
+  "_rota": "POST /api/operacional/salvar",
+  "_comentario": "Lança um pedido na comanda. comanda_id é o nome da comanda criada no passo 1. Pode chamar essa rota várias vezes para adicionar mais pedidos à mesma comanda.",
+  "usuario_id": 1,
+  "terminal_id": 1,
+  "comanda_id": "C001",
+  "total": 93.00,
+  "desconto": 0,
+  "itens": [
+    {
+      "item_id": 4,
+      "quantidade": 1,
+      "preco": 42.00,
+      "subitens": [
+        { "subitem_id": 12, "quantidade": 1, "preco": 2.00 }
+      ]
+    },
+    {
+      "item_id": 5,
+      "quantidade": 1,
+      "preco": 45.00,
+      "subitens": []
+    },
+    {
+      "item_id": 8,
+      "quantidade": 1,
+      "preco": 6.00,
+      "subitens": []
+    }
+  ]
+}

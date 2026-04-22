@@ -1,0 +1,52 @@
+{
+  "_rota": "POST /api/operacional/salvar",
+  "_cenario": "Delivery via WhatsApp — 2 X-Frango (um sem tomate), 2 Águas. delivery_status=RECEBIDO setado automaticamente.",
+  "usuario_id": 1,
+  "terminal_id": 1,
+  "canal_origem": "WHATSAPP",
+  "cliente_id": 1,
+  "taxa_entrega": 8.00,
+  "zona_entrega_id": 1,
+  "total": 65.80,
+  "desconto": 0,
+  "observacao": "Interfone 302 — ligar ao chegar",
+  "itens": [
+    {
+      "_item": "X-Frango (normal)",
+      "item_id": 3,
+      "quantidade": 1,
+      "preco": 24.90,
+      "subitens": [
+        { "_sub": "Pão de Hambúrguer", "subitem_id": 1,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Frango Grelhado",   "subitem_id": 7,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Queijo Cheddar",    "subitem_id": 3,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Alface",            "subitem_id": 4,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Tomate",            "subitem_id": 5,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Molho Especial",    "subitem_id": 6,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Catupiry (adicional)", "subitem_id": 15, "tipo": "ADICIONAL",  "removido": false, "quantidade": 1, "preco": 2.50 }
+      ]
+    },
+    {
+      "_item": "X-Frango (sem tomate)",
+      "item_id": 3,
+      "quantidade": 1,
+      "preco": 24.90,
+      "observacao": "Sem tomate",
+      "subitens": [
+        { "_sub": "Pão de Hambúrguer", "subitem_id": 1, "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Frango Grelhado",   "subitem_id": 7, "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Queijo Cheddar",    "subitem_id": 3, "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Alface",            "subitem_id": 4, "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Tomate (retirar)",  "subitem_id": 5, "tipo": "MATERIA_PRIMA", "removido": true,  "quantidade": 1, "preco": 0 },
+        { "_sub": "Molho Especial",    "subitem_id": 6, "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 }
+      ]
+    },
+    {
+      "_item": "Água Mineral 500ml",
+      "item_id": 10,
+      "quantidade": 2,
+      "preco": 4.00,
+      "subitens": []
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "_comentario": "PUT /api/operacional/pagar — fecha a mesa, libera para LIVRE e gera VendaHistorico.",
+  "mesa": "Mesa 01",
+  "pagamentos": [
+    { "forma_pagamento_id": 1, "valor": 75.80 }
+  ]
+}

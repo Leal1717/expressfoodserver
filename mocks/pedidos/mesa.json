@@ -1,0 +1,50 @@
+{
+  "_rota": "POST /api/operacional/salvar",
+  "_cenario": "Mesa 01 — 2 pessoas. X-Burguer sem alface, X-Bacon com ovo extra, 2 refris.",
+  "usuario_id": 1,
+  "terminal_id": 1,
+  "mesa_id": "Mesa 01",
+  "total": 73.80,
+  "desconto": 0,
+  "itens": [
+    {
+      "_item": "X-Burguer",
+      "item_id": 1,
+      "quantidade": 1,
+      "preco": 22.90,
+      "observacao": "Sem alface",
+      "subitens": [
+        { "_sub": "Pão de Hambúrguer",   "subitem_id": 1,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Carne Bovina 180g",   "subitem_id": 2,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Queijo Cheddar",      "subitem_id": 3,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Alface",              "subitem_id": 4,  "tipo": "MATERIA_PRIMA", "removido": true,  "quantidade": 1, "preco": 0 },
+        { "_sub": "Tomate",              "subitem_id": 5,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Molho Especial",      "subitem_id": 6,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Cebola Caramelizada", "subitem_id": 18, "tipo": "ADICIONAL",     "removido": false, "quantidade": 1, "preco": 2.00 }
+      ]
+    },
+    {
+      "_item": "X-Bacon",
+      "item_id": 2,
+      "quantidade": 1,
+      "preco": 27.90,
+      "subitens": [
+        { "_sub": "Pão de Hambúrguer", "subitem_id": 1,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Carne Bovina 180g", "subitem_id": 2,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Queijo Cheddar",    "subitem_id": 3,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Bacon",             "subitem_id": 8,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 2, "preco": 0 },
+        { "_sub": "Alface",            "subitem_id": 4,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Tomate",            "subitem_id": 5,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Molho Especial",    "subitem_id": 6,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Ovo (adicional)",   "subitem_id": 14, "tipo": "ADICIONAL",     "removido": false, "quantidade": 1, "preco": 3.00 }
+      ]
+    },
+    {
+      "_item": "Coca-Cola 350ml",
+      "item_id": 8,
+      "quantidade": 2,
+      "preco": 6.00,
+      "subitens": []
+    }
+  ]
+}

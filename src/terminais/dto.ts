@@ -10,9 +10,10 @@ export class UpdateTerminalLoginDto {
 
 enum TerminalTipo {
   POS = 'POS',
-  MOBILE = 'MOBILE',
-  PC = 'PC',
+  PDV = 'PDV',
+  DELIVERY = 'DELIVERY',
 }
+
 
 export class SalvarTerminalDto {
     @IsString()

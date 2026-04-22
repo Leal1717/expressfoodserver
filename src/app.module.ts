@@ -1,3 +1,6 @@
+import { LocaisModule } from './locais/locais.module';
+import { LocaisService } from './locais/locais.service';
+import { LocaisController } from './locais/locais.controller';
 import { ZonasEntregaModule } from './zonasEntrega/zonas-entrega.module';
 import { ZonasEntregaController } from './zonasEntrega/zonas-entrega.controller';
 import { ZonasEntregaService } from './zonasEntrega/zonas-entrega.service';
@@ -78,6 +81,7 @@ import { ProvedoresController } from './formasPagamento/provedores.controller';
 
 @Module({
 	imports: [
+		LocaisModule,
 		ZonasEntregaModule,
 		MotoboyModule,
 		GruposfiscaisModule,
@@ -130,8 +134,9 @@ import { ProvedoresController } from './formasPagamento/provedores.controller';
 		SenhasController,
 		ComandasController,
 		MesasController,
-		ClassesController, EmpresasController],
+		ClassesController, EmpresasController, LocaisController],
 	providers: [
+		LocaisService,
 		ZonasEntregaService,
 		MotoboyService,
 		GruposfiscaisService,

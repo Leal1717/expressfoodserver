@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Classe, Item, ItemTipo, PedidoStatus  } from '@prisma/client';
+import { Classe, Item, ItemTipo, PedidoFormato, PedidoStatus  } from '@prisma/client';
 import { CreatePedidoDto } from 'src/operacional/dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -17,22 +17,36 @@ export class PedidosService {
     constructor(private prisma: PrismaService) {}
     
     async salvar(data: CreatePedidoDto) {
+        let formato: PedidoFormato;
+        if (data.mesa_id)                              formato = 'MESA';
+        else if (data.comanda_id)                      formato = 'COMANDA';
+        else if (data.senha_id || data.criar_senha)    formato = 'SENHA';
+        else if (data.canal_origem || data.cliente_id) formato = 'DELIVERY';
+        else                                           formato = 'BALCAO';
+
         return this.prisma.tenantClient.pedido.create({
             data: {
                 total: data.total,
                 desconto: data.desconto,
                 status: data.status ?? 'PENDENTE',
+                formato,
 
-                // empresa_id: 1,
                 usuario_id: data.usuario_id,
-
                 terminal_id: data.terminal_id,
-
                 observacao: data.observacao,
 
                 mesa_id: data.mesa_id,
                 comanda_id: data.comanda_id,
                 senha_id: data.senha_id,
+
+                // Delivery
+                cliente_id: data.cliente_id,
+                canal_origem: data.canal_origem,
+                taxa_entrega: data.taxa_entrega,
+                endereco_entrega_id: data.endereco_entrega_id,
+                zona_entrega_id: data.zona_entrega_id,
+                motoboy_id: data.motoboy_id,
+                delivery_status: data.canal_origem ? 'RECEBIDO' : undefined,
 
                 itens: {
                     create: data.itens.map(i => ({
@@ -44,9 +58,11 @@ export class PedidosService {
                         subitens: {
                             create: i.subitens?.map(s => ({
                                 subitem_id: s.subitem_id,
+                                tipo: s.tipo,
+                                removido: s.removido ?? false,
                                 quantidade: s.quantidade,
                                 preco: s.preco,
-                                desconto: s.desconto
+                                desconto: s.desconto,
                             }))
                         }
                     }))

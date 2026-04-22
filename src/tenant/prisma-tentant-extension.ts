@@ -18,21 +18,30 @@ export const prismaTenantExtension = (tenantService: TenantService) => {
                     // 2. Fazemos o cast para 'any' para o TS parar de reclamar das propriedades
                     const anyArgs = args as any;
 
+                    // Modelos que não possuem empresa_id como campo direto
+                    const SEM_EMPRESA_ID = new Set(['Endereco'])
+
                     // Operações que usam "where"
                     if (['findMany', 'findFirst', 'findUnique', 'update', 'updateMany', 'delete', 'deleteMany', 'count'].includes(operation)) {
-                        anyArgs.where = { ...anyArgs.where, empresa_id: empresaId };
+                        if (!SEM_EMPRESA_ID.has(model)) {
+                            anyArgs.where = { ...anyArgs.where, empresa_id: empresaId };
+                        }
                     }
 
                     // Operações de criação (data)
                     if (operation === 'create') {
-                        anyArgs.data = { ...anyArgs.data, empresa_id: empresaId };
+                        if (!SEM_EMPRESA_ID.has(model)) {
+                            anyArgs.data = { ...anyArgs.data, empresa_id: empresaId };
+                        }
                     }
 
                     if (operation === 'createMany') {
-                        if (Array.isArray(anyArgs.data)) {
-                            anyArgs.data = anyArgs.data.map((item: any) => ({...item,empresa_id: empresaId,}));
-                        } else if (anyArgs.data) {
-                            anyArgs.data.empresa_id = empresaId;
+                        if (!SEM_EMPRESA_ID.has(model)) {
+                            if (Array.isArray(anyArgs.data)) {
+                                anyArgs.data = anyArgs.data.map((item: any) => ({...item,empresa_id: empresaId,}));
+                            } else if (anyArgs.data) {
+                                anyArgs.data.empresa_id = empresaId;
+                            }
                         }
                     }
 

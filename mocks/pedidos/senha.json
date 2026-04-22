@@ -1,0 +1,34 @@
+{
+  "_rota": "POST /api/operacional/salvar",
+  "_cenario": "Senha gerada automaticamente — X-Burguer com Molho Picante extra e sem Cebola, mais um Suco. O número da senha volta no response (senha.numero) e é usado no PUT /pagar.",
+  "usuario_id": 1,
+  "terminal_id": 1,
+  "criar_senha": true,
+  "total": 33.90,
+  "desconto": 0,
+  "itens": [
+    {
+      "_item": "X-Burguer",
+      "item_id": 1,
+      "quantidade": 1,
+      "preco": 22.90,
+      "subitens": [
+        { "_sub": "Pão de Hambúrguer",   "subitem_id": 1,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Carne Bovina 180g",   "subitem_id": 2,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Queijo Cheddar",      "subitem_id": 3,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Alface",              "subitem_id": 4,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Tomate",              "subitem_id": 5,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Molho Especial",      "subitem_id": 6,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Cebola (retirar)",    "subitem_id": 18, "tipo": "ADICIONAL",     "removido": true,  "quantidade": 1, "preco": 2.00 },
+        { "_sub": "Molho Picante (add)", "subitem_id": 17, "tipo": "ADICIONAL",     "removido": false, "quantidade": 1, "preco": 1.00 }
+      ]
+    },
+    {
+      "_item": "Suco de Laranja Natural 300ml",
+      "item_id": 11,
+      "quantidade": 1,
+      "preco": 9.00,
+      "subitens": []
+    }
+  ]
+}

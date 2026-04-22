@@ -29,7 +29,7 @@ export class ClientesService {
                     bairro: data.endereco.bairro,
                     cidade: data.endereco.cidade,
                     estado: data.endereco.estado,
-                    cliente_id: fnCliente.id,
+                    cliente: { connect: { id: fnCliente.id } },
                 }
             })
             return {cliente: fnCliente, endereco: fnEndereco}
@@ -37,8 +37,12 @@ export class ClientesService {
         }
 
         async adicionarEndereco(data: AdicionarEnderecoDto){
+            const { cliente_id, ...rest } = data
             return this.prisma.tenantClient.endereco.create({
-                data
+                data: {
+                    ...rest,
+                    cliente: { connect: { id: cliente_id } },
+                }
             })
         }
 

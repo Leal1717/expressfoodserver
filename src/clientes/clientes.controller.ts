@@ -7,7 +7,7 @@ import { ClientesService } from './clientes.service';
 import { AdicionarEnderecoDto, SalvarClienteDto } from './dto';
 // import { PlanoEntity } from './planos.entity';
 
-@Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
+@Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.OPERADOR_GERAL, Role.OPERADOR_SEM_ESTOQUE, Role.OPERADOR_COM_FINANCEIRO)
 @Controller("api/clientes")
 export class ClientesController {
 

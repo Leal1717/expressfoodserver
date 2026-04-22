@@ -1,4 +1,4 @@
-import { PedidoStatus,  } from "@prisma/client"
+import { CanalOrigem, DeliveryStatus, ItemSubitemTipo, PedidoStatus } from "@prisma/client"
 import {
   IsString,
   IsNumber,
@@ -8,6 +8,7 @@ import {
   IsBoolean,
   IsArray,
   ValidateNested,
+  ValidateIf,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -17,6 +18,13 @@ export class CreatePedidoItemSubitemDto {
   @IsInt()
   @Type(() => Number)
   subitem_id: number;
+
+  @IsEnum(ItemSubitemTipo)
+  tipo: ItemSubitemTipo;
+
+  @IsOptional()
+  @IsBoolean()
+  removido?: boolean;
 
   @IsNumber({ maxDecimalPlaces: 3 })
   @Type(() => Number)
@@ -109,10 +117,61 @@ export class CreatePedidoDto {
   @IsBoolean()
   criar_senha?: boolean;
 
+  // ── Delivery ──────────────────────────────────────────────────────────────
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  cliente_id?: number;
+
+  @IsOptional()
+  @IsEnum(CanalOrigem)
+  canal_origem?: CanalOrigem;
+
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Type(() => Number)
+  taxa_entrega?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  endereco_entrega_id?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  zona_entrega_id?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  motoboy_id?: number;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreatePedidoItemDto)
   itens: CreatePedidoItemDto[];
+}
+
+// -------------------- ALTERAR STATUS DELIVERY
+
+export class AlterarDeliveryStatusDto {
+  @IsEnum(DeliveryStatus)
+  status: DeliveryStatus;
+
+  @IsOptional()
+  @ValidateIf(o => o.motoboy_id !== null)
+  @IsInt()
+  @Type(() => Number)
+  motoboy_id?: number | null;
+}
+
+// -------------------- COMANDA
+
+export class CriarComandaDto {
+  @IsOptional()
+  @IsString()
+  nome?: string;
 }
 
 // -------------------- QUERY
@@ -153,7 +212,6 @@ export class OperacionalPedirContaDto {
   comanda?: string;
 }
 
-// -------------------- PAGAR
 
 
 
@@ -195,6 +253,11 @@ export class OperacionalPagarDto {
   @Type(() => Number)
   senha?: number;
 
+  // Para balcão e delivery — pagar diretamente pelo ID do pedido
+  @IsOptional()
+  @IsString()
+  pedido_id?: string;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreatePedidoPagamentoDto)
@@ -217,69 +280,3 @@ export class OperacionalResponseFormatoDto {
   @IsString()
   senha?: string;
 }
-
-// export class CreatePedidoDto {
-//   total: number;               // total da venda (sem desconto)
-//   desconto?: number;           // desconto total da venda
-//   status?: PedidoStatus;        // opcional, padrão PENDENTE
-
-//   observacao?: string;
-
-//   usuario_id: number;          // ID do usuario
-//   terminal_id?: number;          // ID do terminal caso exista
-
-//   mesa_id?: string;          // ID da mesa
-//   comanda_id?: string;          // ID da comanda
-//   senha_id?: number;          // ID da senha
-//   criar_senha?: boolean;          // ID da senha
-
-
-
-//   itens: CreatePedidoItemDto[]; // itens da venda
-// }
-
-// export class CreatePedidoItemDto {
-//   item_id: number;             // ID do produto ou combo
-//   quantidade: number;          // quantidade vendida
-//   preco: number;               // preço unitário do item (original)
-//   desconto?: number;           // desconto aplicado nesse item
-//   observacao?: string;
-
-//   subitens?: CreatePedidoItemSubitemDto[]; // subitens opcionais
-// }
-
-// export class CreatePedidoItemSubitemDto {
-//   subitem_id: number;          // ID do subitem
-//   quantidade: number;          // quantidade usada/vendida
-//   preco: number;               // preço do subitem
-//   desconto?: number;           // desconto aplicado no subitem
-// }
-
-
-
-// // filtros de busca
-// export class OperacionalQueryDto {
-//   status?: PedidoStatus;
-//   usuario?: number;
-//   mesa?: string;
-//   comanda?: string;
-//   senha?: number;
-// }
-
-// // 
-// export class OperacionalPedirContaDto {
-//   mesa?: string;
-//   comanda?: string;
-// }
-// // 
-// export class OperacionalPagarDto {
-//   mesa?: string;
-//   comanda?: string;
-//   senha?: number;
-// }
-// // 
-// export class OperacionalResponseFormatoDto {
-//   mesa?: number;
-//   comanda?: string;
-//   senha?: string;
-// }

@@ -11,9 +11,9 @@ export class SenhasService {
     }
 
     async criarSenhaOrdem() : Promise<Senha> {
-        const counted =  await this.prisma.senha.count()
-        const numero = counted + 10
-        return await this.prisma.tenantClient.senha.create({ data: { nome: `${numero}`, numero: numero} })
+        const max = await this.prisma.tenantClient.senha.aggregate({ _max: { numero: true } })
+        const numero = (max._max.numero ?? 0) + 1
+        return await this.prisma.tenantClient.senha.create({ data: { nome: `${numero}`, numero: numero } })
     }
 
     async buscarTodos() {

@@ -10,7 +10,17 @@ export class ItensPdvService {
     }
 
     async buscarEmClasses() {
-        const classes = await this.prisma.classe.findMany({include: {item: {include: {subitens: { include: { subitem: true } } , promocao:{where: {ativo: true}}, combos_as_combo: {include: {item: true}} }}}})
+        const classes = await this.prisma.tenantClient.classe.findMany({
+            include: {
+                item: {
+                    include: {
+                        subitens: { include: { subitem: true } },
+                        promocao:{ where: {ativo: true} }, 
+                        combos_as_combo: {include: {item: true}} 
+                    }
+                }
+            }
+        })
         return  classes
     }
 

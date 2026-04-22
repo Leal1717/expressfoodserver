@@ -1,0 +1,43 @@
+{
+  "_rota": "POST /api/operacional/salvar",
+  "_cenario": "Comanda C001 — Pizza Margherita com Rúcula extra, Salada Caesar sem Presunto, 1 Guaraná.",
+  "usuario_id": 1,
+  "terminal_id": 1,
+  "_nota": "comanda_id deve ser o UUID retornado por POST /api/operacional/comandas/salvar (Comanda.id), não o nome",
+  "comanda_id": "<uuid-da-comanda>",
+  "total": 99.00,
+  "desconto": 0,
+  "itens": [
+    {
+      "_item": "Pizza Margherita",
+      "item_id": 4,
+      "quantidade": 1,
+      "preco": 42.00,
+      "subitens": [
+        { "_sub": "Mussarela", "subitem_id": 9,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Tomate",    "subitem_id": 5,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 3, "preco": 0 },
+        { "_sub": "Rúcula (adicional)", "subitem_id": 12, "tipo": "ADICIONAL", "removido": false, "quantidade": 1, "preco": 2.00 }
+      ]
+    },
+    {
+      "_item": "Salada Caesar",
+      "item_id": 7,
+      "quantidade": 1,
+      "preco": 28.00,
+      "subitens": [
+        { "_sub": "Alface",          "subitem_id": 4,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 2, "preco": 0 },
+        { "_sub": "Frango Grelhado", "subitem_id": 7,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Queijo Cheddar",  "subitem_id": 3,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Presunto",        "subitem_id": 10, "tipo": "ADICIONAL",     "removido": true,  "quantidade": 1, "preco": 2.50 },
+        { "_sub": "Cream Cheese",    "subitem_id": 19, "tipo": "ADICIONAL",     "removido": false, "quantidade": 1, "preco": 3.00 }
+      ]
+    },
+    {
+      "_item": "Guaraná Antarctica 350ml",
+      "item_id": 9,
+      "quantidade": 1,
+      "preco": 6.00,
+      "subitens": []
+    }
+  ]
+}

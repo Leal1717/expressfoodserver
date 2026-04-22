@@ -1,0 +1,8 @@
+{
+  "_rota": "PUT /api/operacional/pagar",
+  "_comentario": "Fecha a comanda: marca todos os pedidos PENDENTES como PAGA, gera VendaHistorico, muda status da comanda para PAGA. Aceita múltiplas formas de pagamento.",
+  "comanda": "C001",
+  "pagamentos": [
+    { "forma_pagamento_id": 1, "valor": 93.00 }
+  ]
+}

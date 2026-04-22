@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
-import {  type Subitem, type Item, Role } from '@prisma/client';
-import { CreatePedidoDto, OperacionalPagarDto, OperacionalPedirContaDto, OperacionalQueryDto } from './dto';
+import { Role } from '@prisma/client';
+import { AlterarDeliveryStatusDto, CriarComandaDto, CreatePedidoDto, OperacionalPagarDto, OperacionalPedirContaDto, OperacionalQueryDto } from './dto';
 import { OperacionalService } from './operacional.service';
 import { MovimentacaoSalvarDto } from 'src/estoque/movimentacao/dto';
 import { Roles } from 'src/decorators/role.decorator';
@@ -47,9 +47,10 @@ export class OperacionalController {
 
     @Get("formato")
     async buscarPorFormato(
-        @Query("tipo") tipo: string
+        @Query("tipo") tipo: string,
+        @Query("desde") desde?: string,
     ) {
-        return this.service.buscarPorFormato(tipo)
+        return this.service.buscarPorFormato(tipo, desde)
     }
 
     @Get("mesas/mapa")
@@ -66,12 +67,36 @@ export class OperacionalController {
         return this.service.buscarMesa(nome)
     }
 
-    @Get("comanda/:nome")
-    async buscarComanda(
-        @Param('nome') nome: string
+    // ------------------------------------------------------------------------------------------------------------------- comanda
+
+    @Post("comandas/salvar")
+    async criarComanda(
+        @Body() data: CriarComandaDto,
     ) {
-        return this.service.buscarComanda(nome)
+        return this.service.criarComanda(data)
     }
+
+    @Get("comandas/todos")
+    async listarComandasAtivas() {
+        return this.service.listarComandasAtivas()
+    }
+
+    @Get("comandas/id/:id")
+    async buscarComanda(
+        @Param('id') id: string
+    ) {
+        return this.service.buscarComanda(id)
+    }
+
+    @Delete("comandas/delete/:id")
+    async cancelarComanda(
+        @Param('id') id: string,
+    ) {
+        return this.service.cancelarComanda(id)
+    }
+
+    
+    // ------------------------------------------------------------------------------------------------------------------- senha
 
     @Get("senha/:nome")
     async buscarSenha(
@@ -83,9 +108,16 @@ export class OperacionalController {
 
     // ------------------------------------------------------------------------------------------------------------------- cozinha
     @Get("kds")
-    async buscarKds(
-    ) {
+    async buscarKds() {
         return this.service.buscarKds()
+    }
+
+    @Put("delivery/:pedidoId/status")
+    async alterarStatusDelivery(
+        @Param("pedidoId") pedidoId: string,
+        @Body() data: AlterarDeliveryStatusDto,
+    ) {
+        return this.service.alterarStatusDelivery(pedidoId, data)
     }
     
 

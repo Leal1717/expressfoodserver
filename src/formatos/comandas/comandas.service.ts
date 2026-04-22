@@ -28,6 +28,6 @@ export class ComandasService {
 
     // ------------------------------------------------------------------------------ status
     async setStatus(id: string, status: ComandaStatus) {
-        return this.prisma.tenantClient.comanda.update({where: {id: id}, data: {status: status} })
+        return this.prisma.tenantClient.comanda.update({ where: { id: id }, data: { status: status } })
     }
 }

@@ -1,13 +1,13 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Classe, EstoqueMovimentacao, EstoqueMovimentacaoTipo, Item, ItemTipo, PedidoStatus  } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreatePedidoDto, OperacionalPagarDto, OperacionalPedirContaDto, OperacionalQueryDto } from './dto';
+import { AlterarDeliveryStatusDto, CriarComandaDto, CreatePedidoDto, OperacionalPagarDto, OperacionalPedirContaDto, OperacionalQueryDto } from './dto';
 import { MesasService } from 'src/formatos/mesas/mesas.service';
 import { ComandasService } from 'src/formatos/comandas/comandas.service';
 import { SenhasService } from 'src/formatos/senhas/senhas.service';
 import { PedidosService } from 'src/pedidos/pedidos.service';
 import { MovimentacaoService } from 'src/estoque/movimentacao/movimentacao.service';
 import { MovimentacaoSalvarDto } from 'src/estoque/movimentacao/dto';
+import { TenantService } from 'src/tenant/tenant.service';
 
 
 /**
@@ -28,7 +28,7 @@ export class OperacionalService {
         private senha: SenhasService,
         private pedido: PedidosService,
         private estoque: MovimentacaoService,
-
+        private tenant: TenantService,
     ) {}
     
 
@@ -77,17 +77,20 @@ export class OperacionalService {
     async pagar(data: OperacionalPagarDto) {
         // 1. Identifica o filtro do pedido
         let wherePedido: any = {};
-        if (data.mesa) wherePedido = { mesa_id: data.mesa };
+        if (data.mesa)       wherePedido = { mesa_id: data.mesa };
         else if (data.comanda) wherePedido = { comanda_id: data.comanda };
-        else if (data.senha) wherePedido = { senha_id: data.senha };
-        else throw new BadRequestException("Informe mesa, comanda ou senha.");
+        else if (data.senha)   wherePedido = { senha_id: data.senha };
+        else if (data.pedido_id) wherePedido = { id: data.pedido_id };
+        else throw new BadRequestException("Informe mesa, comanda, senha ou pedido_id.");
+
+        const empresaId = Number(this.tenant.empresaId);
 
         // 2. Iniciamos UMA ÚNICA transação para tudo
         return await this.prisma.$transaction(async (tx) => {
-            
+
             // A. BUSCA DADOS COMPLETOS (Para Estoque e Histórico)
             const pedidos = await tx.pedido.findMany({
-                where: { ...wherePedido, status: "PENDENTE" },
+                where: { ...wherePedido, status: "PENDENTE", empresa_id: empresaId },
                 include: {
                     usuario: true,
                     itens: {
@@ -166,22 +169,26 @@ export class OperacionalService {
             }
 
             // D. ATUALIZA STATUS OPERACIONAIS
-            // Marca pedidos como pagos e limpa vínculos
+            const formatoFinal = data.mesa ? "MESA"
+                : data.comanda ? "COMANDA"
+                : data.senha   ? "SENHA"
+                : pedidos[0].formato ?? "BALCAO";
+
             await tx.pedido.updateMany({
-                where: wherePedido,
-                data: { 
-                    status: "PAGA", 
-                    mesa_id: null, 
-                    comanda_id: null, 
+                where: { ...wherePedido, empresa_id: empresaId },
+                data: {
+                    status: "PAGA",
+                    mesa_id: null,
+                    comanda_id: null,
                     senha_id: null,
-                    formato: data.mesa ? "MESA" : data.comanda ? "COMANDA" : "SENHA"
+                    formato: formatoFinal,
                 }
             });
 
-            // Libera Mesa/Comanda/Senha usando seus serviços existentes (mas dentro da transação tx)
-            if (data.mesa) await tx.mesa.update({ where: { nome_empresa_id: { nome: data.mesa, empresa_id: pedidos[0].empresa_id } }, data: { status: "LIVRE" } });
-            if (data.comanda) await tx.comanda.update({ where: { nome_empresa_id: { nome: data.comanda, empresa_id: pedidos[0].empresa_id } }, data: { status: "PAGA" } });
-            if (data.senha) await tx.senha.delete({ where: { numero_empresa_id: { numero: data.senha, empresa_id: pedidos[0].empresa_id } } });
+            // Libera Mesa/Comanda/Senha
+            if (data.mesa)    await tx.mesa.update({ where: { nome_empresa_id: { nome: data.mesa, empresa_id: empresaId } }, data: { status: "LIVRE" } });
+            if (data.comanda) await tx.comanda.update({ where: { id: data.comanda }, data: { status: "PAGA" } });
+            if (data.senha)   await tx.senha.delete({ where: { numero_empresa_id: { numero: data.senha, empresa_id: empresaId } } });
 
             return historico;
         });
@@ -213,17 +220,37 @@ export class OperacionalService {
 
 
     
-    async buscarPorFormato(tipo:string) {
-        if (tipo == "mesa") {
-            return this.prisma.tenantClient.pedido.findMany({ where: { NOT: { mesa_id: null }} })
-        }
-        if (tipo == "comanda") {
-            return this.prisma.tenantClient.pedido.findMany({ where: { NOT: { comanda_id: null }} })
-        }
-        if (tipo == "senha") {
-            return this.prisma.tenantClient.pedido.findMany({ where: { NOT: { senha_id: null }} })
-        }
-        throw new BadRequestException("Param da query 'tipo' precisa ser informado com: mesa | comanda | senha")
+    async buscarPorFormato(tipo: string, desde?: string) {
+        const formatos: Record<string, any> = {
+            mesa:    { NOT: { mesa_id: null } },
+            comanda: { NOT: { comanda_id: null } },
+            senha:   { NOT: { senha_id: null } },
+            balcao:  { formato: 'BALCAO' },
+            delivery:{ formato: 'DELIVERY' },
+        };
+        const where = formatos[tipo];
+        if (!where) throw new BadRequestException("Param 'tipo' deve ser: mesa | comanda | senha | balcao | delivery");
+
+        const desdeDate = desde ? new Date(desde) : null;
+
+        return this.prisma.tenantClient.pedido.findMany({
+            where: {
+                ...where,
+                ...(desdeDate ? { created_at: { gte: desdeDate } } : {}),
+            },
+            include: {
+                itens: {
+                    include: {
+                        item: true,
+                        subitens: { include: { subitem: { select: { id: true, nome: true } } } },
+                    },
+                },
+                cliente:          { select: { id: true, nome: true, telefone: true } },
+                endereco_entrega: { select: { id: true, rua: true, numero: true, bairro: true, cidade: true, estado: true } },
+                motoboy:          { select: { id: true, nome: true, telefone: true } },
+            },
+            orderBy: { created_at: 'desc' },
+        });
     }
 
 
@@ -232,14 +259,12 @@ export class OperacionalService {
 
 
     async buscarQuery(query: OperacionalQueryDto) {
-        const tipos = [query.mesa, query.comanda, query.senha]
-        const indefinidos = tipos.filter(e => !e)
-        console.log(indefinidos)
-        if (indefinidos.length == 1 ) {
-            throw new BadRequestException("Mais de um formato foi dado (mesa, comanda, senha). Apenas um desses pode vir nao nulo.")
+        const definidos = [query.mesa, query.comanda, query.senha].filter(Boolean)
+        if (definidos.length > 1) {
+            throw new BadRequestException("Mais de um formato foi dado (mesa, comanda, senha). Apenas um desses pode vir não nulo.")
         }
 
-        return this.prisma.pedido.findMany({
+        return this.prisma.tenantClient.pedido.findMany({
             where: {
                 usuario_id: query.usuario ? Number(query.usuario) : undefined,
                 status: query.status,
@@ -265,17 +290,30 @@ export class OperacionalService {
     }
 
     async mapaDeMesas() {
-        return await this.prisma.mesa.findMany({
+        return await this.prisma.tenantClient.mesa.findMany({
             include: { pedidos: true }
         })
     }
 
     async buscarMesa(nome: string) {
         const total = await this.prisma.tenantClient.pedido.aggregate({_sum: { total: true , desconto: true}, where: { mesa_id : nome } })
-        const item = await this.prisma.tenantClient.mesa.findFirst({ where: {  nome: nome }, include: {  pedidos: { include: { itens: { include: { subitens: true } } } } } })
-        return {
-            ...item, total: total._sum
-        }
+        const item = await this.prisma.tenantClient.mesa.findFirst({
+            where: { nome: nome },
+            include: {
+                pedidos: {
+                    where: { status: 'PENDENTE' },
+                    include: {
+                        itens: {
+                            include: {
+                                item: true,
+                                subitens: { include: { subitem: { select: { id: true, nome: true } } } }
+                            }
+                        }
+                    }
+                }
+            }
+        })
+        return { ...item, total: total._sum }
     }
 
     async buscarSenha(numero: number) {
@@ -287,17 +325,30 @@ export class OperacionalService {
         }
     }
 
-    async buscarComanda(nome: string) {
-        const total = await this.prisma.tenantClient.pedido.aggregate({_sum: { total: true , desconto: true}, where: { comanda_id: nome } })
-        const item = await this.prisma.tenantClient.comanda.findFirst({ where: {  nome: nome }, include: {  pedidos: { include: { itens: { include: { subitens: true } } } } } })
-        return {
-            ...item, total: total._sum
-        }
+    async buscarComanda(id: string) {
+        const total = await this.prisma.tenantClient.pedido.aggregate({_sum: { total: true , desconto: true}, where: { comanda_id: id } })
+        const item = await this.prisma.tenantClient.comanda.findUnique({
+            where: { id: id },
+            include: {
+                pedidos: {
+                    where: { status: 'PENDENTE' },
+                    include: {
+                        itens: {
+                            include: {
+                                item: true,
+                                subitens: { include: { subitem: { select: { id: true, nome: true } } } }
+                            }
+                        }
+                    }
+                }
+            }
+        })
+        return { ...item, total: total._sum }
     }
 
 
     async buscarKds() {
-        const geral = await this.prisma.pedido.findMany({
+        const geral = await this.prisma.tenantClient.pedido.findMany({
             where: {
                 status: "PENDENTE",
             },
@@ -331,7 +382,7 @@ export class OperacionalService {
 
 
     async buscarMovimentacaoPorSubitem(id: number) {
-        return this.prisma.subitem.findFirst({
+        return this.prisma.tenantClient.subitem.findFirst({
             where: { id: id },
             include: { estoque_movimentacao: { orderBy: { created_at: "asc" } } }
         })
@@ -351,9 +402,46 @@ export class OperacionalService {
         if (dto.tipo == "AJUSTE") tipoCalculo = { increment: dto.quantidade }
         if (dto.tipo == "ENTRADA") tipoCalculo = { increment: dto.quantidade }
         if (dto.tipo == "SAIDA") tipoCalculo = { decrement: dto.quantidade }
-        return this.prisma.estoquePosicao.updateMany({
+        return this.prisma.tenantClient.estoquePosicao.updateMany({
             where: { subitem_id: dto.subitem_id },
             data: { quantidade_fisica: tipoCalculo }
+        })
+    }
+
+    async alterarStatusDelivery(pedidoId: string, dto: AlterarDeliveryStatusDto) {
+        return this.prisma.tenantClient.pedido.update({
+            where: { id: pedidoId },
+            data: {
+                delivery_status: dto.status,
+                motoboy_id: dto.motoboy_id !== undefined ? (dto.motoboy_id ?? null) : undefined,
+            },
+        })
+    }
+
+    // ─────────────────────────────────────────────────────── COMANDA
+
+    async criarComanda(data: CriarComandaDto) {
+        return this.prisma.tenantClient.comanda.create({
+            data: { nome: data.nome ?? null },
+        })
+    }
+
+    async listarComandasAtivas() {
+        return this.prisma.tenantClient.comanda.findMany({
+            where: { status: { in: ['OCUPADA', 'CONTA'] } },
+        })
+    }
+
+    async cancelarComanda(id: string) {
+        const empresaId = Number(this.tenant.empresaId)
+        return this.prisma.$transaction(async (tx) => {
+            await tx.pedido.updateMany({
+                where: { comanda_id: id, empresa_id: empresaId, status: 'PENDENTE' },
+                data: { status: 'CANCELADA', comanda_id: null },
+            })
+            return tx.comanda.delete({
+                where: { id: id },
+            })
         })
     }
 

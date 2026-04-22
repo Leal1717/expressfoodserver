@@ -1,0 +1,5 @@
+{
+  "_rota": "PUT /api/operacional/conta",
+  "_comentario": "Sinaliza que o cliente pediu a conta. Muda status da comanda para CONTA — ela para de aceitar novos pedidos.",
+  "comanda": "C001"
+}

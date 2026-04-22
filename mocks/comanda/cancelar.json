@@ -1,0 +1,6 @@
+{
+  "_rota": "DELETE /api/operacional/comandas/delete/:nome",
+  "_comentario": "Cancela a comanda sem passar por pagamento. Marca todos os pedidos pendentes como CANCELADA e deleta a comanda. Usar quando o cliente vai embora sem pagar.",
+  "_exemplo": "DELETE /api/operacional/comandas/delete/C001",
+  "_body": "sem body"
+}

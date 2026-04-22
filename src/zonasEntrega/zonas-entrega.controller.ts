@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
 import { Role } from '@prisma/client';
 import { Roles } from 'src/decorators/role.decorator';
 import { ZonasEntregaService } from './zonas-entrega.service';
-import { AtualizarZonaEntregaDto, CriarZonaEntregaDto } from './dto';
+import { AtualizarZonaEntregaDto, CriarZonaEntregaDto, ImportarZonasDto } from './dto';
 
 @Roles(Role.OWNER, Role.ADMIN_GERAL)
 @Controller('api/zonas-entrega')
@@ -32,5 +32,15 @@ export class ZonasEntregaController {
     @Delete('delete/:id')
     delete(@Param('id') id: number) {
         return this.service.remove(Number(id));
+    }
+
+    @Put('taxa-base')
+    atualizarTaxaBase(@Body('taxa_base') taxa_base: number) {
+        return this.service.atualizarTaxaBase(Number(taxa_base));
+    }
+
+    @Post('importar')
+    importar(@Body() data: ImportarZonasDto) {
+        return this.service.importar(data);
     }
 }

@@ -9,7 +9,7 @@ import { TaxasCartaoService } from "./taxas-cartao.service";
 export class TaxasCartaoController {
     constructor(private readonly service: TaxasCartaoService) {}
 
-    @Post('CreateProvedorComTaxasDto')
+    @Post('salvar')
     async salvar(
         @Body() data: CreateTaxaCartaoDto,
     ) {

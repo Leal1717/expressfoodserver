@@ -1,0 +1,5 @@
+{
+  "_rota": "POST /api/operacional/comandas/salvar",
+  "_comentario": "Cria a comanda. nome é opcional — se omitido, a comanda fica sem nome. Guarde o campo 'nome' do response para usar nos próximos passos.",
+  "nome": "C001"
+}

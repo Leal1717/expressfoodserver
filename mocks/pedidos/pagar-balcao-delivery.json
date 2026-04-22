@@ -1,0 +1,8 @@
+{
+  "_comentario": "PUT /api/operacional/pagar — usado para BALCÃO e DELIVERY. Substituir <pedido_id> pelo id UUID retornado no POST /salvar. Pode pagar com mais de uma forma (ex: dinheiro + pix).",
+  "pedido_id": "<uuid-retornado-no-post>",
+  "pagamentos": [
+    { "forma_pagamento_id": 1, "valor": 50.00 },
+    { "forma_pagamento_id": 2, "valor": 56.90 }
+  ]
+}

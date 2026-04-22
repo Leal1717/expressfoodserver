@@ -750,7 +750,9 @@ model Motoboy {
 model ZonaEntrega {
   id             Int     @id @default(autoincrement())
   nome           String  // "Centro", "Água Verde", "Zona Sul"
-  taxa           Decimal @db.Decimal(10, 2)
+  cidade         String  @default("") // cidade à qual o bairro pertence
+  taxa_base      Decimal @default(0) @db.Decimal(10, 2) // taxa fixa da empresa (repetida por zona para leitura única)
+  taxa           Decimal @db.Decimal(10, 2)              // taxa variável por zona
   tempo_estimado Int     @default(30) // em minutos
   ativo          Boolean @default(true)
 
@@ -759,7 +761,7 @@ model ZonaEntrega {
 
   pedidos Pedido[]
 
-  @@unique([nome, empresa_id])
+  @@unique([nome, cidade, empresa_id])
   @@index([empresa_id])
 }
 
@@ -801,7 +803,7 @@ model Pedido {
 
   // formato de trabalho = COMANDAS
   comanda_id String?
-  comanda    Comanda? @relation(fields: [comanda_id, empresa_id], references: [nome, empresa_id])
+  comanda    Comanda? @relation(fields: [comanda_id], references: [id])
 
   // formato de trabalho = SENHAS
   senha_id Int?
@@ -867,6 +869,9 @@ model PedidoItemSubitem {
 
   subitem_id Int
   subitem    Subitem @relation("PedidoItemSubitem_Subitem", fields: [subitem_id], references: [id])
+
+  tipo     ItemSubitemTipo @default(MATERIA_PRIMA)
+  removido Boolean         @default(false)
 
   quantidade Decimal @db.Decimal(10, 3)
   preco      Decimal @db.Decimal(10, 2)

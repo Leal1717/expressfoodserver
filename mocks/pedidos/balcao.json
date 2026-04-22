@@ -1,0 +1,33 @@
+{
+  "_rota": "POST /api/operacional/salvar",
+  "_cenario": "Balcão — X-Frango sem tomate, com Catupiry extra. Batata frita. Para pagar: PUT /pagar com pedido_id do response.",
+  "usuario_id": 1,
+  "terminal_id": 1,
+  "total": 46.40,
+  "desconto": 0,
+  "observacao": "Para viagem",
+  "itens": [
+    {
+      "_item": "X-Frango",
+      "item_id": 3,
+      "quantidade": 1,
+      "preco": 24.90,
+      "subitens": [
+        { "_sub": "Pão de Hambúrguer", "subitem_id": 1,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Frango Grelhado",   "subitem_id": 7,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Queijo Cheddar",    "subitem_id": 3,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Alface",            "subitem_id": 4,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Tomate",            "subitem_id": 5,  "tipo": "MATERIA_PRIMA", "removido": true,  "quantidade": 1, "preco": 0 },
+        { "_sub": "Molho Especial",    "subitem_id": 6,  "tipo": "MATERIA_PRIMA", "removido": false, "quantidade": 1, "preco": 0 },
+        { "_sub": "Catupiry (adicional)", "subitem_id": 15, "tipo": "ADICIONAL",  "removido": false, "quantidade": 1, "preco": 2.50 }
+      ]
+    },
+    {
+      "_item": "Batata Frita Porção",
+      "item_id": 12,
+      "quantidade": 1,
+      "preco": 18.00,
+      "subitens": []
+    }
+  ]
+}
