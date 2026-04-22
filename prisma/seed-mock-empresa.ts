@@ -10,7 +10,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+// import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
@@ -43,12 +43,12 @@ async function main() {
     console.log(`✅ Empresa: ${empresa.nome_fantasia} (id=${empresa.id})`);
 
     // 3. Usuário OWNER (upsert por email)
-    const senhaHash = await bcrypt.hash('12345', 10);
+    // const senhaHash = await bcrypt.hash('12345', 10);
     const usuario = await prisma.usuario.upsert({
         where: { email: 'leal@gmail.com' },
         create: {
             nome: 'Rennan Leal',
-            senha: senhaHash,
+            senha: '12345',
             email: 'leal@gmail.com',
             telefone: '41992760145',
             role: 'OWNER',
