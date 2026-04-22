@@ -467,6 +467,49 @@ export const API = {
 
     },
 
+    // ── IMAGENS (OCI Object Storage) ──────────────────────────────────────────
+    // Estrutura no bucket: {cnpj_sem_formatacao}/empresa/logo
+    //                      {cnpj_sem_formatacao}/itens/{itemId}
+    // Content-Type preservado. Sobrescreve se já existir.
+    // Todas as rotas: multipart/form-data com campo "file".
+
+    imagens: {
+
+        uploadLogo: {
+            method: 'POST' as const,
+            path: '/api/imagens/logo',
+            auth: true,
+            request: 'multipart/form-data — campo: file (image/*)',
+            response: {} as { url: string },
+        },
+
+        deleteLogo: {
+            method: 'DELETE' as const,
+            path: '/api/imagens/logo',
+            auth: true,
+            response: {} as { ok: boolean },
+        },
+
+        uploadItemImage: {
+            method: 'POST' as const,
+            path: '/api/imagens/itens/:itemId',
+            auth: true,
+            params: {} as { itemId: number },
+            request: 'multipart/form-data — campo: file (image/*)',
+            response: {} as { url: string },
+            // obs: ao deletar o item (DELETE /api/itens/delete/:id) a imagem é deletada automaticamente
+        },
+
+        deleteItemImage: {
+            method: 'DELETE' as const,
+            path: '/api/imagens/itens/:itemId',
+            auth: true,
+            params: {} as { itemId: number },
+            response: {} as { ok: boolean },
+        },
+
+    },
+
     // ── LOCAIS (CSVs imutáveis — estados, municípios, bairros do Brasil) ──────
 
     locais: {

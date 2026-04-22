@@ -1,11 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { Classe, Item, ItemTipo } from '@prisma/client';
+import { ItemTipo } from '@prisma/client';
+import { OciStorageService } from 'src/oci/ocistorage.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { TenantService } from 'src/tenant/tenant.service';
 import { CreateItemDto, UpdateItemDto } from './dto';
 
 @Injectable()
 export class ItensService {
-    constructor(private prisma: PrismaService) {}
+    constructor(
+        private prisma: PrismaService,
+        private tenant: TenantService,
+        private oci: OciStorageService,
+    ) {}
     
     async salvar(data:CreateItemDto) {
         let tipo: ItemTipo = 'PRODUTO'
@@ -100,8 +106,13 @@ export class ItensService {
         })
     }
 
-    async delete(id:number) {
-        return this.prisma.tenantClient.item.delete({where: {id: Number(id)}})
+    async delete(id: number) {
+        const empresa = await this.prisma.empresa.findUnique({
+            where: { id: Number(this.tenant.empresaId) },
+            select: { cnpj: true },
+        });
+        if (empresa) await this.oci.deleteItemImage(empresa.cnpj, id);
+        return this.prisma.tenantClient.item.delete({ where: { id: Number(id) } });
     }
 
 

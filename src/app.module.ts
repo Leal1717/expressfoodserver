@@ -1,3 +1,5 @@
+import { OciModule } from './oci/oci.module';
+import { ImagensController } from './oci/imagens.controller';
 import { LocaisModule } from './locais/locais.module';
 import { LocaisService } from './locais/locais.service';
 import { LocaisController } from './locais/locais.controller';
@@ -81,6 +83,7 @@ import { ProvedoresController } from './formasPagamento/provedores.controller';
 
 @Module({
 	imports: [
+		OciModule,
 		LocaisModule,
 		ZonasEntregaModule,
 		MotoboyModule,
@@ -134,7 +137,7 @@ import { ProvedoresController } from './formasPagamento/provedores.controller';
 		SenhasController,
 		ComandasController,
 		MesasController,
-		ClassesController, EmpresasController, LocaisController],
+		ClassesController, EmpresasController, LocaisController, ImagensController],
 	providers: [
 		LocaisService,
 		ZonasEntregaService,

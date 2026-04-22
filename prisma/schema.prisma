@@ -41,6 +41,7 @@ model Empresa {
   razao_social  String
   cnpj          String  @unique
   ativo         Boolean @default(true)
+  logo_url      String?
 
   // Fiscal
   usa_fiscal          Boolean        @default(false) // se false, sistema não exige dados fiscais nos itens
