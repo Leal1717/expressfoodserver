@@ -40,8 +40,10 @@ export class CreateItemDto {
   @Type(() => Number)
   preco: number;
 
+  @IsOptional()
   @IsInt()
-  tempo_prepaeo: number;
+  @Type(() => Number)
+  tempo_preparo: number;
 
   @IsOptional()
   @IsInt()
@@ -75,8 +77,10 @@ export class UpdateItemDto {
   @Type(() => Number)
   preco: number;
 
+  @IsOptional()
   @IsInt()
-  tempo_preparo: number;
+  @Type(() => Number)
+  tempo_preparo?: number;
 
   @IsOptional()
   @IsInt()

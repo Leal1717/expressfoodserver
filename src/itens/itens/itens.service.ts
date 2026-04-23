@@ -26,6 +26,7 @@ export class ItensService {
                 nome: data.nome,
                 descricao: data.descricao,
                 preco: data.preco,
+                tempo_preparo: data.tempo_preparo ?? 0,
 
                 tipo: tipo,
 
@@ -64,6 +65,7 @@ export class ItensService {
                 nome: data.nome,
                 descricao: data.descricao,
                 preco: data.preco,
+                tempo_preparo: data.tempo_preparo ?? 0,
 
                 classe_id: data.classe_id,
 
@@ -92,9 +94,11 @@ export class ItensService {
         return this.prisma.$queryRaw`UPDATE Item SET ativo = NOT ativo WHERE id = ${id}`
     }
 
+    
     async buscarTodos() {
         return this.prisma.tenantClient.item.findMany({include: { classe: true }})
     }
+
 
     async buscarPorId(id: number) {
         return this.prisma.tenantClient.item.findUnique({
@@ -105,6 +109,7 @@ export class ItensService {
             }
         })
     }
+
 
     async delete(id: number) {
         const empresa = await this.prisma.empresa.findUnique({
@@ -153,5 +158,8 @@ export class ItensService {
             });
         }
     }
+
+
+    
     
 }
