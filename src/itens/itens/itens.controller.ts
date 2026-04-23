@@ -22,6 +22,11 @@ export class ItensController {
         return this.service.buscarTodos()
     }
 
+    @Get("ingressos")
+    async buscarIngressos() {
+        return this.service.buscarIngressos()
+    }
+
     @Get("id/:id")
     async buscarPorId(
         @Param('id') id:number

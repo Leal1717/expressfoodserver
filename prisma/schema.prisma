@@ -125,11 +125,18 @@ model HorarioDeFuncionamento {
   @@index([empresa_id])
 }
 
+enum ImpressoraTipo {
+  COZINHA
+  BALCAO
+  RECIBO
+}
+
 model Impressora {
-  id     Int    @id @default(autoincrement())
+  id     Int            @id @default(autoincrement())
   nome   String
   ip     String
   modelo String
+  tipo   ImpressoraTipo @default(COZINHA)
 
   empresa_id Int
   empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
@@ -259,6 +266,7 @@ model EmpresaFormaPagamento {
 enum TipoCartao {
   DEBITO
   CREDITO
+  PIX
 }
 
 model Bandeira {
@@ -290,10 +298,10 @@ model TaxaCartao {
   provedor_id Int
   provedor    ProvedorPagamento @relation(fields: [provedor_id], references: [id], onDelete: Cascade)
 
-  bandeira_id       Int
-  bandeira          Bandeira   @relation(fields: [bandeira_id], references: [id])
+  bandeira_id       Int?
+  bandeira          Bandeira?  @relation(fields: [bandeira_id], references: [id])
   tipo              TipoCartao
-  parcelas          Int
+  parcelas          Int        @default(1)
   prazo_recebimento Int        @default(30) // dias (2, 14, 30...)
 
   taxa_percentual Decimal  @db.Decimal(5, 2)
@@ -400,6 +408,8 @@ enum ItemTipo {
   PRODUTO
   MERCADORIA
   COMBO
+  INGRESSO
+  ENTRADA
 }
 
 

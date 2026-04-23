@@ -14,21 +14,25 @@ export class TaxasCartaoService {
 
    
     async create(data: CreateTaxaCartaoDto) {
-        if (data.tipo === TipoCartao.DEBITO && data.parcelas > 1) {
-            throw new BadRequestException('Débito não pode ter parcelas');
+        if ((data.tipo === TipoCartao.DEBITO || data.tipo === TipoCartao.PIX) && (data.parcelas ?? 1) > 1) {
+            throw new BadRequestException(`${data.tipo} não pode ter parcelas`);
         }
-        
+
+        if (data.tipo !== TipoCartao.PIX && !data.bandeira_id) {
+            throw new BadRequestException('bandeira_id é obrigatório para cartão');
+        }
+
         const exists = await this.prisma.tenantClient.taxaCartao.findFirst({
             where: {
                 provedor_id: data.provedor_id,
-                bandeira_id: data.bandeira_id,
+                bandeira_id: data.bandeira_id ?? null,
                 tipo: data.tipo,
-                parcelas: data.parcelas,
+                parcelas: data.parcelas ?? 1,
             },
         });
 
         if (exists) {
-            throw new BadRequestException(`Taxa já cadastrada para esse provedor (bandeira ${data.bandeira_id}, tipo ${data.tipo}, parcelas ${data.parcelas})`);
+            throw new BadRequestException(`Taxa já cadastrada para esse provedor (tipo ${data.tipo}${data.bandeira_id ? `, bandeira ${data.bandeira_id}` : ''}, parcelas ${data.parcelas ?? 1})`);
         }
 
         const provedorExists = await this.prisma.tenantClient.provedorPagamento.findFirst({
@@ -39,7 +43,9 @@ export class TaxasCartaoService {
             throw new BadRequestException('Provedor não cadastrado');
         }
 
-        return this.prisma.tenantClient.taxaCartao.create({data});
+        return this.prisma.tenantClient.taxaCartao.create({
+            data: { ...data, parcelas: data.parcelas ?? 1 },
+        });
     }
 
 

@@ -14,6 +14,7 @@ import { Type } from 'class-transformer';
 export enum TipoCartao {
   DEBITO = 'DEBITO',
   CREDITO = 'CREDITO',
+  PIX = 'PIX',
 }
 
 //
@@ -21,16 +22,18 @@ export enum TipoCartao {
 //
 export class BaseTaxaCartaoDto {
 
+  @IsOptional()
   @IsInt()
-  bandeira_id: number;
+  bandeira_id?: number;
 
   @IsEnum(TipoCartao)
   tipo: TipoCartao;
 
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(12)
-  parcelas: number;
+  parcelas?: number;
 
   @IsInt()
   prazo_recebimento: number // dias (2, 14, 30...): number;

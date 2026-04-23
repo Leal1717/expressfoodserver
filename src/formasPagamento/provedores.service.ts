@@ -97,7 +97,7 @@ export class ProvedoresService {
 
             for (const taxa of data.taxas) {
 
-                if (taxa.tipo === TipoCartao.DEBITO && taxa.parcelas > 1) {
+                if (taxa.tipo === TipoCartao.DEBITO &&(taxa.parcelas && taxa.parcelas > 1)) {
                     throw new BadRequestException('Débito não pode ter parcelas');
                 }
 

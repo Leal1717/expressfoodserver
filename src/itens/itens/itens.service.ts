@@ -14,12 +14,10 @@ export class ItensService {
     ) {}
     
     async salvar(data:CreateItemDto) {
-        let tipo: ItemTipo = 'PRODUTO'
-        if (!data.subitens || data.subitens.length == 0) {
-            tipo = 'MERCADORIA'
-        }
-        if (data.combo_itens && data.combo_itens.length > 0) {
-            tipo = 'COMBO'
+        let tipo: ItemTipo = data.tipo_fixo ?? 'PRODUTO'
+        if (!data.tipo_fixo) {
+            if (!data.subitens || data.subitens.length == 0) tipo = 'MERCADORIA'
+            if (data.combo_itens && data.combo_itens.length > 0) tipo = 'COMBO'
         }
         return this.prisma.tenantClient.item.create({
             data: {
@@ -51,12 +49,10 @@ export class ItensService {
 
 
     async update(data:UpdateItemDto) {
-        let tipo: ItemTipo = 'PRODUTO'
-        if (!data.subitens || data.subitens.length == 0) {
-            tipo = 'MERCADORIA'
-        }
-        if (data.combo_itens && data.combo_itens.length > 0) {
-            tipo = 'COMBO'
+        let tipo: ItemTipo = data.tipo_fixo ?? 'PRODUTO'
+        if (!data.tipo_fixo) {
+            if (!data.subitens || data.subitens.length == 0) tipo = 'MERCADORIA'
+            if (data.combo_itens && data.combo_itens.length > 0) tipo = 'COMBO'
         }
         console.log("tipo: ", tipo)
         return this.prisma.tenantClient.item.update({
@@ -98,6 +94,12 @@ export class ItensService {
     
     async buscarTodos() {
         return this.prisma.tenantClient.item.findMany({include: { classe: true }})
+    }
+
+    async buscarIngressos() {
+        return this.prisma.tenantClient.item.findMany({
+            where: { tipo: { in: ['INGRESSO', 'ENTRADA'] } },
+        })
     }
 
 

@@ -1,4 +1,4 @@
-import { IsInt, IsNumber, IsOptional, IsEnum, IsArray, ValidateNested, IsString } from 'class-validator';
+import { IsInt, IsNumber, IsOptional, IsEnum, IsArray, ValidateNested, IsString, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ItemSubitemTipo } from "@prisma/client"
 
@@ -50,6 +50,10 @@ export class CreateItemDto {
   @Type(() => Number)
   classe_id?: number;
 
+  @IsOptional()
+  @IsIn(['INGRESSO', 'ENTRADA'])
+  tipo_fixo?: 'INGRESSO' | 'ENTRADA';
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ItemSubitemDto)
@@ -86,6 +90,10 @@ export class UpdateItemDto {
   @IsInt()
   @Type(() => Number)
   classe_id?: number;
+
+  @IsOptional()
+  @IsIn(['INGRESSO', 'ENTRADA'])
+  tipo_fixo?: 'INGRESSO' | 'ENTRADA';
 
   @IsArray()
   @ValidateNested({ each: true })
