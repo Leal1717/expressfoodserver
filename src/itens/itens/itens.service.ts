@@ -89,6 +89,7 @@ export class ItensService {
         })
     }
 
+
         
     async updateAtivo(id: number) {
         return this.prisma.$queryRaw`UPDATE Item SET ativo = NOT ativo WHERE id = ${id}`
