@@ -2,6 +2,16 @@ import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
 import { ComandasService } from './comandas.service';
 import { Role, type Comanda } from '@prisma/client';
 import { Roles } from 'src/decorators/role.decorator';
+import { IsInt, IsOptional, IsString } from 'class-validator';
+
+class AbrirEntradaDto {
+    @IsString()
+    nome: string;
+
+    @IsOptional()
+    @IsInt()
+    cliente_id?: number;
+}
 
 @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
 @Controller("api/formatos/comandas")
@@ -41,6 +51,15 @@ export class ComandasController {
         @Param('id') id: string,
     ) {
         return this.service.delete(id)
+    }
 
+    @Post("/abrir-entrada")
+    abrirEntrada(@Body() data: AbrirEntradaDto) {
+        return this.service.abrirEntrada(data.nome, data.cliente_id)
+    }
+
+    @Get("/nome/:nome")
+    buscarPorNome(@Param('nome') nome: string) {
+        return this.service.buscarPorNome(nome)
     }
 }

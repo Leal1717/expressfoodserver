@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { IsInt, IsObject, IsString, ValidateNested } from "class-validator";
+import { IsInt, IsObject, IsOptional, IsString, ValidateNested } from "class-validator";
 
 
 export class SalvarEnderecoDto {
@@ -41,4 +41,17 @@ export class SalvarClienteDto {
     @ValidateNested()
     @Type(()=>SalvarEnderecoDto)
     endereco: SalvarEnderecoDto;
+}
+
+export class CriarClienteRapidoDto {
+    @IsString()
+    nome: string;
+
+    @IsOptional()
+    @IsString()
+    cpf?: string;
+
+    @IsOptional()
+    @IsString()
+    telefone?: string;
 }

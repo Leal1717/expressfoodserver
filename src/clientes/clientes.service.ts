@@ -4,7 +4,7 @@ https://docs.nestjs.com/providers#services
 
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { AdicionarEnderecoDto, SalvarClienteDto } from './dto';
+import { AdicionarEnderecoDto, CriarClienteRapidoDto, SalvarClienteDto } from './dto';
 import { Cliente } from '@prisma/client';
 
 @Injectable()
@@ -52,6 +52,20 @@ export class ClientesService {
             })
         }
     
+        async criarRapido(data: CriarClienteRapidoDto) {
+            return this.prisma.tenantClient.cliente.create({
+                data: { nome: data.nome, cpf: data.cpf ?? '', telefone: data.telefone ?? '' },
+            })
+        }
+
+        async buscarPorCpf(cpf: string) {
+            return this.prisma.tenantClient.cliente.findFirst({ where: { cpf } })
+        }
+
+        async buscarPorTelefone(telefone: string) {
+            return this.prisma.tenantClient.cliente.findFirst({ where: { telefone } })
+        }
+
         async buscarTodos() {
             return this.prisma.tenantClient.cliente.findMany()
         }

@@ -1,17 +1,12 @@
-import { IsEnum, IsIn, IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { TerminalTipo } from '@prisma/client';
 
 export class UpdateTerminalLoginDto {
     @IsInt()
     terminal_id:number;
-    
+
     @IsInt()
     usuario_id:number;
-}
-
-enum TerminalTipo {
-  POS = 'POS',
-  PDV = 'PDV',
-  DELIVERY = 'DELIVERY',
 }
 
 
