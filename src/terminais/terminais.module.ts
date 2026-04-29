@@ -2,12 +2,12 @@ import { TerminaisController } from './terminais.controller';
 import { TerminaisService } from './terminais.service';
 
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { PrismaModule } from 'src/prisma/prisma.module';
+import { TenantModule } from 'src/tenant/tenant.module';
 
 @Module({
-    controllers: [
-        TerminaisController,],
-    providers: [
-        TerminaisService,],
+    imports: [PrismaModule, TenantModule],
+    controllers: [TerminaisController],
+    providers: [TerminaisService],
 })
 export class TerminaisModule { }

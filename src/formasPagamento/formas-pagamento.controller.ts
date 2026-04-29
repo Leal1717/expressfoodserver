@@ -9,11 +9,13 @@ export class FormasPagamentoController {
     constructor(private readonly service: FormasPagamentoService) {}
 
 
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO)
     @Get('todos')
     async buscarTodos() {
         return this.service.findAll();
     }
 
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO)
     @Get('id/:id')
     async buscarPorId(@Param('id') id: number) {
         return this.service.findOne(Number(id));

@@ -4,7 +4,11 @@
       "Bash(npx prisma *)",
       "Bash(npm install *)",
       "Bash(node -e \"const oci = require\\('oci-sdk'\\); console.log\\(typeof oci.objectstorage, Object.keys\\(oci.objectstorage\\).filter\\(k => k.includes\\('Client'\\)\\)\\)\")",
-      "Bash(node -e \"require\\('@types/multer'\\)\")"
+      "Bash(node -e \"require\\('@types/multer'\\)\")",
+      "Read(//c/Users/Dalca/Documents/Github/minifood/auth/front/**)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\Dalca\\Documents\\Github\\minifood\\auth\\front"
     ]
   }
 }

@@ -11,6 +11,7 @@ export class TerminaisController {
 
     constructor(private readonly service : TerminaisService) {}
 
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO, Role.OPERADOR_GERAL, Role.OPERADOR_SEM_ESTOQUE, Role.OPERADOR_COM_FINANCEIRO)
     @Post("/login")
     logar(
         @Body() data: UpdateTerminalLoginDto
@@ -39,11 +40,13 @@ export class TerminaisController {
         return this.service.updateAtivo(Number(id))
     }
     
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO, Role.OPERADOR_GERAL, Role.OPERADOR_SEM_ESTOQUE, Role.OPERADOR_COM_FINANCEIRO)
     @Get("/todos")
     buscarTodos () {
         return this.service.buscarTodos()
     }
-    
+
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO, Role.OPERADOR_GERAL, Role.OPERADOR_SEM_ESTOQUE, Role.OPERADOR_COM_FINANCEIRO)
     @Get("/id/:id")
     buscarPorId (
         @Param('id') id: number,

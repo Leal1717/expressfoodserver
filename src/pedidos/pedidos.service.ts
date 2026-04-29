@@ -39,6 +39,8 @@ export class PedidosService {
                 comanda_id: data.comanda_id,
                 senha_id: data.senha_id,
 
+                cpf_nota: data.cpf_nota,
+
                 // Delivery
                 cliente_id: data.cliente_id,
                 canal_origem: data.canal_origem,

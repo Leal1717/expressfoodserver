@@ -4,10 +4,14 @@ https://docs.nestjs.com/providers#services
 
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { TenantService } from 'src/tenant/tenant.service';
 
 @Injectable()
 export class RelatorialService {
-    constructor(private prisma: PrismaService) {}
+    constructor(
+        private prisma: PrismaService,
+        private tenant: TenantService,
+    ) {}
 
     async buscarTotalizador(inicio: Date, fim: Date) {
         const total = await this.buscarVendaBruta(inicio, fim)
@@ -26,22 +30,63 @@ export class RelatorialService {
 
     async buscarDiario(inicio: Date, fim: Date) {
         const groupedByDay = await this.prisma.$queryRaw`
-            SELECT 
-                DATE(p.updated_at) AS dia,
-                SUM(p.total) AS total, 
-                CAST(COUNT(*) AS SIGNED) AS total_vendas,
-                sum(if (p.status = 'PAGA', p.total, 0)) AS pagas,
-                sum(if (p.status = 'PENDENTE', p.total, 0)) AS pendentes,
-                sum(if (p.status = 'CANCELADA', p.total, 0)) AS canceladas,
-                sum(if (p.status = 'PAGA', p.desconto, 0)) AS pagas_desconto,
-                sum(if (p.status = 'PENDENTE', p.desconto, 0)) AS pendentes_desconto,
-                sum(if (p.status = 'CANCELADA', p.desconto, 0)) AS canceladas_desconto
+            SELECT
+                DATE(p.created_at) AS dia,
+                CAST(COUNT(*) AS SIGNED) AS total_pedidos,
+                CAST(SUM(if(p.status = 'PAGA', 1, 0)) AS SIGNED) AS total_pagos,
+                SUM(if(p.status = 'PAGA', p.total, 0)) AS total_pago,
+                SUM(if(p.status = 'PAGA', p.desconto, 0)) AS total_desconto,
+                SUM(if(p.status = 'CANCELADA', p.total, 0)) AS total_cancelado,
+                SUM(if(p.status = 'PENDENTE', p.total, 0)) AS total_pendente,
+                SUM(if(p.status = 'PAGA', p.total, 0)) / NULLIF(SUM(if(p.status = 'PAGA', 1, 0)), 0) AS ticket_medio
             FROM pedido p
-            WHERE p.updated_at >= DATE(${inicio}) AND p.updated_at < DATE(${fim})
+            WHERE p.created_at >= ${inicio} AND p.created_at < ${fim}
+            AND p.empresa_id = ${Number(this.tenant.empresaId)}
             GROUP BY dia
-            ORDER BY dia asc;
+            ORDER BY dia ASC;
         `;
         return this.formatBigInt(groupedByDay)
+    }
+
+    async buscarSemanal(inicio: Date, fim: Date) {
+        const grouped = await this.prisma.$queryRaw`
+            SELECT
+                YEAR(p.created_at) AS ano,
+                WEEK(p.created_at, 1) AS semana,
+                MIN(DATE(p.created_at)) AS semana_inicio,
+                CAST(COUNT(*) AS SIGNED) AS total_pedidos,
+                CAST(SUM(if(p.status = 'PAGA', 1, 0)) AS SIGNED) AS total_pagos,
+                SUM(if(p.status = 'PAGA', p.total, 0)) AS total_pago,
+                SUM(if(p.status = 'PAGA', p.desconto, 0)) AS total_desconto,
+                SUM(if(p.status = 'CANCELADA', p.total, 0)) AS total_cancelado,
+                SUM(if(p.status = 'PAGA', p.total, 0)) / NULLIF(SUM(if(p.status = 'PAGA', 1, 0)), 0) AS ticket_medio
+            FROM pedido p
+            WHERE p.created_at >= ${inicio} AND p.created_at < ${fim}
+            AND p.empresa_id = ${Number(this.tenant.empresaId)}
+            GROUP BY ano, semana
+            ORDER BY ano ASC, semana ASC;
+        `;
+        return this.formatBigInt(grouped)
+    }
+
+    async buscarMensal(inicio: Date, fim: Date) {
+        const grouped = await this.prisma.$queryRaw`
+            SELECT
+                YEAR(p.created_at) AS ano,
+                MONTH(p.created_at) AS mes,
+                CAST(COUNT(*) AS SIGNED) AS total_pedidos,
+                CAST(SUM(if(p.status = 'PAGA', 1, 0)) AS SIGNED) AS total_pagos,
+                SUM(if(p.status = 'PAGA', p.total, 0)) AS total_pago,
+                SUM(if(p.status = 'PAGA', p.desconto, 0)) AS total_desconto,
+                SUM(if(p.status = 'CANCELADA', p.total, 0)) AS total_cancelado,
+                SUM(if(p.status = 'PAGA', p.total, 0)) / NULLIF(SUM(if(p.status = 'PAGA', 1, 0)), 0) AS ticket_medio
+            FROM pedido p
+            WHERE p.created_at >= ${inicio} AND p.created_at < ${fim}
+            AND p.empresa_id = ${Number(this.tenant.empresaId)}
+            GROUP BY ano, mes
+            ORDER BY ano ASC, mes ASC;
+        `;
+        return this.formatBigInt(grouped)
     }
 
 
@@ -53,27 +98,27 @@ export class RelatorialService {
 // ---------------------------------------------------------------------------------------------------------------------------- DADOS GERAIS (SEM FILTROS)
 
     async buscarVendaBruta(inicio: Date, fim: Date) {
-        return this.prisma.pedido.aggregate({
+        return this.prisma.tenantClient.pedido.aggregate({
             _sum: { total: true, desconto: true },
-            where: { created_at: { gte: inicio, lte: fim } }
+            where: { created_at: { gte: inicio, lt: fim } },
         })
     }
     async buscarPagas(inicio: Date, fim: Date) {
-        return this.prisma.pedido.aggregate({
+        return this.prisma.tenantClient.pedido.aggregate({
             _sum: { total: true, desconto: true },
-            where: { status: "PAGA", created_at: { gte: inicio, lte: fim } }
+            where: { status: 'PAGA', created_at: { gte: inicio, lt: fim } },
         })
     }
     async buscarCanceladas(inicio: Date, fim: Date) {
-        return this.prisma.pedido.aggregate({
+        return this.prisma.tenantClient.pedido.aggregate({
             _sum: { total: true, desconto: true },
-            where: { status: "CANCELADA", created_at: { gte: inicio, lte: fim } }
+            where: { status: 'CANCELADA', created_at: { gte: inicio, lt: fim } },
         })
     }
     async buscarPendentes(inicio: Date, fim: Date) {
-        return this.prisma.pedido.aggregate({
+        return this.prisma.tenantClient.pedido.aggregate({
             _sum: { total: true, desconto: true },
-            where: { status: "PENDENTE" , created_at: { gte: inicio, lte: fim } } 
+            where: { status: 'PENDENTE', created_at: { gte: inicio, lt: fim } },
         })
     }
 
@@ -82,43 +127,41 @@ export class RelatorialService {
 
 // ---------------------------------------------------------------------------------------------------------------------------- DADOS FILTRADOS
     async buscarPorUsuario(inicio: Date, fim: Date) {
-        const groupedByDay = await this.prisma.$queryRaw`
-            SELECT 
+        const grouped = await this.prisma.$queryRaw`
+            SELECT
                 p.usuario_id,
-                SUM(p.total) AS total, 
-                CAST(COUNT(*) AS SIGNED) AS total_vendas,
-                sum(if (p.status = 'PAGA', p.total, 0)) AS pagas,
-                sum(if (p.status = 'PENDENTE', p.total, 0)) AS pendentes,
-                sum(if (p.status = 'CANCELADA', p.total, 0)) AS canceladas,
-                sum(if (p.status = 'PAGA', p.desconto, 0)) AS pagas_desconto,
-                sum(if (p.status = 'PENDENTE', p.desconto, 0)) AS pendentes_desconto,
-                sum(if (p.status = 'CANCELADA', p.desconto, 0)) AS canceladas_desconto
+                CAST(COUNT(*) AS SIGNED) AS total_pedidos,
+                CAST(SUM(if(p.status = 'PAGA', 1, 0)) AS SIGNED) AS total_pagos,
+                SUM(if(p.status = 'PAGA', p.total, 0)) AS total_pago,
+                SUM(if(p.status = 'PAGA', p.desconto, 0)) AS total_desconto,
+                SUM(if(p.status = 'CANCELADA', p.total, 0)) AS total_cancelado,
+                SUM(if(p.status = 'PAGA', p.total, 0)) / NULLIF(SUM(if(p.status = 'PAGA', 1, 0)), 0) AS ticket_medio
             FROM pedido p
-            WHERE p.updated_at >= DATE(${inicio}) AND p.updated_at < DATE(${fim})
+            WHERE p.created_at >= ${inicio} AND p.created_at < ${fim}
+            AND p.empresa_id = ${Number(this.tenant.empresaId)}
             GROUP BY p.usuario_id;
- 
         `;
-        return this.formatBigInt(groupedByDay)
+        return this.formatBigInt(grouped)
     }
 
     async buscarPorTerminal(inicio: Date, fim: Date) {
-        const groupedByDay = await this.prisma.$queryRaw`
-            SELECT 
+        const grouped = await this.prisma.$queryRaw`
+            SELECT
                 p.terminal_id,
-                SUM(p.total) AS total, 
-                CAST(COUNT(*) AS SIGNED) AS total_vendas,
-                sum(if (p.status = 'PAGA', p.total, 0)) AS pagas,
-                sum(if (p.status = 'PENDENTE', p.total, 0)) AS pendentes,
-                sum(if (p.status = 'CANCELADA', p.total, 0)) AS canceladas,
-                sum(if (p.status = 'PAGA', p.desconto, 0)) AS pagas_desconto,
-                sum(if (p.status = 'PENDENTE', p.desconto, 0)) AS pendentes_desconto,
-                sum(if (p.status = 'CANCELADA', p.desconto, 0)) AS canceladas_desconto
+                CAST(COUNT(*) AS SIGNED) AS total_pedidos,
+                CAST(SUM(if(p.status = 'PAGA', 1, 0)) AS SIGNED) AS total_pagos,
+                SUM(if(p.status = 'PAGA', p.total, 0)) AS total_pago,
+                SUM(if(p.status = 'PAGA', p.desconto, 0)) AS total_desconto,
+                SUM(if(p.status = 'CANCELADA', p.total, 0)) AS total_cancelado,
+                SUM(if(p.status = 'PAGA', p.total, 0)) / NULLIF(SUM(if(p.status = 'PAGA', 1, 0)), 0) AS ticket_medio
             FROM pedido p
-            WHERE p.updated_at >= DATE(${inicio}) AND p.updated_at < DATE(${fim})
-            GROUP BY p.usuario_id;
- 
+            JOIN terminal t ON t.id = p.terminal_id
+            WHERE p.created_at >= ${inicio} AND p.created_at < ${fim}
+            AND p.empresa_id = ${Number(this.tenant.empresaId)}
+            AND t.tipo != 'ADM'
+            GROUP BY p.terminal_id;
         `;
-        return this.formatBigInt(groupedByDay)
+        return this.formatBigInt(grouped)
     }
 
 
@@ -142,64 +185,60 @@ export class RelatorialService {
 
 
     
-// ---------------------------------------------------------------------------------------------------------------------------- DADOS FILTRADOS POR ITENS
-    async buscarClasses(inicio: Date, fim: Date) {
-        const groupedByDay = await this.prisma.$queryRaw`
-            SELECT 
-                c.id,
-                c.nome,
-                SUM(pis.quantidade) AS qtd,
-                SUM(pis.quantidade * pis.preco) AS preco_total,
-                SUM(pis.desconto) AS desconto_total,
-                (SUM(pis.quantidade * pis.preco)) - SUM(pis.desconto) AS final
-            FROM pedidoitem pis
-            JOIN item s ON pis.item_id = s.id
-            JOIN pedido p ON pis.pedido_id = p.id
-            JOIN classe c ON s.classe_id = c.id
-            WHERE p.updated_at >= DATE(${inicio}) AND p.updated_at < DATE(${fim}) AND p.status = 'PAGA'
-            GROUP BY c.id;
-        `;
+// ---------------------------------------------------------------------------------------------------------------------------- DADOS FILTRADOS POR ITENS (usa tabelas de histórico flat)
 
-        return this.formatBigInt(groupedByDay)
+    async buscarClasses(inicio: Date, fim: Date) {
+        const grouped = await this.prisma.$queryRaw`
+            SELECT
+                vi.classe_id AS id,
+                vi.classe_nome AS nome,
+                SUM(vi.quantidade) AS qtd,
+                SUM(vi.preco * vi.quantidade) AS preco_total,
+                SUM(vi.desconto) AS desconto_total,
+                SUM(vi.total) AS final
+            FROM VendaHistoricoItem vi
+            WHERE vi.empresa_id = ${Number(this.tenant.empresaId)}
+            AND vi.created_at >= ${inicio} AND vi.created_at < ${fim}
+            AND vi.classe_id IS NOT NULL
+            GROUP BY vi.classe_id, vi.classe_nome
+            ORDER BY final DESC;
+        `;
+        return this.formatBigInt(grouped)
     }
 
     async buscarItens(inicio: Date, fim: Date) {
-        const groupedByDay = await this.prisma.$queryRaw`
-            SELECT 
-                pis.item_id,
-                s.nome,
-                SUM(pis.quantidade) AS qtd,
-                SUM(pis.quantidade * pis.preco) AS preco_total,
-                SUM(pis.desconto) AS desconto_total,
-                (SUM(pis.quantidade * pis.preco)) - SUM(pis.desconto) AS final
-            FROM pedidoitem pis
-            JOIN item s ON pis.item_id = s.id
-            JOIN pedido p ON pis.pedido_id = p.id
-            WHERE p.updated_at >= DATE(${inicio}) AND p.updated_at < DATE(${fim}) AND p.status = 'PAGA'
-            GROUP BY pis.item_id;
+        const grouped = await this.prisma.$queryRaw`
+            SELECT
+                vi.item_id,
+                vi.nome,
+                SUM(vi.quantidade) AS qtd,
+                SUM(vi.preco * vi.quantidade) AS preco_total,
+                SUM(vi.desconto) AS desconto_total,
+                SUM(vi.total) AS final
+            FROM VendaHistoricoItem vi
+            WHERE vi.empresa_id = ${Number(this.tenant.empresaId)}
+            AND vi.created_at >= ${inicio} AND vi.created_at < ${fim}
+            GROUP BY vi.item_id, vi.nome
+            ORDER BY final DESC;
         `;
-
-        return this.formatBigInt(groupedByDay)
+        return this.formatBigInt(grouped)
     }
 
     async buscarSubitens(inicio: Date, fim: Date) {
-        const groupedByDay = await this.prisma.$queryRaw`
-            SELECT 
-                s.nome,
-                SUM(pis.quantidade) AS qtd,
-                SUM(pis.preco * pis.quantidade) AS preco_total,
-                SUM(pis.desconto) AS desconto_total,
-                SUM(pis.preco * pis.quantidade) - SUM(pis.desconto) AS final
-            FROM pedidoitemsubitem pis
-            JOIN subitem s ON pis.subitem_id = s.id
-            JOIN pedidoitem pp ON pp.id = pis.pedido_item_id
-            JOIN pedido p ON pp.pedido_id = p.id
-            WHERE p.updated_at >= DATE(${inicio}) AND p.updated_at < DATE(${fim}) AND p.status = 'PAGA'
-            GROUP BY pis.subitem_id;
-            
+        const grouped = await this.prisma.$queryRaw`
+            SELECT
+                vs.subitem_id,
+                vs.nome,
+                SUM(vs.quantidade) AS qtd,
+                SUM(vs.preco * vs.quantidade) AS preco_total,
+                SUM(vs.total) AS final
+            FROM VendaHistoricoSubitem vs
+            WHERE vs.empresa_id = ${Number(this.tenant.empresaId)}
+            AND vs.created_at >= ${inicio} AND vs.created_at < ${fim}
+            GROUP BY vs.subitem_id, vs.nome
+            ORDER BY final DESC;
         `;
-
-        return this.formatBigInt(groupedByDay)
+        return this.formatBigInt(grouped)
     }
 
 }

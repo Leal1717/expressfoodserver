@@ -1,0 +1,5 @@
+Para a próxima vez que isso acontecer, o processo é sempre o mesmo:
+
+prisma db execute --stdin --schema // para deletar o registro corrompido da _prisma_migrations
+prisma migrate resolve --applied <nome> // para re-registrar com checksum correto
+Para drift (coluna no banco mas sem migration): criar o arquivo SQL manualmente + resolve --applied

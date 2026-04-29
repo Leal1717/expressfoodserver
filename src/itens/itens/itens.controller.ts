@@ -17,16 +17,19 @@ export class ItensController {
         return this.service.salvar(data)
     }
 
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO)
     @Get("todos")
     async buscarTodos() {
         return this.service.buscarTodos()
     }
 
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO)
     @Get("ingressos")
     async buscarIngressos() {
         return this.service.buscarIngressos()
     }
 
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO)
     @Get("id/:id")
     async buscarPorId(
         @Param('id') id:number

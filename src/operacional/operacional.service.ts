@@ -75,9 +75,8 @@ export class OperacionalService {
 
 
     async pagar(data: OperacionalPagarDto) {
-        // 1. Identifica o filtro do pedido
         let wherePedido: any = {};
-        if (data.mesa)       wherePedido = { mesa_id: data.mesa };
+        if (data.mesa)         wherePedido = { mesa_id: data.mesa };
         else if (data.comanda) wherePedido = { comanda_id: data.comanda };
         else if (data.senha)   wherePedido = { senha_id: data.senha };
         else if (data.pedido_id) wherePedido = { id: data.pedido_id };
@@ -85,107 +84,164 @@ export class OperacionalService {
 
         const empresaId = Number(this.tenant.empresaId);
 
-        // 2. Iniciamos UMA ÚNICA transação para tudo
         return await this.prisma.$transaction(async (tx) => {
 
-            // A. BUSCA DADOS COMPLETOS (Para Estoque e Histórico)
+            // A. Busca pedidos com todos os dados necessários
             const pedidos = await tx.pedido.findMany({
                 where: { ...wherePedido, status: "PENDENTE", empresa_id: empresaId },
                 include: {
                     usuario: true,
+                    terminal: { select: { id: true, nome: true } },
                     itens: {
                         include: {
-                            item: true,
-                            subitens: { include: { subitem: true } }
-                        }
-                    }
-                }
+                            item: { include: { classe: { select: { id: true, nome: true } } } },
+                            subitens: { include: { subitem: true } },
+                        },
+                    },
+                },
             });
 
             if (pedidos.length === 0) throw new BadRequestException("Nenhum pedido pendente encontrado.");
 
-            const totalVenda = pedidos.reduce((acc, p) => acc + Number(p.total), 0);
+            const totalVenda   = pedidos.reduce((acc, p) => acc + Number(p.total), 0);
             const totalDesconto = pedidos.reduce((acc, p) => acc + Number(p.desconto), 0);
-
-            // B. MOVIMENTAÇÃO DE ESTOQUE (Integrada na tx)
-            const todosItens = pedidos.flatMap(p => p.itens);
+            const todosItens   = pedidos.flatMap(p => p.itens);
             const todosSubitens = todosItens.flatMap(i => i.subitens);
-            const subitensParaEstoque = todosSubitens.filter(si => si.subitem.controla_estoque);
+            const now = new Date();
 
+            // B. Movimentação de estoque
+            const subitensParaEstoque = todosSubitens.filter(si => si.subitem.controla_estoque);
             for (const si of subitensParaEstoque) {
-                // Registra a movimentação
                 await tx.estoqueMovimentacao.create({
                     data: {
                         subitem_id: si.subitem_id,
                         quantidade: si.quantidade,
                         tipo: "VENDA",
-                        empresa_id: pedidos[0].empresa_id,
-                        referencia: `venda:${pedidos[0].id}`
-                    }
+                        empresa_id: empresaId,
+                        referencia: `venda:${pedidos[0].id}`,
+                    },
                 });
-
-                // Baixa a posição física
                 await tx.estoquePosicao.update({
                     where: { subitem_id: si.subitem_id },
-                    data: { quantidade_fisica: { decrement: si.quantidade } }
+                    data: { quantidade_fisica: { decrement: si.quantidade } },
                 });
             }
 
-            // C. GERAÇÃO DO HISTÓRICO (SNAPSHOT)
+            // C. Busca detalhes das formas de pagamento para o snapshot
+            const formasPagamento = await Promise.all(
+                data.pagamentos.map(p =>
+                    tx.empresaFormaPagamento.findFirst({
+                        where: { id: p.forma_pagamento_id },
+                        include: { forma_pagamento: true },
+                    })
+                )
+            );
+
+            // D. Cria VendaHistorico (snapshot imutável)
             const historico = await tx.vendaHistorico.create({
                 data: {
-                    empresa_id: pedidos[0].empresa_id,
+                    empresa_id: empresaId,
                     total: totalVenda,
                     desconto: totalDesconto,
                     status: "PAGA",
+                    usuario_id: pedidos[0].usuario_id,
                     usuario_nome: pedidos[0].usuario.nome,
                     usuario_email: pedidos[0].usuario.email,
+                    terminal_id: pedidos[0].terminal_id ?? null,
+                    terminal_nome: pedidos[0].terminal?.nome ?? null,
                     itens_json: todosItens as any,
-                    pagamento_json: data.pagamentos as any // Assumindo que seu DTO de pagar recebe os pagamentos
-                }
+                    pagamento_json: data.pagamentos as any,
+                },
             });
 
-            // Grava Itens e Subitens no histórico (para os seus relatórios flat)
-            for (const item of todosItens) {
+            // E. VendaHistoricoItem (flat, sem FK externa)
+            for (const pedidoItem of todosItens) {
+                const itemTotal = Number(pedidoItem.preco) * Number(pedidoItem.quantidade) - Number(pedidoItem.desconto ?? 0);
                 await tx.vendaHistoricoItem.create({
                     data: {
                         venda_historico_id: historico.id,
-                        nome: item.item.nome,
-                        preco: item.preco,
-                        quantidade: Number(item.quantidade)
-                    }
+                        empresa_id: empresaId,
+                        item_id: pedidoItem.item_id,
+                        nome: pedidoItem.item.nome,
+                        classe_id: pedidoItem.item.classe_id ?? null,
+                        classe_nome: pedidoItem.item.classe?.nome ?? null,
+                        quantidade: Number(pedidoItem.quantidade),
+                        preco: pedidoItem.preco,
+                        desconto: pedidoItem.desconto ?? 0,
+                        total: itemTotal,
+                        created_at: now,
+                    },
                 });
             }
 
+            // F. VendaHistoricoSubitem (flat)
             for (const si of todosSubitens) {
+                const siTotal = Number(si.preco) * Number(si.quantidade);
                 await tx.vendaHistoricoSubitem.create({
                     data: {
                         venda_historico_id: historico.id,
+                        empresa_id: empresaId,
+                        subitem_id: si.subitem_id,
                         nome: si.subitem.nome,
+                        quantidade: Number(si.quantidade),
                         preco: si.preco,
-                        quantidade: Number(si.quantidade)
-                    }
+                        total: siTotal,
+                        created_at: now,
+                    },
                 });
             }
 
-            // D. ATUALIZA STATUS OPERACIONAIS
-            const formatoFinal = data.mesa ? "MESA"
+            // G. VendaHistoricoPagamento + PedidoPagamento
+            for (let i = 0; i < data.pagamentos.length; i++) {
+                const pag = data.pagamentos[i];
+                const fp  = formasPagamento[i];
+
+                await tx.vendaHistoricoPagamento.create({
+                    data: {
+                        venda_historico_id: historico.id,
+                        empresa_id: empresaId,
+                        valor: pag.valor,
+                        valor_liquido: pag.valor, // taxa calculada em relatório separado
+                        forma_pagamento: fp?.forma_pagamento.nome ?? 'Desconhecido',
+                        tipo_pagamento: fp?.forma_pagamento.tipo ?? null,
+                        parcelas: pag.parcelas ?? null,
+                        created_at: now,
+                    },
+                });
+
+                await tx.pedidoPagamento.create({
+                    data: {
+                        pedido_id: pedidos[0].id,
+                        empresa_forma_pagamento_id: pag.forma_pagamento_id,
+                        terminal_id: pedidos[0].terminal_id ?? null,
+                        valor: pag.valor,
+                        valor_liquido: pag.valor,
+                        troco_para: pag.troco_para ?? null,
+                        parcelas: pag.parcelas ?? null,
+                    },
+                });
+            }
+
+            // H. Atualiza status dos pedidos
+            const formatoFinal = data.mesa    ? "MESA"
                 : data.comanda ? "COMANDA"
                 : data.senha   ? "SENHA"
                 : pedidos[0].formato ?? "BALCAO";
 
             await tx.pedido.updateMany({
                 where: { ...wherePedido, empresa_id: empresaId },
+                // senha_id só é zerado quando o próprio pagar vai deletar a Senha (fluxo PDV com data.senha)
+                // assim a referência histórica ao número da senha fica preservada no pedido
                 data: {
                     status: "PAGA",
                     mesa_id: null,
                     comanda_id: null,
-                    senha_id: null,
+                    ...(data.senha ? { senha_id: null } : {}),
                     formato: formatoFinal,
-                }
+                },
             });
 
-            // Libera Mesa/Comanda/Senha
+            // I. Libera Mesa / Comanda / Senha
             if (data.mesa)    await tx.mesa.update({ where: { nome_empresa_id: { nome: data.mesa, empresa_id: empresaId } }, data: { status: "LIVRE" } });
             if (data.comanda) await tx.comanda.update({ where: { id: data.comanda }, data: { status: "PAGA" } });
             if (data.senha)   await tx.senha.delete({ where: { numero_empresa_id: { numero: data.senha, empresa_id: empresaId } } });
@@ -323,6 +379,13 @@ export class OperacionalService {
         return {
             ...item, total: total._sum
         }
+    }
+
+    async setSenhaPronta(numero: number, pronta: boolean) {
+        return this.prisma.tenantClient.pedido.updateMany({
+            where: { senha_id: numero, status: 'PENDENTE' },
+            data: { senha_pronta: pronta },
+        })
     }
 
     async buscarComanda(id: string) {

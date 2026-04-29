@@ -1,5 +1,6 @@
 import { Type } from "class-transformer";
-import { IsInt, IsObject, IsOptional, IsString, ValidateNested } from "class-validator";
+import { IsEnum, IsInt, IsObject, IsOptional, IsString, ValidateNested } from "class-validator";
+import { ClienteGenero } from "@prisma/client";
 
 
 export class SalvarEnderecoDto {
@@ -37,6 +38,10 @@ export class SalvarClienteDto {
     @IsString()
     telefone: string;
 
+    @IsOptional()
+    @IsEnum(ClienteGenero)
+    genero?: ClienteGenero;
+
     @IsObject()
     @ValidateNested()
     @Type(()=>SalvarEnderecoDto)
@@ -54,4 +59,8 @@ export class CriarClienteRapidoDto {
     @IsOptional()
     @IsString()
     telefone?: string;
+
+    @IsOptional()
+    @IsEnum(ClienteGenero)
+    genero?: ClienteGenero;
 }

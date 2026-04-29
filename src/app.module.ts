@@ -1,3 +1,4 @@
+import { KdsModule } from './kds/kds.module';
 import { OciModule } from './oci/oci.module';
 import { ImagensController } from './oci/imagens.controller';
 import { LocaisModule } from './locais/locais.module';
@@ -83,6 +84,7 @@ import { ProvedoresController } from './formasPagamento/provedores.controller';
 
 @Module({
 	imports: [
+		KdsModule,
 		OciModule,
 		LocaisModule,
 		ZonasEntregaModule,

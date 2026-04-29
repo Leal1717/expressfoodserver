@@ -42,6 +42,7 @@ async function main() {
                 cnpj: CNPJ,
                 plano_id: 1,
                 endereco_id: endereco.id,
+                tipo_comercio: 'RESTAURANTE',
             },
         });
 

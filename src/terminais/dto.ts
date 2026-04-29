@@ -1,4 +1,4 @@
-import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { TerminalTipo } from '@prisma/client';
 
 export class UpdateTerminalLoginDto {
@@ -17,6 +17,10 @@ export class SalvarTerminalDto {
 
     @IsEnum(TerminalTipo)
     tipo: TerminalTipo;
+
+    @IsBoolean()
+    @IsOptional()
+    faz_pagamento?: boolean;
 
     @IsInt()
     @IsOptional()
@@ -40,6 +44,10 @@ export class UpdateTerminalDto {
     @IsEnum(TerminalTipo)
     @IsOptional()
     tipo?: TerminalTipo;
+
+    @IsBoolean()
+    @IsOptional()
+    faz_pagamento?: boolean;
 
     @IsInt()
     @IsOptional()

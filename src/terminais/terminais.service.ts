@@ -1,17 +1,19 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-// import { PlanoEntity } from './planos.entity';
-import { Repository } from 'typeorm';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import {  Terminal } from '@prisma/client';
+import { TenantService } from 'src/tenant/tenant.service';
+import { Role, TerminalTipo } from '@prisma/client';
 import { SalvarTerminalDto, UpdateTerminalDto, UpdateTerminalLoginDto } from './dto';
 import CustomException from 'src/exceptions/exceptions';
 
+const SENHA_PADRAO_AUTOATENDIMENTO = '123Totem!'
 
 @Injectable()
 export class TerminaisService {
-    
-    constructor(private prisma: PrismaService) {}
+
+    constructor(
+        private prisma: PrismaService,
+        private tenant: TenantService,
+    ) {}
 
     async logar(data: UpdateTerminalLoginDto) {
         return await this.prisma.tenantClient.terminal.update({
@@ -27,8 +29,33 @@ export class TerminaisService {
 
     async salvar(data: SalvarTerminalDto) {
         try {
-            const terminal = await  this.prisma.tenantClient.terminal.create({data: data});
-            return terminal
+            const terminal = await this.prisma.tenantClient.terminal.create({ data })
+
+            // cria usuário AUTOATENDIMENTO automaticamente para totens e tablets
+            if (data.tipo === TerminalTipo.AUTO_TOTEM || data.tipo === TerminalTipo.AUTO_TABLET) {
+                const empresaId = Number(this.tenant.empresaId)
+                const count = await this.prisma.tenantClient.usuario.count({
+                    where: { role: Role.AUTOATENDIMENTO },
+                })
+                const numero = count + 1
+                const prefixo = data.tipo === TerminalTipo.AUTO_TOTEM ? 'TOTEM' : 'TABLET'
+                const nome  = `${prefixo} ${numero}`
+                const email = `${prefixo.toLowerCase()}${numero}@totem.com`
+
+                const usuario = await this.prisma.tenantClient.usuario.create({
+                    data: {
+                        nome,
+                        email,
+                        senha:      SENHA_PADRAO_AUTOATENDIMENTO,
+                        telefone:   '',
+                        role:       Role.AUTOATENDIMENTO,
+                        empresa_id: empresaId,
+                    },
+                })
+                return { terminal, usuario: { id: usuario.id, nome, email, senha: SENHA_PADRAO_AUTOATENDIMENTO } }
+            }
+
+            return { terminal }
         } catch (error) {
             return CustomException(error)
         }

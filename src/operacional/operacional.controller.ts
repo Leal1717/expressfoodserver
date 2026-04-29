@@ -5,7 +5,7 @@ import { OperacionalService } from './operacional.service';
 import { MovimentacaoSalvarDto } from 'src/estoque/movimentacao/dto';
 import { Roles } from 'src/decorators/role.decorator';
 
-@Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.OPERADOR_COM_FINANCEIRO, Role.OPERADOR_GERAL, Role.OPERADOR_SEM_ESTOQUE)
+@Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.OPERADOR_COM_FINANCEIRO, Role.OPERADOR_GERAL, Role.OPERADOR_SEM_ESTOQUE, Role.AUTOATENDIMENTO)
 @Controller("api/operacional")
 export class OperacionalController {
     constructor(private readonly service: OperacionalService) {}
@@ -103,6 +103,14 @@ export class OperacionalController {
         @Param('nome') numero: number
     ) {
         return this.service.buscarSenha(numero)
+    }
+
+    @Put("senha/:numero/pronta")
+    async toggleSenhaPronta(
+        @Param('numero') numero: number,
+        @Body('pronta') pronta: boolean,
+    ) {
+        return this.service.setSenhaPronta(Number(numero), pronta)
     }
     
 

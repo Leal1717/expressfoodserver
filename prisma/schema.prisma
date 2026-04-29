@@ -34,14 +34,35 @@ enum AmbienteFiscal {
   HOMOLOGACAO
 }
 
+enum TipoComercio {
+  RESTAURANTE
+  PIZZARIA
+  CHURRASCARIA
+  FAST_FOOD
+  LANCHONETE
+  PADARIA
+  CAFE
+  SORVETERIA
+  CANTINA_ESCOLAR
+  CONVENIENCIA
+  DISTRIBUIDORA
+  BAR
+  CASA_NOTURNA
+  FOOD_TRUCK
+  HAMBURGUERIA
+  SUSHI
+  OUTRO
+}
+
 // ----------------------------------------------------------------------------------------------------------------------- estrutural
 model Empresa {
   id            Int     @id @default(autoincrement())
   nome_fantasia String
   razao_social  String
   cnpj          String  @unique
-  ativo         Boolean @default(true)
+  ativo         Boolean       @default(true)
   logo_url      String?
+  tipo_comercio TipoComercio?
 
   // Fiscal
   usa_fiscal          Boolean        @default(false) // se false, sistema não exige dados fiscais nos itens
@@ -97,11 +118,18 @@ model Endereco {
   pedidos_entrega Pedido[] @relation("EnderecoEntrega")
 }
 
+enum ClienteGenero {
+  M
+  F
+  O
+}
+
 model Cliente {
-  id        Int        @id @default(autoincrement())
+  id        Int            @id @default(autoincrement())
   nome      String
-  cpf       String
+  cpf       String?
   telefone  String
+  genero    ClienteGenero?
   enderecos Endereco[]
   pedidos   Pedido[]
   comandas  Comanda[]
@@ -109,6 +137,7 @@ model Cliente {
   empresa_id Int
   empresa    Empresa @relation(fields: [empresa_id], references: [id])
 
+  @@unique([cpf, empresa_id])
   @@index([empresa_id])
 }
 
@@ -154,7 +183,8 @@ model Usuario {
   telefone String
   role     Role   @default(ADMIN_GERAL)
 
-  ativo Boolean @default(true)
+  ativo      Boolean @default(true)
+  session_id String?
 
   ultimo_login_terminal_id Int?
 
@@ -176,6 +206,8 @@ enum Role {
   OPERADOR_SEM_ESTOQUE
   OPERADOR_COM_FINANCEIRO
 
+  AUTOATENDIMENTO
+
   CONTADOR
 }
 
@@ -186,6 +218,10 @@ enum TerminalTipo {
   DELIVERY
   ENTRADA
   SAIDA
+  KDS
+  AUTO_TOTEM //auto de autoatendimento
+  AUTO_TABLET //auto de autoatendimento
+
 }
 
 enum DeliveryStatus {
@@ -211,6 +247,9 @@ model Terminal {
   tipo   TerminalTipo
   modelo String?
   ativo  Boolean      @default(true)
+
+  faz_pagamento Boolean @default(false) // se true, terminal exige que cada venda tenha um pagamento associado (caixa, PDV)
+  img_fundo_url String?       // para terminal de autoatendimento, a imagem de fundo do app
 
   pedidos Pedido[]
 
@@ -791,6 +830,12 @@ enum PedidoStatus {
   CANCELADA
 }
 
+enum ProducaoStatus {
+  AGUARDANDO
+  EM_PREPARO
+  PRONTO
+}
+
 enum PedidoFormato {
   BALCAO
   MESA
@@ -811,6 +856,8 @@ model Pedido {
   total      Decimal      @db.Decimal(10, 2)
   desconto   Decimal      @default(0) @db.Decimal(10, 2) // desconto total da venda
 
+  producao_status ProducaoStatus @default(AGUARDANDO)
+
   observacao String? // qualquer coisa que o cliente peca pro pedido todo
 
   itens PedidoItem[]
@@ -824,8 +871,9 @@ model Pedido {
   comanda    Comanda? @relation(fields: [comanda_id], references: [id])
 
   // formato de trabalho = SENHAS
-  senha_id Int?
-  senha    Senha? @relation(fields: [senha_id, empresa_id], references: [numero, empresa_id])
+  senha_id     Int?
+  senha_pronta Boolean @default(false)  // só relevante quando senha_id != null
+  senha        Senha?  @relation(fields: [senha_id, empresa_id], references: [numero, empresa_id])
 
   // vai ser preenchido so quando a venda for terminada pra depois usarmos pra filtrar relatorios
   formato PedidoFormato?
@@ -839,6 +887,7 @@ model Pedido {
 
   // Delivery
   delivery_status     DeliveryStatus?
+  cpf_nota            String?      // CPF do consumidor para nota fiscal (autoatendimento)
   canal_origem        CanalOrigem?
   taxa_entrega        Decimal?        @db.Decimal(10, 2)
   endereco_entrega_id Int?
@@ -856,8 +905,14 @@ model Pedido {
   usuario           Usuario           @relation(fields: [usuario_id], references: [id])
   pedido_pagamentos PedidoPagamento[]
 
-  @@index([empresa_id])
-  @@index([usuario_id])
+
+  @@index([empresa_id, created_at])   // relatório principal
+  @@index([empresa_id, status])       // filtro de status
+  @@index([empresa_id, terminal_id])  // terminal
+  @@index([empresa_id, usuario_id])   // operador
+  @@index([empresa_id, delivery_status])
+  @@index([empresa_id, producao_status])
+
   @@map("Pedido")
 }
 
@@ -899,66 +954,124 @@ model PedidoItemSubitem {
 }
 
 // ----------------------------------------------------------------------------------------------------------------------- pedidos (historico)
+
 model VendaHistorico {
   id         String       @id @default(uuid())
   empresa_id Int
+
   created_at DateTime     @default(now())
   status     PedidoStatus @default(PENDENTE)
-  total      Decimal      @db.Decimal(10, 2)
-  desconto   Decimal      @default(0) @db.Decimal(10, 2)
 
-  // O Snapshot Completo (Segurança extra)
+  total    Decimal @db.Decimal(10, 2)
+  desconto Decimal @default(0) @db.Decimal(10, 2)
+
+  // snapshot (segurança / auditoria)
   itens_json     Json
   pagamento_json Json?
 
-  // Dados do Usuário (Texto puro para não depender da tabela User)
+  // snapshot usuário
+  usuario_id    Int
   usuario_nome  String
   usuario_email String
 
-  // Relações para Relatórios (Opcionais no DB, mas úteis no Prisma)
-  itens      VendaHistoricoItem[]
-  subitens   VendaHistoricoSubitem[]
-  pagamentos VendaHistoricoPagamento[]
-
-  @@index([empresa_id])
-}
-
-model VendaHistoricoItem {
-  id                 String         @id @default(uuid())
-  venda_historico_id String
-  venda_historico    VendaHistorico @relation(fields: [venda_historico_id], references: [id], onDelete: Cascade)
-
-  nome       String
-  preco      Decimal @db.Decimal(10, 2)
-  quantidade Int
-
-  @@index([venda_historico_id])
-}
-
-model VendaHistoricoSubitem {
-  id                 String         @id @default(uuid())
-  venda_historico_id String
-  venda_historico    VendaHistorico @relation(fields: [venda_historico_id], references: [id], onDelete: Cascade)
-
-  nome       String
-  preco      Decimal @db.Decimal(10, 2)
-  quantidade Int
-
-  @@index([venda_historico_id])
-}
-
-model VendaHistoricoPagamento {
-  id                 String         @id @default(uuid())
-  venda_historico_id String
-  venda_historico    VendaHistorico @relation(fields: [venda_historico_id], references: [id], onDelete: Cascade)
-
-  valor           Decimal  @db.Decimal(10, 2)
-  forma_pagamento String? // "Dinheiro", "Cartão"
-  bandeira_cartao String?
-  taxa_percentual Decimal? @db.Decimal(5, 2)
-
-  // Dados do terminal na hora da venda
+  // snapshot terminal
+  terminal_id   Int?
   terminal_nome String?
 
-  @@index([venda_historico_id])
+  // relações flat
+  itens       VendaHistoricoItem[]
+  subitens    VendaHistoricoSubitem[]
+  pagamentos  VendaHistoricoPagamento[]
+
+  // 🔥 ÍNDICES IMPORTANTES (relatórios)
+  @@index([empresa_id, created_at])   // principal (relatório mensal)
+  @@index([empresa_id, status])
+  @@index([empresa_id, usuario_id])
+  @@index([empresa_id, terminal_id])
 }
+
+
+model VendaHistoricoItem {
+  id String @id @default(uuid())
+
+  empresa_id        Int
+  venda_historico_id String
+
+  venda_historico VendaHistorico @relation(fields: [venda_historico_id], references: [id], onDelete: Cascade)
+
+  // snapshot do item
+  item_id   Int?
+  nome      String
+  classe_id Int?
+  classe_nome String?
+
+  quantidade Decimal @db.Decimal(10, 3)
+  preco      Decimal @db.Decimal(10, 2)
+  desconto   Decimal @default(0) @db.Decimal(10, 2)
+  total      Decimal @db.Decimal(10, 2)
+
+  created_at DateTime
+
+  // 🔥 índices pra relatório
+  @@index([empresa_id, created_at])
+  @@index([empresa_id, item_id])
+  @@index([empresa_id, classe_id])
+}
+
+
+
+model VendaHistoricoSubitem {
+  id String @id @default(uuid())
+
+  empresa_id         Int
+  venda_historico_id String
+
+  venda_historico VendaHistorico @relation(fields: [venda_historico_id], references: [id], onDelete: Cascade)
+
+  subitem_id Int?
+  nome       String
+
+  quantidade Decimal @db.Decimal(10, 3)
+  preco      Decimal @db.Decimal(10, 2)
+  total      Decimal @db.Decimal(10, 2)
+
+  created_at DateTime
+
+  // 🔥 índices
+  @@index([empresa_id, created_at])
+  @@index([empresa_id, subitem_id])
+}
+
+
+
+model VendaHistoricoPagamento {
+  id String @id @default(uuid())
+
+  empresa_id         Int
+  venda_historico_id String
+
+  venda_historico VendaHistorico @relation(fields: [venda_historico_id], references: [id], onDelete: Cascade)
+
+  valor         Decimal @db.Decimal(10, 2)
+  valor_liquido Decimal @db.Decimal(10, 2)
+
+  forma_pagamento String
+  tipo_pagamento  TipoFormaPagamento?
+
+  bandeira_cartao String?
+  provedor_nome   String?
+
+  parcelas Int?
+
+  taxa_percentual Decimal? @db.Decimal(5, 2)
+  taxa_valor      Decimal? @db.Decimal(10, 2)
+
+  created_at DateTime
+
+  // 🔥 índices
+  @@index([empresa_id, created_at])
+  @@index([empresa_id, forma_pagamento])
+  @@index([empresa_id, tipo_pagamento])
+}
+
+

@@ -26,6 +26,22 @@ export class RelatorialController {
         return this.service.buscarDiario(new Date(inicio), new Date(fim))
     }
 
+    @Get("semanal")
+    buscarSemanal(
+        @Query("inicio") inicio: string,
+        @Query("fim") fim: string,
+    ) {
+        return this.service.buscarSemanal(new Date(inicio), new Date(fim))
+    }
+
+    @Get("mensal")
+    buscarMensal(
+        @Query("inicio") inicio: string,
+        @Query("fim") fim: string,
+    ) {
+        return this.service.buscarMensal(new Date(inicio), new Date(fim))
+    }
+
     @Get("classes")
     buscarClasses(
         @Query("inicio") inicio: string,

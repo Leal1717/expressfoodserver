@@ -28,6 +28,10 @@ export class OciStorageService implements OnModuleInit {
         return `${this.normalizeCnpj(cnpj)}/empresa/logo`;
     }
 
+    private imgFundoAutoatendimentoPath(cnpj: string) {
+        return `${this.normalizeCnpj(cnpj)}/empresa/autoatendimento/fundo`;
+    }
+
     private itemPath(cnpj: string, itemId: number) {
         return `${this.normalizeCnpj(cnpj)}/itens/${itemId}`;
     }
@@ -57,6 +61,30 @@ export class OciStorageService implements OnModuleInit {
             });
         } catch (e) {
             this.logger.warn(`deleteLogo: objeto não encontrado (${cnpj})`);
+        }
+    }
+
+    async uploadImagemFundoAutoatendimento(cnpj: string, buffer: Buffer, contentType: string) {
+        const objectName = this.imgFundoAutoatendimentoPath(cnpj);
+        await this.client.putObject({
+            namespaceName: this.namespace,
+            bucketName: this.bucket,
+            objectName,
+            putObjectBody: buffer,
+            contentType,
+        });
+        return { url: this.getUrl(objectName) };
+    }
+
+    async deleteImagemFundoAutoatendimento(cnpj: string) {
+        try {
+            await this.client.deleteObject({
+                namespaceName: this.namespace,
+                bucketName: this.bucket,
+                objectName: this.imgFundoAutoatendimentoPath(cnpj),
+            });
+        } catch (e) {
+            this.logger.warn(`deleteImagemFundoAutoatendimento: objeto não encontrado (${cnpj})`);
         }
     }
 

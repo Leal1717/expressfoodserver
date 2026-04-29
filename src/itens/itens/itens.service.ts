@@ -93,12 +93,19 @@ export class ItensService {
 
     
     async buscarTodos() {
-        return this.prisma.tenantClient.item.findMany({include: { classe: true }})
+        return this.prisma.tenantClient.item.findMany({
+            include: {
+                classe: true,
+                subitens: { include: { subitem: true } },
+                promocao: true,
+            },
+        })
     }
 
     async buscarIngressos() {
         return this.prisma.tenantClient.item.findMany({
             where: { tipo: { in: ['INGRESSO', 'ENTRADA'] } },
+            include: { promocao: true },
         })
     }
 

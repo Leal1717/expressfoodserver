@@ -2,10 +2,11 @@
 https://docs.nestjs.com/providers#services
 */
 
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AdicionarEnderecoDto, CriarClienteRapidoDto, SalvarClienteDto } from './dto';
 import { Cliente } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ClientesService {
@@ -13,11 +14,17 @@ export class ClientesService {
         constructor(private prisma: PrismaService) {}
     
         async salvar(data:SalvarClienteDto) {
+            if (data.cpf) {
+                const existe = await this.prisma.tenantClient.cliente.findFirst({ where: { cpf: data.cpf } })
+                if (existe) throw new ConflictException(`CPF ${data.cpf} já cadastrado`)
+            }
+
             const fnCliente = await this.prisma.tenantClient.cliente.create({
                 data: {
                     nome: data.nome,
-                    cpf: data.cpf,
+                    cpf: data.cpf ?? null,
                     telefone: data.telefone,
+                    genero: data.genero,
                 }
             })
 
@@ -54,7 +61,7 @@ export class ClientesService {
     
         async criarRapido(data: CriarClienteRapidoDto) {
             return this.prisma.tenantClient.cliente.create({
-                data: { nome: data.nome, cpf: data.cpf ?? '', telefone: data.telefone ?? '' },
+                data: { nome: data.nome, cpf: data.cpf ?? null, telefone: data.telefone ?? '', genero: data.genero },
             })
         }
 
@@ -78,7 +85,14 @@ export class ClientesService {
         }
     
         async update(data:Cliente) {
-            return this.prisma.tenantClient.cliente.update({where: {id: Number(data.id), data}, data: data})
+            try {
+                return await this.prisma.tenantClient.cliente.update({ where: { id: Number(data.id) }, data })
+            } catch (e) {
+                if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+                    throw new ConflictException('CPF já cadastrado para outro cliente')
+                }
+                throw e
+            }
         }
     
         async delete(id:number) {

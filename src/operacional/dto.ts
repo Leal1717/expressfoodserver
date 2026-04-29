@@ -117,6 +117,10 @@ export class CreatePedidoDto {
   @IsBoolean()
   criar_senha?: boolean;
 
+  @IsOptional()
+  @IsString()
+  cpf_nota?: string;
+
   // ── Delivery ──────────────────────────────────────────────────────────────
   @IsOptional()
   @IsInt()

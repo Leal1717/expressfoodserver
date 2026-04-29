@@ -17,6 +17,7 @@ export class ClassesController {
         return this.service.salvar(data)
     }
 
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO)
     @Get("todos")
     async buscarTodos() {
         return this.service.buscarTodos()
