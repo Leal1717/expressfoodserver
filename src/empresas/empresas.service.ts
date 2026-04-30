@@ -16,7 +16,8 @@ export class EmpresasService {
     //
     async salvar(data: SalvarEmpresaDto) {
         try {
-            const result = await this.prisma.$transaction(async (tx) => {
+
+                const result = await this.prisma.$transaction(async (tx) => {
 
                 // criar endereco da empresa
                 const endereco = await tx.endereco.create({ data: data.endereco })
@@ -140,3 +141,71 @@ export class EmpresasService {
         return this.prisma.empresa.update({ where: { id: Number(id) }, data });
     }
 }
+    // "message": "Invalid `this.prisma.empresa.update()` invocation inC:\\Users\\Dalca\\Documents\\Github\\minifood\\auth\\server\\src\\empresas\\empresas.service.ts:135:36
+    // 132 }
+    // 133
+    //  134 async update(data:Empresa) {→ 135
+    //  return this.prisma.empresa.update({
+    // where: {
+    // id: 1
+    // },
+    // data: {
+    // id: 1,
+    //     ~~
+    //     nome_fantasia: \"Testes & Co\",
+    //     razao_social: \"Testes and Company ltda\",
+    //     cnpj: \"00906885000197\",
+    //     ativo: true,
+    //     logo_url: null,
+    //     tipo_comercio: \"RESTAURANTE\",
+    //     gorjeta_percentual: 10,
+    //     usa_fiscal: false,
+    //     inscricao_estadual: null,
+    //     inscricao_municipal: null,
+    //     crt: \"SIMPLES_NACIONAL\",
+    //     ambiente_fiscal: \"HOMOLOGACAO\",
+    //     serie_nfce: 1,
+    //     proximo_numero_nfce: 1,
+    //     endereco_id: 1,
+    //     plano_id: 1,
+    //     plano: {
+    //           id: 1,
+    //           nome: \"Básico\",
+    //           preco: \"4.99\",
+    //           qtd_licencas: 6
+    //         },
+    //         endereco: {
+    //           id: 1,
+    //           rua: \"Tv Luigi Pirandello\",
+    //           numero: \"5122\",
+    //           cep: \"83030270\",
+    //           bairro: \"Aristocrata\",
+    //           cidade: \"Sao Jose dos Pinhais\",
+    //           estado: \"PR\",
+    //           pais: \"Brasil\",
+    //           cliente_id: null              },
+    //           ?   horario_funcionamento?: HorarioDeFuncionamentoUpdateManyWithoutEmpresaNestedInput,
+    //           ?   usuarios?: UsuarioUpdateManyWithoutEmpresaNestedInput,
+    //           ?   classes?: ClasseUpdateManyWithoutEmpresaNestedInput,
+    //           ?   subitens?: SubitemUpdateManyWithoutEmpresaNestedInput,
+    //           ?   itens?: ItemUpdateManyWithoutEmpresaNestedInput,
+    //           ?   promocoes?: PromocaoUpdateManyWithoutEmpresaNestedInput,
+    //           ?   vendas?: PedidoUpdateManyWithoutEmpresaNestedInput,
+    //           ?   impressoras?: ImpressoraUpdateManyWithoutEmpresaNestedInput,
+    //           ?   terminais?: TerminalUpdateManyWithoutEmpresaNestedInput,
+    //           ?   mesas?: MesaUpdateManyWithoutEmpresaNestedInput,
+    //           ?   comandas?: ComandaUpdateManyWithoutEmpresaNestedInput,
+    //           ?   senhas?: SenhaUpdateManyWithoutEmpresaNestedInput,
+    //           ?   estoque_movimentacao?: EstoqueMovimentacaoUpdateManyWithoutEmpresaNestedInput,
+    //           ?   estoque_posicao?: EstoquePosicaoUpdateManyWithoutEmpresaNestedInput,
+    //           ?   forma_pagamentos?: EmpresaFormaPagamentoUpdateManyWithoutEmpresaNestedInput,
+    //           ?   taxas_cartao?: TaxaCartaoUpdateManyWithoutEmpresaNestedInput,
+    //           ?   provedores_pagamento?: ProvedorPagamentoUpdateManyWithoutEmpresaNestedInput,
+    //           ?   clientes?: ClienteUpdateManyWithoutEmpresaNestedInput,
+    //           ?   grupos_fiscais?: GrupoFiscalUpdateManyWithoutEmpresaNestedInput,
+    //           ?   motoboys?: MotoboyUpdateManyWithoutEmpresaNestedInput,
+    //           ?   zonas_entrega?: ZonaEntregaUpdateManyWithoutEmpresaNestedInput,
+    //           ?   eventos?: EventoUpdateManyWithoutEmpresaNestedInput
+    //           }
+    //         })Unknown argument `id`. Did you mean `crt`? Available options are marked with ?.",
+

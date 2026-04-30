@@ -3,12 +3,11 @@ import { TerminalTipo } from '@prisma/client';
 
 export class UpdateTerminalLoginDto {
     @IsInt()
-    terminal_id:number;
+    terminal_id: number;
 
     @IsInt()
-    usuario_id:number;
+    usuario_id: number;
 }
-
 
 export class SalvarTerminalDto {
     @IsString()
@@ -18,42 +17,58 @@ export class SalvarTerminalDto {
     @IsEnum(TerminalTipo)
     tipo: TerminalTipo;
 
-    @IsBoolean()
-    @IsOptional()
-    faz_pagamento?: boolean;
+    @IsOptional() @IsString()
+    modelo?: string;
 
-    @IsInt()
-    @IsOptional()
+    @IsOptional() @IsInt()
     provedor_padrao_id?: number;
 
-    @IsString()
-    @IsOptional()
-    modelo?: string;
+    @IsOptional() @IsString()
+    img_fundo_url?: string;
+
+    // capabilities
+    @IsOptional() @IsBoolean() faz_pagamento?: boolean;
+    @IsOptional() @IsBoolean() tem_balcao?: boolean;
+    @IsOptional() @IsBoolean() tem_mesa?: boolean;
+    @IsOptional() @IsBoolean() tem_comanda?: boolean;
+    @IsOptional() @IsBoolean() tem_senha?: boolean;
+
+    // permissions
+    @IsOptional() @IsBoolean() pode_abrir_comanda?: boolean;
+    @IsOptional() @IsBoolean() pode_abrir_mesa?: boolean;
+    @IsOptional() @IsBoolean() pode_dar_desconto?: boolean;
+    @IsOptional() @IsBoolean() pode_cancelar_pedido?: boolean;
 }
-
-
 
 export class UpdateTerminalDto {
     @IsInt()
     id: number;
 
-    @IsString()
-    @IsOptional()
+    @IsOptional() @IsString() @IsNotEmpty()
     nome?: string;
 
-    @IsEnum(TerminalTipo)
-    @IsOptional()
+    @IsOptional() @IsEnum(TerminalTipo)
     tipo?: TerminalTipo;
 
-    @IsBoolean()
-    @IsOptional()
-    faz_pagamento?: boolean;
+    @IsOptional() @IsString()
+    modelo?: string;
 
-    @IsInt()
-    @IsOptional()
+    @IsOptional() @IsInt()
     provedor_padrao_id?: number;
 
-    @IsString()
-    @IsOptional()
-    modelo?: string;
+    @IsOptional() @IsString()
+    img_fundo_url?: string;
+
+    // capabilities
+    @IsOptional() @IsBoolean() faz_pagamento?: boolean;
+    @IsOptional() @IsBoolean() tem_balcao?: boolean;
+    @IsOptional() @IsBoolean() tem_mesa?: boolean;
+    @IsOptional() @IsBoolean() tem_comanda?: boolean;
+    @IsOptional() @IsBoolean() tem_senha?: boolean;
+
+    // permissions
+    @IsOptional() @IsBoolean() pode_abrir_comanda?: boolean;
+    @IsOptional() @IsBoolean() pode_abrir_mesa?: boolean;
+    @IsOptional() @IsBoolean() pode_dar_desconto?: boolean;
+    @IsOptional() @IsBoolean() pode_cancelar_pedido?: boolean;
 }

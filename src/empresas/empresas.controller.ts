@@ -38,7 +38,7 @@ export class EmpresasController {
         return this.service.salvar(data)
     }
     
-    @Public()
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO)
     @Put("update")
     async update(
         @Body() data: Empresa

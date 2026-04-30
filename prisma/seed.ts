@@ -13,9 +13,9 @@ async function main() {
 
 async function planos() {
   const itens = [
-    { id: 1, nome: 'Básico', preco: 4.99, qtd_licencas: 3 },
-    { id: 2, nome: 'Medio', preco: 14.99, qtd_licencas: 10 },
-    { id: 3, nome: 'Grande', preco: 34.99, qtd_licencas: 30 },
+    { id: 1, nome: 'Básico', preco: 4.99, qtd_licencas: 6 },
+    { id: 2, nome: 'Medio', preco: 14.99, qtd_licencas: 18 },
+    { id: 3, nome: 'Grande', preco: 34.99, qtd_licencas: 40 },
   ];
 
   console.log('🌱 Iniciando seed de planos...');

@@ -61,8 +61,9 @@ model Empresa {
   razao_social  String
   cnpj          String  @unique
   ativo         Boolean       @default(true)
-  logo_url      String?
-  tipo_comercio TipoComercio?
+  logo_url             String?
+  tipo_comercio        TipoComercio?
+  gorjeta_percentual   Decimal? @db.Decimal(5, 2) // null = gorjeta desabilitada; ex: 10.00 = 10%
 
   // Fiscal
   usa_fiscal          Boolean        @default(false) // se false, sistema não exige dados fiscais nos itens
@@ -241,6 +242,8 @@ enum CanalOrigem {
   BALCAO
 }
 
+
+
 model Terminal {
   id     Int          @id @default(autoincrement())
   nome   String
@@ -249,6 +252,17 @@ model Terminal {
   ativo  Boolean      @default(true)
 
   faz_pagamento Boolean @default(false) // se true, terminal exige que cada venda tenha um pagamento associado (caixa, PDV)
+  
+  tem_balcao Boolean @default(false) // se true, terminal tem acesso a funcionalidades de balcão (ex: imprimir recibo, acessar vendas antigas, etc)
+  tem_mesa Boolean @default(false) // se true, terminal tem acesso a funcionalidades de mesa (ex: abrir mesa, transferir mesa, etc)
+  tem_senha Boolean @default(false) // se true, terminal tem acesso a funcionalidades de senha (ex: gerar senha, chamar senha, etc)
+  tem_comanda Boolean @default(false) // se true, terminal tem acesso a funcionalidades de comanda (ex: abrir comanda, transferir comanda, etc)
+
+  pode_abrir_comanda Boolean @default(false) // se true, terminal pode abrir comandas (mesmo que o formato de trabalho da empresa seja mesa ou senha)
+  pode_abrir_mesa Boolean @default(false) // se true, terminal pode abrir mesas (mesmo que o formato de trabalho da empresa seja comanda ou senha)
+  pode_dar_desconto Boolean @default(false) // se true, terminal pode aplicar desconto nas vendas
+  pode_cancelar_pedido Boolean @default(false) // se true, terminal pode cancelar pedidos
+
   img_fundo_url String?       // para terminal de autoatendimento, a imagem de fundo do app
 
   pedidos Pedido[]
@@ -855,6 +869,7 @@ model Pedido {
   status     PedidoStatus @default(PENDENTE)
   total      Decimal      @db.Decimal(10, 2)
   desconto   Decimal      @default(0) @db.Decimal(10, 2) // desconto total da venda
+  gorjeta    Decimal      @default(0) @db.Decimal(10, 2) // valor aplicado (0 = não aplicado)
 
   producao_status ProducaoStatus @default(AGUARDANDO)
 
@@ -964,6 +979,7 @@ model VendaHistorico {
 
   total    Decimal @db.Decimal(10, 2)
   desconto Decimal @default(0) @db.Decimal(10, 2)
+  gorjeta  Decimal @default(0) @db.Decimal(10, 2)
 
   // snapshot (segurança / auditoria)
   itens_json     Json

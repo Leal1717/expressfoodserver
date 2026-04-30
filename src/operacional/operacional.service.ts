@@ -103,8 +103,9 @@ export class OperacionalService {
 
             if (pedidos.length === 0) throw new BadRequestException("Nenhum pedido pendente encontrado.");
 
-            const totalVenda   = pedidos.reduce((acc, p) => acc + Number(p.total), 0);
+            const totalVenda    = pedidos.reduce((acc, p) => acc + Number(p.total), 0);
             const totalDesconto = pedidos.reduce((acc, p) => acc + Number(p.desconto), 0);
+            const gorjeta       = data.gorjeta ?? 0;
             const todosItens   = pedidos.flatMap(p => p.itens);
             const todosSubitens = todosItens.flatMap(i => i.subitens);
             const now = new Date();
@@ -143,6 +144,7 @@ export class OperacionalService {
                     empresa_id: empresaId,
                     total: totalVenda,
                     desconto: totalDesconto,
+                    gorjeta,
                     status: "PAGA",
                     usuario_id: pedidos[0].usuario_id,
                     usuario_nome: pedidos[0].usuario.nome,
@@ -238,6 +240,7 @@ export class OperacionalService {
                     comanda_id: null,
                     ...(data.senha ? { senha_id: null } : {}),
                     formato: formatoFinal,
+                    gorjeta,
                 },
             });
 

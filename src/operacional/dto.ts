@@ -262,6 +262,11 @@ export class OperacionalPagarDto {
   @IsString()
   pedido_id?: string;
 
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Type(() => Number)
+  gorjeta?: number;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreatePedidoPagamentoDto)
