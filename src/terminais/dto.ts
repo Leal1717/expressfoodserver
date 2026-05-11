@@ -26,6 +26,16 @@ export class SalvarTerminalDto {
     @IsOptional() @IsString()
     img_fundo_url?: string;
 
+    @IsOptional() @IsString()
+    mesa_nome?: string;
+
+    // apenas para criar o usuário compartilhado no primeiro terminal CARDAPIO_DIGITAL
+    @IsOptional() @IsString()
+    usuario_email?: string;
+
+    @IsOptional() @IsString()
+    usuario_senha?: string;
+
     // capabilities
     @IsOptional() @IsBoolean() faz_pagamento?: boolean;
     @IsOptional() @IsBoolean() tem_balcao?: boolean;
@@ -58,6 +68,9 @@ export class UpdateTerminalDto {
 
     @IsOptional() @IsString()
     img_fundo_url?: string;
+
+    @IsOptional() @IsString()
+    mesa_nome?: string;
 
     // capabilities
     @IsOptional() @IsBoolean() faz_pagamento?: boolean;

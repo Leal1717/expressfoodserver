@@ -222,6 +222,7 @@ enum TerminalTipo {
   KDS
   AUTO_TOTEM //auto de autoatendimento
   AUTO_TABLET //auto de autoatendimento
+  CARDAPIO_DIGITAL //cardápio digital em tablets nas mesas
 
 }
 
@@ -264,6 +265,7 @@ model Terminal {
   pode_cancelar_pedido Boolean @default(false) // se true, terminal pode cancelar pedidos
 
   img_fundo_url String?       // para terminal de autoatendimento, a imagem de fundo do app
+  mesa_nome     String?       // para CARDAPIO_DIGITAL: nome da mesa a que este tablet está fixado
 
   pedidos Pedido[]
 

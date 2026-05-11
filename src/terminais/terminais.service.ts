@@ -29,11 +29,35 @@ export class TerminaisService {
 
     async salvar(data: SalvarTerminalDto) {
         try {
-            const terminal = await this.prisma.tenantClient.terminal.create({ data })
+            const { usuario_email, usuario_senha, ...terminalData } = data
+            const terminal = await this.prisma.tenantClient.terminal.create({ data: terminalData })
 
-            // cria usuário AUTOATENDIMENTO automaticamente para totens e tablets
+            const empresaId = Number(this.tenant.empresaId)
+
+            // CARDAPIO_DIGITAL: usuário único compartilhado por todos os terminais da empresa
+            if (data.tipo === TerminalTipo.CARDAPIO_DIGITAL) {
+                const jaExiste = await this.prisma.tenantClient.terminal.count({
+                    where: { tipo: TerminalTipo.CARDAPIO_DIGITAL },
+                })
+                // jaExiste inclui o que acabamos de criar, então > 1 significa que já havia outro
+                if (jaExiste <= 1 && usuario_email && usuario_senha) {
+                    const usuario = await this.prisma.tenantClient.usuario.create({
+                        data: {
+                            nome:       'Cardápio Digital',
+                            email:      usuario_email,
+                            senha:      usuario_senha,
+                            telefone:   '',
+                            role:       Role.AUTOATENDIMENTO,
+                            empresa_id: empresaId,
+                        },
+                    })
+                    return { terminal, usuario: { id: usuario.id, nome: 'Cardápio Digital', email: usuario_email, senha: usuario_senha } }
+                }
+                return { terminal }
+            }
+
+            // AUTO_TOTEM e AUTO_TABLET: cria usuário individual por terminal
             if (data.tipo === TerminalTipo.AUTO_TOTEM || data.tipo === TerminalTipo.AUTO_TABLET) {
-                const empresaId = Number(this.tenant.empresaId)
                 const count = await this.prisma.tenantClient.usuario.count({
                     where: { role: Role.AUTOATENDIMENTO },
                 })
@@ -58,6 +82,17 @@ export class TerminaisService {
             return { terminal }
         } catch (error) {
             return CustomException(error)
+        }
+    }
+
+    async buscarInfoCardapioDigital() {
+        const terminais = await this.prisma.tenantClient.terminal.findMany({
+            where:  { tipo: TerminalTipo.CARDAPIO_DIGITAL },
+            select: { mesa_nome: true },
+        })
+        return {
+            existe:      terminais.length > 0,
+            mesasEmUso:  terminais.map(t => t.mesa_nome).filter(Boolean) as string[],
         }
     }
 
