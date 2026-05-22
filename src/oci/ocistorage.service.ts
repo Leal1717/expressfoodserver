@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, ServiceUnavailableException } from '@nestjs/common';
 import * as oci from 'oci-sdk';
 
 @Injectable()
@@ -18,6 +18,12 @@ export class OciStorageService implements OnModuleInit {
         } catch (e: any) {
             this.logger.warn('OCI não disponível: ' + e.message);
         }
+    }
+
+    get disponivel() { return !!this.client }
+
+    private assertClient() {
+        if (!this.client) throw new ServiceUnavailableException('OCI Storage não está configurado neste ambiente.')
     }
 
     private normalizeCnpj(cnpj: string) {
@@ -41,6 +47,7 @@ export class OciStorageService implements OnModuleInit {
     }
 
     async uploadLogo(cnpj: string, buffer: Buffer, contentType: string) {
+        this.assertClient()
         const objectName = this.logoPath(cnpj);
         await this.client.putObject({
             namespaceName: this.namespace,
@@ -53,6 +60,7 @@ export class OciStorageService implements OnModuleInit {
     }
 
     async deleteLogo(cnpj: string) {
+        this.assertClient()
         try {
             await this.client.deleteObject({
                 namespaceName: this.namespace,
@@ -65,6 +73,7 @@ export class OciStorageService implements OnModuleInit {
     }
 
     async uploadImagemFundoAutoatendimento(cnpj: string, buffer: Buffer, contentType: string) {
+        this.assertClient()
         const objectName = this.imgFundoAutoatendimentoPath(cnpj);
         await this.client.putObject({
             namespaceName: this.namespace,
@@ -77,6 +86,7 @@ export class OciStorageService implements OnModuleInit {
     }
 
     async deleteImagemFundoAutoatendimento(cnpj: string) {
+        this.assertClient()
         try {
             await this.client.deleteObject({
                 namespaceName: this.namespace,
@@ -89,6 +99,7 @@ export class OciStorageService implements OnModuleInit {
     }
 
     async uploadItemImage(cnpj: string, itemId: number, buffer: Buffer, contentType: string) {
+        this.assertClient()
         const objectName = this.itemPath(cnpj, itemId);
         await this.client.putObject({
             namespaceName: this.namespace,
@@ -101,6 +112,7 @@ export class OciStorageService implements OnModuleInit {
     }
 
     async deleteItemImage(cnpj: string, itemId: number) {
+        this.assertClient()
         try {
             await this.client.deleteObject({
                 namespaceName: this.namespace,
@@ -114,6 +126,7 @@ export class OciStorageService implements OnModuleInit {
 
     // método genérico legado
     async uploadFile(bucketName: string, objectName: string, data: Buffer | string) {
+        this.assertClient()
         return this.client.putObject({
             namespaceName: this.namespace,
             bucketName,

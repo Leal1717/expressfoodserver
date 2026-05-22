@@ -81,6 +81,7 @@ import { SessionService } from './auth/session.service';
 import { LoggerMiddleware } from './logger/logger.middleware';
 import { ProvedoresService } from './formasPagamento/provedores.service';
 import { ProvedoresController } from './formasPagamento/provedores.controller';
+import { MercadoPagoOAuthModule } from '../integracoes/mercadopago/mercadopago-oauth.module';
 
 @Module({
 	imports: [
@@ -121,6 +122,7 @@ import { ProvedoresController } from './formasPagamento/provedores.controller';
 		ItensPdvModule,
 		PedidosModule,
 		OperacionalModule,
+		MercadoPagoOAuthModule,
 	],
 	controllers: [
 		ZonasEntregaController,

@@ -151,6 +151,10 @@ export class CreatePedidoDto {
   @Type(() => Number)
   motoboy_id?: number;
 
+  @IsOptional()
+  @IsString()
+  pedido_uuid?: string;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreatePedidoItemDto)

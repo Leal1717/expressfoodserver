@@ -35,7 +35,21 @@ export class AuthService {
                 ativo: true,
                 tipo: { in: tiposPermitidos },
             },
-            select: { id: true, nome: true, tipo: true, modelo: true },
+            select: {
+                    id:                   true,
+                    nome:                 true,
+                    tipo:                 true,
+                    modelo:               true,
+                    faz_pagamento:        true,
+                    tem_balcao:           true,
+                    tem_mesa:             true,
+                    tem_comanda:          true,
+                    tem_senha:            true,
+                    pode_abrir_comanda:   true,
+                    pode_abrir_mesa:      true,
+                    pode_cancelar_pedido: true,
+                    pode_dar_desconto:    true,
+                },
         });
 
         return {

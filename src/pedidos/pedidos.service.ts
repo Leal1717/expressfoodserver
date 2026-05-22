@@ -17,6 +17,14 @@ export class PedidosService {
     constructor(private prisma: PrismaService) {}
     
     async salvar(data: CreatePedidoDto) {
+        if (data.pedido_uuid) {
+            const existente = await this.prisma.tenantClient.pedido.findUnique({
+                where: { pedido_uuid: data.pedido_uuid },
+                include: { itens: { include: { subitens: true, item: true } }, senha: true, mesa: true, comanda: true },
+            })
+            if (existente) return existente
+        }
+
         let formato: PedidoFormato;
         if (data.mesa_id)                              formato = 'MESA';
         else if (data.comanda_id)                      formato = 'COMANDA';
@@ -34,6 +42,7 @@ export class PedidosService {
                 usuario_id: data.usuario_id,
                 terminal_id: data.terminal_id,
                 observacao: data.observacao,
+                pedido_uuid: data.pedido_uuid,
 
                 mesa_id: data.mesa_id,
                 comanda_id: data.comanda_id,
