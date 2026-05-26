@@ -92,4 +92,29 @@ export class ImagensController {
         await this.prisma.tenantClient.item.update({ where: { id: Number(itemId) }, data: { imagem: null } });
         return { ok: true };
     }
+
+
+
+
+    //-----------------------------------------------------------------------------------------------------------------------------  EVENTOS
+
+    @Post('eventos/:eventoId')
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadEventoImage(
+        @Param('eventoId') eventoId: number,
+        @UploadedFile() file: { buffer: Buffer; mimetype: string },
+    ) {
+        const empresa = await this.buscarEmpresa();
+        const { url } = await this.oci.uploadEventoImage(empresa!.cnpj, Number(eventoId), file.buffer, file.mimetype);
+        await this.prisma.tenantClient.evento.update({ where: { id: Number(eventoId) }, data: { imagem: url } });
+        return { url };
+    }
+
+    @Delete('eventos/:eventoId')
+    async deleteEventoImage(@Param('eventoId') eventoId: number) {
+        const empresa = await this.buscarEmpresa();
+        await this.oci.deleteEventoImage(empresa!.cnpj, Number(eventoId));
+        await this.prisma.tenantClient.evento.update({ where: { id: Number(eventoId) }, data: { imagem: null } });
+        return { ok: true };
+    }
 }

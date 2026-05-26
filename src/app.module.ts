@@ -76,12 +76,14 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/auth.guard';
 import { TenantMiddleware } from './tenant/tenant.middleware';
 import { OperacionalModule } from './operacional/operacional.module';
+import { CaixaModule } from './caixa/caixa.module';
 import { TerminaisModule } from './terminais/terminais.module';
 import { SessionService } from './auth/session.service';
 import { LoggerMiddleware } from './logger/logger.middleware';
 import { ProvedoresService } from './formasPagamento/provedores.service';
 import { ProvedoresController } from './formasPagamento/provedores.controller';
 import { MercadoPagoOAuthModule } from '../integracoes/mercadopago/mercadopago-oauth.module';
+import { EventosModule } from './eventos/eventos.module';
 
 @Module({
 	imports: [
@@ -122,7 +124,9 @@ import { MercadoPagoOAuthModule } from '../integracoes/mercadopago/mercadopago-o
 		ItensPdvModule,
 		PedidosModule,
 		OperacionalModule,
+		CaixaModule,
 		MercadoPagoOAuthModule,
+		EventosModule,
 	],
 	controllers: [
 		ZonasEntregaController,

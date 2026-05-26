@@ -42,6 +42,10 @@ export class OciStorageService implements OnModuleInit {
         return `${this.normalizeCnpj(cnpj)}/itens/${itemId}`;
     }
 
+    private eventoPath(cnpj: string, eventoId: number) {
+        return `${this.normalizeCnpj(cnpj)}/eventos/${eventoId}`;
+    }
+
     getUrl(objectName: string) {
         return `https://objectstorage.${this.region}.oraclecloud.com/n/${this.namespace}/b/${this.bucket}/o/${encodeURIComponent(objectName)}`;
     }
@@ -121,6 +125,32 @@ export class OciStorageService implements OnModuleInit {
             });
         } catch (e) {
             this.logger.warn(`deleteItemImage: objeto não encontrado (item ${itemId})`);
+        }
+    }
+
+    async uploadEventoImage(cnpj: string, eventoId: number, buffer: Buffer, contentType: string) {
+        this.assertClient()
+        const objectName = this.eventoPath(cnpj, eventoId);
+        await this.client.putObject({
+            namespaceName: this.namespace,
+            bucketName: this.bucket,
+            objectName,
+            putObjectBody: buffer,
+            contentType,
+        });
+        return { url: this.getUrl(objectName) };
+    }
+
+    async deleteEventoImage(cnpj: string, eventoId: number) {
+        this.assertClient()
+        try {
+            await this.client.deleteObject({
+                namespaceName: this.namespace,
+                bucketName: this.bucket,
+                objectName: this.eventoPath(cnpj, eventoId),
+            });
+        } catch (e) {
+            this.logger.warn(`deleteEventoImage: objeto não encontrado (evento ${eventoId})`);
         }
     }
 

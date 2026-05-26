@@ -110,6 +110,17 @@ export class OperacionalService {
             const todosSubitens = todosItens.flatMap(i => i.subitens);
             const now = new Date();
 
+            // Vincula ao caixa aberto do terminal (se houver)
+            const caixaAberto = await tx.caixa.findFirst({
+                where: {
+                    empresa_id: empresaId,
+                    status: 'ABERTO',
+                    ...(pedidos[0].terminal_id ? { terminal_id: pedidos[0].terminal_id } : {}),
+                },
+                select: { id: true },
+            });
+            const caixaId = caixaAberto?.id ?? null;
+
             // B. Movimentação de estoque
             const subitensParaEstoque = todosSubitens.filter(si => si.subitem.controla_estoque);
             for (const si of subitensParaEstoque) {
@@ -126,6 +137,21 @@ export class OperacionalService {
                     where: { subitem_id: si.subitem_id },
                     data: { quantidade_fisica: { decrement: si.quantidade } },
                 });
+            }
+
+            const alertasEstoque: { nome: string; quantidade_fisica: number; estoque_minimo: number }[] = [];
+            if (subitensParaEstoque.length > 0) {
+                const posicoes = await tx.estoquePosicao.findMany({
+                    where: { subitem_id: { in: subitensParaEstoque.map(si => si.subitem_id) } },
+                    include: { subitem: { select: { nome: true } } },
+                });
+                for (const pos of posicoes) {
+                    const qtd = Number(pos.quantidade_fisica);
+                    const min = Number(pos.estoque_minimo ?? 0);
+                    if (min > 0 && qtd <= min) {
+                        alertasEstoque.push({ nome: pos.subitem?.nome ?? '', quantidade_fisica: qtd, estoque_minimo: min });
+                    }
+                }
             }
 
             // C. Busca detalhes das formas de pagamento para o snapshot
@@ -153,6 +179,7 @@ export class OperacionalService {
                     terminal_nome: pedidos[0].terminal?.nome ?? null,
                     itens_json: todosItens as any,
                     pagamento_json: data.pagamentos as any,
+                    caixa_id: caixaId,
                 },
             });
 
@@ -249,7 +276,7 @@ export class OperacionalService {
             if (data.comanda) await tx.comanda.update({ where: { id: data.comanda }, data: { status: "PAGA" } });
             if (data.senha)   await tx.senha.delete({ where: { numero_empresa_id: { numero: data.senha, empresa_id: empresaId } } });
 
-            return historico;
+            return { historico, alertasEstoque };
         });
     }
 

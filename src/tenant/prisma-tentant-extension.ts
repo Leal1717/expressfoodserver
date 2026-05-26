@@ -19,7 +19,7 @@ export const prismaTenantExtension = (tenantService: TenantService) => {
                     const anyArgs = args as any;
 
                     // Modelos que não possuem empresa_id como campo direto
-                    const SEM_EMPRESA_ID = new Set(['Endereco'])
+                    const SEM_EMPRESA_ID = new Set(['Endereco', 'CaixaMovimentacao', 'CaixaFechamento'])
 
                     // Operações que usam "where"
                     if (['findMany', 'findFirst', 'findUnique', 'update', 'updateMany', 'delete', 'deleteMany', 'count'].includes(operation)) {

@@ -102,6 +102,7 @@ model Empresa {
   zonas_entrega         ZonaEntrega[]
   eventos               Evento[]
   mercadopago_credencial MercadoPagoCredencial?
+  caixas                Caixa[]
 }
 
 model Endereco {
@@ -194,6 +195,7 @@ model Usuario {
   empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
 
   vendas Pedido[]
+  caixas Caixa[]
 
   @@unique([email])
   @@index([empresa_id])
@@ -280,6 +282,8 @@ model Terminal {
 
   ultimo_login_data       DateTime?
   ultimo_login_usuario_id Int?
+
+  caixas Caixa[]
 
   @@unique([nome, empresa_id])
   @@index([empresa_id])
@@ -553,6 +557,9 @@ model Item {
   grupo_fiscal_id Int?
   grupo_fiscal    GrupoFiscal? @relation(fields: [grupo_fiscal_id], references: [id])
 
+  evento_id Int?
+  evento    Evento? @relation(fields: [evento_id], references: [id])
+
   @@unique([nome, empresa_id])
   @@index([empresa_id])
 }
@@ -786,18 +793,29 @@ model Senha {
 }
 
 // ----------------------------------------------------------------------------------- EVENTOS
+
+enum EventoStatus {
+  ATIVO
+  CANCELADO
+  ENCERRADO
+}
+
 model Evento {
   id Int @id @default(autoincrement())
 
   nome      String
-  descricao String?
+  descricao String? @db.Text
+  status    EventoStatus @default(ATIVO)
 
   created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   inicio DateTime
   final  DateTime
 
   imagem String?
+
+  itens Item[]
 
   empresa_id Int
   empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
@@ -944,6 +962,9 @@ model Pedido {
 
   pedido_uuid String? @unique // idempotência para reenvios offline
 
+  caixa_id Int?
+  caixa    Caixa? @relation(fields: [caixa_id], references: [id])
+
   @@index([empresa_id, created_at])   // relatório principal
   @@index([empresa_id, status])       // filtro de status
   @@index([empresa_id, terminal_id])  // terminal
@@ -1022,11 +1043,15 @@ model VendaHistorico {
   subitens    VendaHistoricoSubitem[]
   pagamentos  VendaHistoricoPagamento[]
 
+  caixa_id Int?
+  caixa    Caixa? @relation(fields: [caixa_id], references: [id])
+
   // 🔥 ÍNDICES IMPORTANTES (relatórios)
   @@index([empresa_id, created_at])   // principal (relatório mensal)
   @@index([empresa_id, status])
   @@index([empresa_id, usuario_id])
   @@index([empresa_id, terminal_id])
+  @@index([empresa_id, caixa_id])
 }
 
 
@@ -1111,6 +1136,81 @@ model VendaHistoricoPagamento {
   @@index([empresa_id, created_at])
   @@index([empresa_id, forma_pagamento])
   @@index([empresa_id, tipo_pagamento])
+}
+
+// ----------------------------------------------------------------------------------------------------------------------- caixa
+
+enum CaixaStatus {
+  ABERTO
+  FECHADO
+}
+
+enum CaixaMovimentacaoTipo {
+  SUPRIMENTO
+  SANGRIA
+}
+
+model Caixa {
+  id Int @id @default(autoincrement())
+
+  empresa_id Int
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+
+  terminal_id Int?
+  terminal    Terminal? @relation(fields: [terminal_id], references: [id])
+
+  operador_id   Int
+  operador_nome String
+  operador      Usuario @relation(fields: [operador_id], references: [id])
+
+  valor_abertura Decimal     @db.Decimal(10, 2)
+  status         CaixaStatus @default(ABERTO)
+  aberto_em      DateTime    @default(now())
+  fechado_em     DateTime?
+  observacao     String?
+
+  movimentacoes CaixaMovimentacao[]
+  fechamento    CaixaFechamento?
+  pedidos       Pedido[]
+  vendas        VendaHistorico[]
+
+  @@index([empresa_id, status])
+  @@index([empresa_id, terminal_id])
+}
+
+model CaixaMovimentacao {
+  id Int @id @default(autoincrement())
+
+  caixa_id Int
+  caixa    Caixa @relation(fields: [caixa_id], references: [id], onDelete: Cascade)
+
+  tipo            CaixaMovimentacaoTipo
+  valor           Decimal @db.Decimal(10, 2)
+  motivo          String?
+  criado_por_id   Int
+  criado_por_nome String
+  created_at      DateTime @default(now())
+}
+
+model CaixaFechamento {
+  id Int @id @default(autoincrement())
+
+  caixa_id Int   @unique
+  caixa    Caixa @relation(fields: [caixa_id], references: [id], onDelete: Cascade)
+
+  valor_contado_dinheiro  Decimal @db.Decimal(10, 2)
+  valor_esperado_dinheiro Decimal @db.Decimal(10, 2)
+  diferenca               Decimal @db.Decimal(10, 2) // contado - esperado; negativo = falta, positivo = sobra
+
+  total_bruto         Decimal @db.Decimal(10, 2)
+  total_liquido       Decimal @db.Decimal(10, 2)
+  total_cancelamentos Decimal @default(0) @db.Decimal(10, 2)
+
+  totais_json Json // { "DINHEIRO": { total_bruto, total_liquido, qtd }, "PIX": {...}, ... }
+
+  fechado_por_id   Int
+  fechado_por_nome String
+  fechado_em       DateTime @default(now())
 }
 
 
