@@ -8,6 +8,8 @@ const emailEl = document.getElementById("email")
 const senhaEl = document.getElementById("senha")
 
 btnEntrarEl.addEventListener('click', entrar)
+senhaEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') entrar() })
+emailEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') entrar() })
 
 export function entrar() {
     const body = { email: emailEl.value, senha: senhaEl.value }
