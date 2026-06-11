@@ -45,12 +45,15 @@ export class OperacionalController {
 
     // ------------------------------------------------------------------------------------------------------------------- formatos
 
+    // [PAGINADO] retorna { items, total, page, limit } — aceita ?page=N&limit=N
     @Get("formato")
     async buscarPorFormato(
         @Query("tipo") tipo: string,
         @Query("desde") desde?: string,
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
     ) {
-        return this.service.buscarPorFormato(tipo, desde)
+        return this.service.buscarPorFormato(tipo, desde, page ? Number(page) : 1, limit ? Number(limit) : 50)
     }
 
     @Get("mesas/mapa")
@@ -86,6 +89,13 @@ export class OperacionalController {
         @Param('id') id: string
     ) {
         return this.service.buscarComanda(id)
+    }
+
+    @Get("comandas/nfc/:uid")
+    async buscarComandaPorNfc(
+        @Param('uid') uid: string,
+    ) {
+        return this.service.buscarComandaPorNfc(uid)
     }
 
     @Delete("comandas/delete/:id")

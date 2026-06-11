@@ -306,7 +306,7 @@ export class OperacionalService {
 
 
     
-    async buscarPorFormato(tipo: string, desde?: string) {
+    async buscarPorFormato(tipo: string, desde?: string, page = 1, limit = 50) {
         const formatos: Record<string, any> = {
             mesa:    { NOT: { mesa_id: null } },
             comanda: { NOT: { comanda_id: null } },
@@ -318,25 +318,29 @@ export class OperacionalService {
         if (!where) throw new BadRequestException("Param 'tipo' deve ser: mesa | comanda | senha | balcao | delivery");
 
         const desdeDate = desde ? new Date(desde) : null;
+        const whereClause = { ...where, ...(desdeDate ? { created_at: { gte: desdeDate } } : {}) }
+        const skip = (page - 1) * limit
 
-        return this.prisma.tenantClient.pedido.findMany({
-            where: {
-                ...where,
-                ...(desdeDate ? { created_at: { gte: desdeDate } } : {}),
-            },
-            include: {
-                itens: {
-                    include: {
-                        item: true,
-                        subitens: { include: { subitem: { select: { id: true, nome: true } } } },
+        const [items, total] = await Promise.all([
+            this.prisma.tenantClient.pedido.findMany({
+                where: whereClause,
+                include: {
+                    itens: {
+                        include: {
+                            item: true,
+                            subitens: { include: { subitem: { select: { id: true, nome: true } } } },
+                        },
                     },
+                    cliente:          { select: { id: true, nome: true, telefone: true } },
+                    endereco_entrega: { select: { id: true, rua: true, numero: true, bairro: true, cidade: true, estado: true } },
+                    motoboy:          { select: { id: true, nome: true, telefone: true } },
                 },
-                cliente:          { select: { id: true, nome: true, telefone: true } },
-                endereco_entrega: { select: { id: true, rua: true, numero: true, bairro: true, cidade: true, estado: true } },
-                motoboy:          { select: { id: true, nome: true, telefone: true } },
-            },
-            orderBy: { created_at: 'desc' },
-        });
+                orderBy: { created_at: 'desc' },
+                skip, take: limit,
+            }),
+            this.prisma.tenantClient.pedido.count({ where: whereClause }),
+        ])
+        return { items, total, page, limit }
     }
 
 
@@ -469,7 +473,7 @@ export class OperacionalService {
     async buscarMovimentacaoAtual() {
         return this.prisma.tenantClient.subitem.findMany({
             where: { ativo: true, controla_estoque: true },
-            include: {  }
+            include: { estoque_posicao: true }
         })
     }
 
@@ -514,14 +518,31 @@ export class OperacionalService {
     // ─────────────────────────────────────────────────────── COMANDA
 
     async criarComanda(data: CriarComandaDto) {
+        if (data.nome) {
+            const existe = await this.prisma.tenantClient.comanda.findFirst({
+                where: { nome: data.nome, status: { in: ['OCUPADA', 'CONTA'] } },
+                select: { id: true },
+            })
+            if (existe) throw new BadRequestException(`Já existe uma comanda aberta com o nome "${data.nome}".`)
+        }
+
         return this.prisma.tenantClient.comanda.create({
-            data: { nome: data.nome ?? null },
+            data: { nome: data.nome ?? null, nfc_uid: data.nfc_uid ?? null, cliente_id: data.cliente_id ?? null },
+            include: { cliente: { select: { id: true, nome: true, cpf: true } } },
         })
     }
 
     async listarComandasAtivas() {
         return this.prisma.tenantClient.comanda.findMany({
             where: { status: { in: ['OCUPADA', 'CONTA'] } },
+            include: { cliente: { select: { id: true, nome: true, cpf: true } } },
+        })
+    }
+
+    async buscarComandaPorNfc(nfc_uid: string) {
+        return this.prisma.tenantClient.comanda.findFirst({
+            where: { nfc_uid, status: { in: ['OCUPADA', 'CONTA'] } },
+            include: { cliente: { select: { id: true, nome: true, cpf: true } } },
         })
     }
 

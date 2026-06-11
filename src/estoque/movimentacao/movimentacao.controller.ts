@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { MovimentacaoService } from './movimentacao.service';
 import { Role, type EstoqueMovimentacao } from '@prisma/client';
 import { MovimentacaoSalvarDto, MovimentacaoUpdateDto } from './dto';
@@ -23,10 +23,13 @@ export class MovimentacaoController {
         return this.service.update(data)
     }
     
+    // [PAGINADO] retorna { items, total, page, limit } — aceita ?page=N&limit=N
     @Get("/todos")
-    buscarTodos () {
-        return this.service.buscarTodos()
-
+    buscarTodos (
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
+    ) {
+        return this.service.buscarTodos(page ? Number(page) : 1, limit ? Number(limit) : 50)
     }
     
     @Get("/id/:id")

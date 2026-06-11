@@ -70,7 +70,6 @@ import { ItensPdvModule } from './itens/pdv/itenspdv.module';
 import { PedidosModule } from './pedidos/pedidos.module';
 import { ImpressorasModule } from './impressoras/impressoras.module';
 import { JwtModule } from '@nestjs/jwt';
-import { jwtConstants } from './auth/constants';
 import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/auth.guard';
@@ -97,7 +96,7 @@ import { EventosModule } from './eventos/eventos.module';
 
 		JwtModule.register({
 			global: true,
-			secret: jwtConstants.secret,
+			secret: process.env.JWT_SECRET,
 			signOptions: { expiresIn: '1day' },
 		}),
 		AuthModule,

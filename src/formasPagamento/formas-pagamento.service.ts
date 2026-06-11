@@ -18,8 +18,9 @@ export class FormasPagamentoService {
         return this.prisma.empresaFormaPagamento.findFirst({where: { id },include: { forma_pagamento: true }});
     }
 
-    updateAtivo(id: number) {
-        return this.prisma.$queryRaw`UPDATE empresaformapagamento SET ativo = NOT ativo WHERE id = ${id}`
+    async updateAtivo(id: number) {
+        const record = await this.prisma.empresaFormaPagamento.findUniqueOrThrow({ where: { id }, select: { ativo: true } })
+        return this.prisma.empresaFormaPagamento.update({ where: { id }, data: { ativo: !record.ativo } })
     }
 
 

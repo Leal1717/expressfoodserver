@@ -26,9 +26,13 @@ export class PedidosController {
     }
 
     
+    // [PAGINADO] retorna { items, total, page, limit } — aceita ?page=N&limit=N
     @Get("todos")
-    async buscarTodos() {
-        return this.service.buscarTodos()
+    async buscarTodos(
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
+    ) {
+        return this.service.buscarTodos(page ? Number(page) : 1, limit ? Number(limit) : 50)
     }
 
     @Get("id/:id")

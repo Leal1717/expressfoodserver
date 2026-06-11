@@ -180,6 +180,15 @@ export class CriarComandaDto {
   @IsOptional()
   @IsString()
   nome?: string;
+
+  @IsOptional()
+  @IsString()
+  nfc_uid?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  cliente_id?: number;
 }
 
 // -------------------- QUERY

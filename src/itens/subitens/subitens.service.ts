@@ -75,7 +75,10 @@ export class SubitensService {
     
 
     async buscarPorId(id: number) {
-        return this.prisma.tenantClient.subitem.findUnique({where: {id: Number(id)}})
+        return this.prisma.tenantClient.subitem.findUnique({
+            where: {id: Number(id)},
+            include: { estoque_posicao: true }
+        })
     }
 
 

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import {  type Subitem, type Item, Role } from '@prisma/client';
 import { ItensService } from './itens.service';
 import { CreateItemDto, UpdateItemDto } from './dto';
@@ -18,9 +18,13 @@ export class ItensController {
     }
 
     @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO, Role.OPERADOR_GERAL, Role.OPERADOR_SEM_ESTOQUE, Role.OPERADOR_COM_FINANCEIRO)
+    // [PAGINADO] retorna { items, total, page, limit } — aceita ?page=N&limit=N
     @Get("todos")
-    async buscarTodos() {
-        return this.service.buscarTodos()
+    async buscarTodos(
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
+    ) {
+        return this.service.buscarTodos(page ? Number(page) : 1, limit ? Number(limit) : 200)
     }
 
     @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO)

@@ -59,8 +59,13 @@ export class PromocoesService {
         return this.prisma.$queryRaw`UPDATE Promocao SET ativo = NOT ativo WHERE id = ${id}`
     }   
 
-    async buscarTodos() {
-        return this.prisma.tenantClient.promocao.findMany({ include: { item: true } })
+    async buscarTodos(page = 1, limit = 50) {
+        const skip = (page - 1) * limit
+        const [items, total] = await Promise.all([
+            this.prisma.tenantClient.promocao.findMany({ skip, take: limit, include: { item: true }, orderBy: { id: 'asc' } }),
+            this.prisma.tenantClient.promocao.count(),
+        ])
+        return { items, total, page, limit }
     }
 
     async buscarPorId(id:number) {

@@ -65,4 +65,28 @@ export class RelatorialController {
     ) {
         return this.service.buscarSubitens(new Date(inicio), new Date(fim))
     }
+
+    @Get("itens/todos")
+    buscarTodosItens(
+        @Query("inicio") inicio: string,
+        @Query("fim") fim: string,
+    ) {
+        return this.service.buscarTodosItens(new Date(inicio), new Date(fim))
+    }
+
+    @Get("operadores")
+    buscarOperadores(
+        @Query("inicio") inicio: string,
+        @Query("fim") fim: string,
+    ) {
+        return this.service.buscarPorUsuario(new Date(inicio), new Date(fim))
+    }
+
+    @Get("terminais")
+    buscarTerminais(
+        @Query("inicio") inicio: string,
+        @Query("fim") fim: string,
+    ) {
+        return this.service.buscarPorTerminal(new Date(inicio), new Date(fim))
+    }
 }

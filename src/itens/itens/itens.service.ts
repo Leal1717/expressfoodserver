@@ -54,7 +54,6 @@ export class ItensService {
             if (!data.subitens || data.subitens.length == 0) tipo = 'MERCADORIA'
             if (data.combo_itens && data.combo_itens.length > 0) tipo = 'COMBO'
         }
-        console.log("tipo: ", tipo)
         return this.prisma.tenantClient.item.update({
             where: {id: Number(data.id)},
             data: {
@@ -92,14 +91,17 @@ export class ItensService {
     }
 
     
-    async buscarTodos() {
-        return this.prisma.tenantClient.item.findMany({
-            include: {
-                classe: true,
-                subitens: { include: { subitem: true } },
-                promocao: true,
-            },
-        })
+    async buscarTodos(page = 1, limit = 200) {
+        const skip = (page - 1) * limit
+        const [items, total] = await Promise.all([
+            this.prisma.tenantClient.item.findMany({
+                skip, take: limit,
+                include: { classe: true, subitens: { include: { subitem: true } }, promocao: true },
+                orderBy: { index: 'asc' },
+            }),
+            this.prisma.tenantClient.item.count(),
+        ])
+        return { items, total, page, limit }
     }
 
     async buscarIngressos() {

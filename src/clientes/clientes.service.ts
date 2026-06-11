@@ -73,8 +73,13 @@ export class ClientesService {
             return this.prisma.tenantClient.cliente.findFirst({ where: { telefone } })
         }
 
-        async buscarTodos() {
-            return this.prisma.tenantClient.cliente.findMany()
+        async buscarTodos(page = 1, limit = 50) {
+            const skip = (page - 1) * limit
+            const [items, total] = await Promise.all([
+                this.prisma.tenantClient.cliente.findMany({ skip, take: limit, orderBy: { id: 'desc' } }),
+                this.prisma.tenantClient.cliente.count(),
+            ])
+            return { items, total, page, limit }
         }
     
         async buscarPorId(id:number) {

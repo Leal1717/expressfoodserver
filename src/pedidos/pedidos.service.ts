@@ -98,8 +98,13 @@ export class PedidosService {
 
 
 
-    async buscarTodos() {
-        return this.prisma.tenantClient.pedido.findMany()
+    async buscarTodos(page = 1, limit = 50) {
+        const skip = (page - 1) * limit
+        const [items, total] = await Promise.all([
+            this.prisma.tenantClient.pedido.findMany({ skip, take: limit, orderBy: { created_at: 'desc' } }),
+            this.prisma.tenantClient.pedido.count(),
+        ])
+        return { items, total, page, limit }
     }
 
 

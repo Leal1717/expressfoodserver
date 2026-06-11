@@ -48,6 +48,7 @@ export class SalvarTerminalDto {
     @IsOptional() @IsBoolean() pode_abrir_mesa?: boolean;
     @IsOptional() @IsBoolean() pode_dar_desconto?: boolean;
     @IsOptional() @IsBoolean() pode_cancelar_pedido?: boolean;
+    @IsOptional() @IsBoolean() exige_cliente_comanda?: boolean;
 }
 
 export class UpdateTerminalDto {
@@ -84,4 +85,5 @@ export class UpdateTerminalDto {
     @IsOptional() @IsBoolean() pode_abrir_mesa?: boolean;
     @IsOptional() @IsBoolean() pode_dar_desconto?: boolean;
     @IsOptional() @IsBoolean() pode_cancelar_pedido?: boolean;
+    @IsOptional() @IsBoolean() exige_cliente_comanda?: boolean;
 }

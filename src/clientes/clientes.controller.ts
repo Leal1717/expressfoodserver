@@ -1,6 +1,6 @@
 
 
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { type Cliente, Role, type Impressora } from '@prisma/client';
 import { Roles } from 'src/decorators/role.decorator';
 import { ClientesService } from './clientes.service';
@@ -57,10 +57,13 @@ export class ClientesController {
         return this.service.removerEndereco(cliente_id, endereco_id)
     }
     
+    // [PAGINADO] retorna { items, total, page, limit } — aceita ?page=N&limit=N
     @Get("/todos")
-    buscarTodos () {
-        return this.service.buscarTodos()
-
+    buscarTodos (
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
+    ) {
+        return this.service.buscarTodos(page ? Number(page) : 1, limit ? Number(limit) : 50)
     }
     
     @Get("/id/:id")

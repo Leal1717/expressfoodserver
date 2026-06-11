@@ -42,10 +42,17 @@ export class MovimentacaoService {
     }
 
 
-    async buscarTodos() {
-        return this.prisma.tenantClient.estoqueMovimentacao.findMany({
-            include: { subitem: true }
-        })
+    async buscarTodos(page = 1, limit = 50) {
+        const skip = (page - 1) * limit
+        const [items, total] = await Promise.all([
+            this.prisma.tenantClient.estoqueMovimentacao.findMany({
+                skip, take: limit,
+                include: { subitem: true },
+                orderBy: { created_at: 'desc' },
+            }),
+            this.prisma.tenantClient.estoqueMovimentacao.count(),
+        ])
+        return { items, total, page, limit }
     }
 
 
