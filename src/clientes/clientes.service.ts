@@ -14,15 +14,17 @@ export class ClientesService {
         constructor(private prisma: PrismaService) {}
     
         async salvar(data:SalvarClienteDto) {
-            if (data.cpf) {
-                const existe = await this.prisma.tenantClient.cliente.findFirst({ where: { cpf: data.cpf } })
-                if (existe) throw new ConflictException(`CPF ${data.cpf} já cadastrado`)
+            const cpf = data.cpf?.trim() || null
+
+            if (cpf) {
+                const existe = await this.prisma.tenantClient.cliente.findFirst({ where: { cpf } })
+                if (existe) throw new ConflictException(`CPF ${cpf} já cadastrado`)
             }
 
             const fnCliente = await this.prisma.tenantClient.cliente.create({
                 data: {
                     nome: data.nome,
-                    cpf: data.cpf ?? null,
+                    cpf,
                     telefone: data.telefone,
                     genero: data.genero,
                 }
@@ -61,7 +63,7 @@ export class ClientesService {
     
         async criarRapido(data: CriarClienteRapidoDto) {
             return this.prisma.tenantClient.cliente.create({
-                data: { nome: data.nome, cpf: data.cpf ?? null, telefone: data.telefone ?? '', genero: data.genero },
+                data: { nome: data.nome, cpf: data.cpf?.trim() || null, telefone: data.telefone ?? '', genero: data.genero },
             })
         }
 

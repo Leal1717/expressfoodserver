@@ -12,7 +12,10 @@ export class MotoboyService {
 
     findAll() {
         return this.prisma.tenantClient.motoboy.findMany({
-            include: { _count: { select: { pedidos: true } } },
+            include: {
+                _count: { select: { pedidos: true } },
+                usuario: { select: { id: true, nome: true, email: true } },
+            },
             orderBy: { nome: 'asc' },
         });
     }

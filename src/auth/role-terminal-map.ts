@@ -11,4 +11,5 @@ export const ROLE_TERMINAL_MAP: Record<Role, TerminalTipo[]> = {
     [Role.OPERADOR_COM_FINANCEIRO]:[TerminalTipo.POS, TerminalTipo.PDV, TerminalTipo.DELIVERY, ...TOTEM_TABLET],
     [Role.AUTOATENDIMENTO]:        [...TOTEM_TABLET],
     [Role.CONTADOR]:               [TerminalTipo.ADM],
+    [Role.MOTOBOY]:                [TerminalTipo.MOTOBOY],
 };

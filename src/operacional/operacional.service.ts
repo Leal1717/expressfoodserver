@@ -334,6 +334,7 @@ export class OperacionalService {
                     cliente:          { select: { id: true, nome: true, telefone: true } },
                     endereco_entrega: { select: { id: true, rua: true, numero: true, bairro: true, cidade: true, estado: true } },
                     motoboy:          { select: { id: true, nome: true, telefone: true } },
+                    rota:             { select: { id: true, status: true, saiu_at: true } },
                 },
                 orderBy: { created_at: 'desc' },
                 skip, take: limit,
@@ -506,13 +507,32 @@ export class OperacionalService {
     }
 
     async alterarStatusDelivery(pedidoId: string, dto: AlterarDeliveryStatusDto) {
-        return this.prisma.tenantClient.pedido.update({
+        const pedido = await this.prisma.tenantClient.pedido.update({
             where: { id: pedidoId },
             data: {
                 delivery_status: dto.status,
                 motoboy_id: dto.motoboy_id !== undefined ? (dto.motoboy_id ?? null) : undefined,
             },
+            select: { rota_id: true },
         })
+
+        if (dto.status === 'CANCELADO' && pedido.rota_id) {
+            const irmaos = await this.prisma.tenantClient.pedido.findMany({
+                where: { rota_id: pedido.rota_id, id: { not: pedidoId } },
+                select: { delivery_status: true },
+            })
+            const todosFinalizados = irmaos.every(
+                p => p.delivery_status === 'ENTREGUE' || p.delivery_status === 'CANCELADO'
+            )
+            if (todosFinalizados) {
+                await this.prisma.tenantClient.rota.update({
+                    where: { id: pedido.rota_id },
+                    data: { status: 'CANCELADA', concluido_at: new Date() },
+                })
+            }
+        }
+
+        return pedido
     }
 
     // ─────────────────────────────────────────────────────── COMANDA

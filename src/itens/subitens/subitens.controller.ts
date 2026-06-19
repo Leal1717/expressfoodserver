@@ -16,11 +16,13 @@ export class SubitensController {
         return this.service.salvar(data)
     }
 
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.CONTADOR)
     @Get("todos")
     async buscarTodos() {
         return this.service.buscarTodos()
     }
 
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.CONTADOR)
     @Get("id/:id")
     async buscarPorId(
         @Param('id') id:number
@@ -28,9 +30,10 @@ export class SubitensController {
         return this.service.buscarPorId(id)
     }
 
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.CONTADOR)
     @Put("update")
     async update(
-        @Body() data: SubitemUpdateDto        
+        @Body() data: SubitemUpdateDto
     ) {
         return this.service.update(data)
     }

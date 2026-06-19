@@ -100,6 +100,7 @@ model Empresa {
   grupos_fiscais        GrupoFiscal[]
   motoboys              Motoboy[]
   zonas_entrega         ZonaEntrega[]
+  rotas                 Rota[]
   eventos               Evento[]
   mercadopago_credencial MercadoPagoCredencial?
   caixas                Caixa[]
@@ -194,8 +195,9 @@ model Usuario {
   empresa_id Int
   empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
 
-  vendas Pedido[]
-  caixas Caixa[]
+  vendas          Pedido[]
+  caixas          Caixa[]
+  motoboy_profile Motoboy?
 
   @@unique([email])
   @@index([empresa_id])
@@ -213,6 +215,8 @@ enum Role {
   AUTOATENDIMENTO
 
   CONTADOR
+
+  MOTOBOY
 }
 
 enum TerminalTipo {
@@ -226,7 +230,7 @@ enum TerminalTipo {
   AUTO_TOTEM //auto de autoatendimento
   AUTO_TABLET //auto de autoatendimento
   CARDAPIO_DIGITAL //cardápio digital em tablets nas mesas
-
+  MOTOBOY
 }
 
 enum DeliveryStatus {
@@ -236,7 +240,23 @@ enum DeliveryStatus {
   AGUARDANDO_MOTOBOY
   A_CAMINHO
   ENTREGUE
+  NAO_ENTREGUE
   CANCELADO
+}
+
+enum MotivoNaoEntrega {
+  CLIENTE_AUSENTE
+  ENDERECO_NAO_ENCONTRADO
+  RECUSOU_PEDIDO
+  OUTRO
+}
+
+enum OcorrenciaTipo {
+  TRANSITO
+  ACIDENTE
+  CLIMA
+  VEICULO
+  OUTRO
 }
 
 enum CanalOrigem {
@@ -261,6 +281,7 @@ model Terminal {
   tem_mesa Boolean @default(false) // se true, terminal tem acesso a funcionalidades de mesa (ex: abrir mesa, transferir mesa, etc)
   tem_senha Boolean @default(false) // se true, terminal tem acesso a funcionalidades de senha (ex: gerar senha, chamar senha, etc)
   tem_comanda Boolean @default(false) // se true, terminal tem acesso a funcionalidades de comanda (ex: abrir comanda, transferir comanda, etc)
+  tem_delivery Boolean @default(false) // se true, terminal tem acesso à tela de gestão de delivery
 
   pode_abrir_comanda Boolean @default(false) // se true, terminal pode abrir comandas (mesmo que o formato de trabalho da empresa seja mesa ou senha)
   pode_abrir_mesa Boolean @default(false) // se true, terminal pode abrir mesas (mesmo que o formato de trabalho da empresa seja comanda ou senha)
@@ -461,6 +482,9 @@ model Subitem {
   estoque_posicao      EstoquePosicao?
   estoque_movimentacao EstoqueMovimentacao[]
 
+  grupo_fiscal_id Int?
+  grupo_fiscal    GrupoFiscal? @relation("GrupoFiscalSubitens", fields: [grupo_fiscal_id], references: [id])
+
   empresa_id Int
   empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
 
@@ -520,7 +544,8 @@ model GrupoFiscal {
   empresa_id Int
   empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
 
-  itens Item[]
+  itens    Item[]
+  subitens Subitem[] @relation("GrupoFiscalSubitens")
 
   @@unique([nome, empresa_id])
   @@index([empresa_id])
@@ -827,16 +852,47 @@ model Evento {
 
 // ----------------------------------------------------------------------------------------------------------------------- delivery
 
+enum RotaStatus {
+  EM_ANDAMENTO
+  CONCLUIDA
+  CANCELADA
+}
+
+model Rota {
+  id           Int        @id @default(autoincrement())
+  status       RotaStatus @default(EM_ANDAMENTO)
+  criado_at    DateTime   @default(now())
+  saiu_at      DateTime?
+  concluido_at DateTime?
+
+  ocorrencia_tipo      OcorrenciaTipo? // problema ativo reportado pelo motoboy
+  ocorrencia_descricao String?
+
+  motoboy_id Int
+  motoboy    Motoboy @relation(fields: [motoboy_id], references: [id])
+  empresa_id Int
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+
+  pedidos Pedido[]
+
+  @@index([empresa_id])
+  @@index([empresa_id, status])
+}
+
 model Motoboy {
   id       Int     @id @default(autoincrement())
   nome     String
   telefone String
   ativo    Boolean @default(true)
 
+  usuario_id Int?     @unique
+  usuario    Usuario? @relation(fields: [usuario_id], references: [id], onDelete: SetNull)
+
   empresa_id Int
   empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
 
   pedidos Pedido[]
+  rotas   Rota[]
 
   @@index([empresa_id])
 }
@@ -944,6 +1000,7 @@ model Pedido {
 
   // Delivery
   delivery_status     DeliveryStatus?
+  motivo_nao_entrega  MotivoNaoEntrega?
   cpf_nota            String?      // CPF do consumidor para nota fiscal (autoatendimento)
   canal_origem        CanalOrigem?
   taxa_entrega        Decimal?        @db.Decimal(10, 2)
@@ -951,6 +1008,8 @@ model Pedido {
   endereco_entrega    Endereco?       @relation("EnderecoEntrega", fields: [endereco_entrega_id], references: [id])
   motoboy_id          Int?
   motoboy             Motoboy?        @relation(fields: [motoboy_id], references: [id], onDelete: SetNull)
+  rota_id             Int?
+  rota                Rota?           @relation(fields: [rota_id], references: [id], onDelete: SetNull)
   zona_entrega_id     Int?
   zona_entrega        ZonaEntrega?    @relation(fields: [zona_entrega_id], references: [id], onDelete: SetNull)
   producao_inicio_at  DateTime?

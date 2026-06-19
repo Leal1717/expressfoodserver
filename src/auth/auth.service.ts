@@ -45,6 +45,7 @@ export class AuthService {
                     tem_mesa:             true,
                     tem_comanda:          true,
                     tem_senha:            true,
+                    tem_delivery:         true,
                     pode_abrir_comanda:   true,
                     pode_abrir_mesa:      true,
                     pode_cancelar_pedido: true,

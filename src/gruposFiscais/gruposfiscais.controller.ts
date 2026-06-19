@@ -14,11 +14,13 @@ export class GruposfiscaisController {
         return this.service.create(data);
     }
 
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.CONTADOR)
     @Get('todos')
     buscarTodos() {
         return this.service.findAll();
     }
 
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.CONTADOR)
     @Get('id/:id')
     buscarPorId(@Param('id') id: number) {
         return this.service.findOne(Number(id));

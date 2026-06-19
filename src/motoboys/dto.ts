@@ -12,6 +12,11 @@ export class CriarMotoboyDto {
     @IsOptional()
     @IsBoolean()
     ativo?: boolean;
+
+    @IsOptional()
+    @IsInt()
+    @Type(() => Number)
+    usuario_id?: number | null;
 }
 
 export class AtualizarMotoboyDto extends CriarMotoboyDto {

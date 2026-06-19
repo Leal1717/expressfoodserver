@@ -17,7 +17,7 @@ export class ItensController {
         return this.service.salvar(data)
     }
 
-    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO, Role.OPERADOR_GERAL, Role.OPERADOR_SEM_ESTOQUE, Role.OPERADOR_COM_FINANCEIRO)
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO, Role.OPERADOR_GERAL, Role.OPERADOR_SEM_ESTOQUE, Role.OPERADOR_COM_FINANCEIRO, Role.CONTADOR)
     // [PAGINADO] retorna { items, total, page, limit } — aceita ?page=N&limit=N
     @Get("todos")
     async buscarTodos(
@@ -33,7 +33,7 @@ export class ItensController {
         return this.service.buscarIngressos()
     }
 
-    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO)
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO, Role.CONTADOR)
     @Get("id/:id")
     async buscarPorId(
         @Param('id') id:number
@@ -41,9 +41,10 @@ export class ItensController {
         return this.service.buscarPorId(id)
     }
 
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.CONTADOR)
     @Put("update")
     async update(
-        @Body() data: UpdateItemDto        
+        @Body() data: UpdateItemDto
     ) {
         return this.service.update(data)
     }

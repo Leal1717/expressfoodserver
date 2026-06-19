@@ -1,27 +1,40 @@
 
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { Empresa, PrismaClient, Usuario } from '@prisma/client';
+import { Usuario } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
-export class UsuariosService { 
+export class UsuariosService {
     constructor(private prisma: PrismaService) {}
 
-    async salvar(data:Usuario) {
-        const user = await this.prisma.tenantClient.usuario.create({data: data})
-        
-        const empresa_id = user.empresa_id
+    async salvar(data: Usuario) {
+        const user = await this.prisma.tenantClient.usuario.create({ data })
 
-        const res = await this.prisma.empresa.findFirst({ where: { id: Number(empresa_id) }, include: {plano: true, usuarios: true} })
+        const res = await this.prisma.empresa.findFirst({
+            where: { id: Number(user.empresa_id) },
+            include: { plano: true, usuarios: true },
+        })
         if (!res) {
-            await this.prisma.usuario.delete({where: { id: user.id }})
-            throw new NotFoundException("Empresa nao encontrada");
+            await this.prisma.usuario.delete({ where: { id: user.id } })
+            throw new NotFoundException('Empresa nao encontrada')
         }
-        if ( res.usuarios.length >= res.plano.qtd_licencas) {
-            await this.prisma.usuario.delete({where: { id: user.id }})
-            throw new BadRequestException("Limite de usuarios atingido");
+        if (res.usuarios.length >= res.plano.qtd_licencas) {
+            await this.prisma.usuario.delete({ where: { id: user.id } })
+            throw new BadRequestException('Limite de usuarios atingido')
         }
 
+        if (user.role === 'MOTOBOY') {
+            await this.prisma.tenantClient.motoboy.create({
+                data: {
+                    nome: user.nome,
+                    telefone: user.telefone ?? '',
+                    usuario_id: user.id,
+                    empresa_id: user.empresa_id,
+                },
+            })
+        }
+
+        return user
     }
 
     async buscarTodos() {
@@ -29,24 +42,49 @@ export class UsuariosService {
     }
 
     async buscarPorId(id: number) {
-        return this.prisma.tenantClient.usuario.findUnique({where: {id: Number(id)}})
+        return this.prisma.tenantClient.usuario.findUnique({ where: { id: Number(id) } })
     }
 
     async buscarPorEmail(username: string) {
-        const user = await this.prisma.usuario.findFirst({where: { email: username } })
-        return user
+        return this.prisma.usuario.findFirst({ where: { email: username } })
     }
 
-    async update(data:Usuario) {
-        return this.prisma.tenantClient.usuario.update({where: {id: Number(data.id)}, data: data})
-    }
+    async update(data: Usuario) {
+        const updated = await this.prisma.tenantClient.usuario.update({
+            where: { id: Number(data.id) },
+            data,
+        })
 
-    async delete(id:number) {
-        const usuarios_antes = await this.prisma.tenantClient.usuario.findFirst({where: {role: "OWNER"}})
-        if (usuarios_antes && usuarios_antes.id == id) {
-            throw new BadRequestException("Voce nao pode deletar o OWNER")
+        if (updated.role === 'MOTOBOY') {
+            const motoboy = await this.prisma.tenantClient.motoboy.findFirst({
+                where: { usuario_id: updated.id },
+            })
+            if (motoboy) {
+                await this.prisma.tenantClient.motoboy.update({
+                    where: { id: motoboy.id },
+                    data: { nome: updated.nome, telefone: updated.telefone },
+                })
+            } else {
+                // role mudou para MOTOBOY em edição — cria o perfil
+                await this.prisma.tenantClient.motoboy.create({
+                    data: {
+                        nome: updated.nome,
+                        telefone: updated.telefone ?? '',
+                        usuario_id: updated.id,
+                        empresa_id: updated.empresa_id,
+                    },
+                })
+            }
         }
-        return this.prisma.tenantClient.usuario.delete({where: {id: Number(id)}})
+
+        return updated
     }
 
+    async delete(id: number) {
+        const owner = await this.prisma.tenantClient.usuario.findFirst({ where: { role: 'OWNER' } })
+        if (owner && owner.id == id) {
+            throw new BadRequestException('Voce nao pode deletar o OWNER')
+        }
+        return this.prisma.tenantClient.usuario.delete({ where: { id: Number(id) } })
+    }
 }

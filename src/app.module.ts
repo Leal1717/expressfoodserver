@@ -10,6 +10,7 @@ import { ZonasEntregaService } from './zonasEntrega/zonas-entrega.service';
 import { MotoboyModule } from './motoboys/motoboys.module';
 import { MotoboyController } from './motoboys/motoboys.controller';
 import { MotoboyService } from './motoboys/motoboys.service';
+import { RotasModule } from './rotas/rotas.module';
 import { GruposfiscaisModule } from './gruposFiscais/gruposfiscais.module';
 import { GruposfiscaisController } from './gruposFiscais/gruposfiscais.controller';
 import { GruposfiscaisService } from './gruposFiscais/gruposfiscais.service';
@@ -91,6 +92,7 @@ import { EventosModule } from './eventos/eventos.module';
 		LocaisModule,
 		ZonasEntregaModule,
 		MotoboyModule,
+		RotasModule,
 		GruposfiscaisModule,
 		ClientesModule,
 

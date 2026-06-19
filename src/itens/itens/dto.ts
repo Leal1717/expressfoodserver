@@ -64,6 +64,11 @@ export class CreateItemDto {
   @ValidateNested({ each: true })
   @Type(() => ComboItemDto)
   combo_itens?: ComboItemDto[];
+
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  grupo_fiscal_id?: number;
 }
 export class UpdateItemDto {
   @IsInt()
@@ -105,4 +110,9 @@ export class UpdateItemDto {
   @ValidateNested({ each: true })
   @Type(() => ComboItemDto)
   combo_itens?: ComboItemDto[];
+
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  grupo_fiscal_id?: number;
 }

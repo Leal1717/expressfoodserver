@@ -14,12 +14,13 @@ export class SubitensService {
      * uma movimentcao de stoque na tabela estoque-movimentacao como se estivesse dando a primeira esntrada de estoque
      */
     async salvar(data:SubitemCriarDto) {
-        const subitem = await this.prisma.tenantClient.subitem.create({data: { 
+        const subitem = await this.prisma.tenantClient.subitem.create({data: {
             nome: data.nome,
             controla_estoque: data.controla_estoque,
             fator_conversao: data.fator_conversao,
             unidade_compra: data.unidade_compra,
-            unidade_venda: data.unidade_venda
+            unidade_venda: data.unidade_venda,
+            grupo_fiscal_id: data.grupo_fiscal_id ?? null,
          }})
         let estoque_posicao: any = {}
         let estoque_movimentacao: any = {}
@@ -58,7 +59,8 @@ export class SubitensService {
             controla_estoque: data.controla_estoque,
             fator_conversao: data.fator_conversao,
             unidade_compra: data.unidade_compra,
-            unidade_venda: data.unidade_venda
+            unidade_venda: data.unidade_venda,
+            grupo_fiscal_id: data.grupo_fiscal_id ?? null,
         }})
         return {subitem: updated, estoque_posicao, estoque_movimentacao}
     }
@@ -68,7 +70,9 @@ export class SubitensService {
 
     
     async buscarTodos() {
-        return this.prisma.tenantClient.subitem.findMany()
+        return this.prisma.tenantClient.subitem.findMany({
+            include: { grupo_fiscal: { select: { id: true, nome: true } } },
+        })
     }
 
 
@@ -77,7 +81,7 @@ export class SubitensService {
     async buscarPorId(id: number) {
         return this.prisma.tenantClient.subitem.findUnique({
             where: {id: Number(id)},
-            include: { estoque_posicao: true }
+            include: { estoque_posicao: true, grupo_fiscal: true }
         })
     }
 

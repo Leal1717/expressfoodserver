@@ -29,6 +29,7 @@ export class ItensService {
                 tipo: tipo,
 
                 classe_id: data.classe_id,
+                grupo_fiscal_id: data.grupo_fiscal_id ?? null,
 
                 subitens: {
                     create: data.subitens
@@ -63,6 +64,7 @@ export class ItensService {
                 tempo_preparo: data.tempo_preparo ?? 0,
 
                 classe_id: data.classe_id,
+                grupo_fiscal_id: data.grupo_fiscal_id ?? null,
 
                 tipo: tipo,
 
@@ -96,7 +98,7 @@ export class ItensService {
         const [items, total] = await Promise.all([
             this.prisma.tenantClient.item.findMany({
                 skip, take: limit,
-                include: { classe: true, subitens: { include: { subitem: true } }, promocao: true },
+                include: { classe: true, subitens: { include: { subitem: true } }, promocao: true, grupo_fiscal: { select: { id: true, nome: true } } },
                 orderBy: { index: 'asc' },
             }),
             this.prisma.tenantClient.item.count(),
@@ -117,7 +119,8 @@ export class ItensService {
             where: {id: Number(id)},
             include: {
                 subitens: true,
-                combos_as_combo: { include: { item: true } }
+                combos_as_combo: { include: { item: true } },
+                grupo_fiscal: true,
             }
         })
     }

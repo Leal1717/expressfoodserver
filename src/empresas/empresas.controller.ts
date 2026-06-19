@@ -18,7 +18,7 @@ export class EmpresasController {
         return this.service.buscarPorId(id)
     }
 
-    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO)
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO, Role.CONTADOR)
     @Get("logada")
     async buscarLogada() {
         return this.service.buscarLogada()
@@ -46,7 +46,7 @@ export class EmpresasController {
         return this.service.update(data)
     }
 
-    @Roles(Role.OWNER)
+    @Roles(Role.OWNER, Role.CONTADOR)
     @Put("configurar-fiscal")
     async configurarFiscal(
         @Body() data: ConfigurarFiscalEmpresaDto

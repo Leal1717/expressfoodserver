@@ -57,7 +57,7 @@ export class PedidosService {
                 endereco_entrega_id: data.endereco_entrega_id,
                 zona_entrega_id: data.zona_entrega_id,
                 motoboy_id: data.motoboy_id,
-                delivery_status: data.canal_origem ? 'RECEBIDO' : undefined,
+                delivery_status: data.canal_origem ? 'CONFIRMADO' : undefined,
 
                 itens: {
                     create: data.itens.map(i => ({

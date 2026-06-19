@@ -43,6 +43,11 @@ export class SubitemCriarDto {
   @IsNumber({ maxDecimalPlaces: 2 })
   @Type(() => Number)
   custo_unitario?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  grupo_fiscal_id?: number;
 }
 
 
@@ -84,6 +89,11 @@ export class SubitemUpdateDto {
   @IsNumber({ maxDecimalPlaces: 2 })
   @Type(() => Number)
   custo_unitario?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  grupo_fiscal_id?: number;
 }
 
 
