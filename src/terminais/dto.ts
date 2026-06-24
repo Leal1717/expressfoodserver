@@ -42,6 +42,7 @@ export class SalvarTerminalDto {
     @IsOptional() @IsBoolean() tem_mesa?: boolean;
     @IsOptional() @IsBoolean() tem_comanda?: boolean;
     @IsOptional() @IsBoolean() tem_senha?: boolean;
+    @IsOptional() @IsBoolean() tem_ficha?: boolean;
     @IsOptional() @IsBoolean() tem_delivery?: boolean;
 
     // permissions
@@ -80,6 +81,7 @@ export class UpdateTerminalDto {
     @IsOptional() @IsBoolean() tem_mesa?: boolean;
     @IsOptional() @IsBoolean() tem_comanda?: boolean;
     @IsOptional() @IsBoolean() tem_senha?: boolean;
+    @IsOptional() @IsBoolean() tem_ficha?: boolean;
     @IsOptional() @IsBoolean() tem_delivery?: boolean;
 
     // permissions

@@ -9,7 +9,7 @@ export class FormasPagamentoController {
     constructor(private readonly service: FormasPagamentoService) {}
 
 
-    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO)
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO, Role.OPERADOR)
     @Get('todos')
     async buscarTodos() {
         return this.service.findAll();

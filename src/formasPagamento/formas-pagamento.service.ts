@@ -7,11 +7,25 @@ import { IsNumberOptions } from 'class-validator';
 export class FormasPagamentoService {
     constructor(private prisma: PrismaService) {}
 
-    findAll() {
-        return this.prisma.empresaFormaPagamento.findMany({
+    async findAll() {
+        const existing = await this.prisma.tenantClient.empresaFormaPagamento.findMany({
             orderBy: { id: 'asc' },
-            include: { forma_pagamento: true }
+            include: { forma_pagamento: true },
         });
+
+        if (existing.length === 0) {
+            const globais = await this.prisma.formaPagamentoGlobal.findMany();
+            await this.prisma.tenantClient.empresaFormaPagamento.createMany({
+                data: globais.map(f => ({ forma_pagamento_id: f.id, ativo: true })),
+                skipDuplicates: true,
+            });
+            return this.prisma.tenantClient.empresaFormaPagamento.findMany({
+                orderBy: { id: 'asc' },
+                include: { forma_pagamento: true },
+            });
+        }
+
+        return existing;
     }
 
     findOne(id: number) {

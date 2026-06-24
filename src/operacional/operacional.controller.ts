@@ -122,7 +122,21 @@ export class OperacionalController {
     ) {
         return this.service.setSenhaPronta(Number(numero), pronta)
     }
-    
+
+    @Post("fichas")
+    async criarFichas(@Body('pedido_id') pedidoId: string) {
+        return this.service.criarFichas(pedidoId)
+    }
+
+    @Get("fichas/pendentes")
+    async buscarFichasPendentes() {
+        return this.service.buscarFichasPendentes()
+    }
+
+    @Put("fichas/:id/entregar")
+    async entregarFicha(@Param('id') id: string) {
+        return this.service.entregarFicha(id)
+    }
 
     // ------------------------------------------------------------------------------------------------------------------- cozinha
     @Get("kds")

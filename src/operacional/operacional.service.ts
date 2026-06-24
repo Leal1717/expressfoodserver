@@ -310,7 +310,7 @@ export class OperacionalService {
         const formatos: Record<string, any> = {
             mesa:    { NOT: { mesa_id: null } },
             comanda: { NOT: { comanda_id: null } },
-            senha:   { NOT: { senha_id: null } },
+            senha:   { NOT: { senha_id: null }, status: 'PENDENTE' },
             balcao:  { formato: 'BALCAO' },
             delivery:{ formato: 'DELIVERY' },
         };
@@ -420,6 +420,55 @@ export class OperacionalService {
         return this.prisma.tenantClient.pedido.updateMany({
             where: { senha_id: numero, status: 'PENDENTE' },
             data: { senha_pronta: pronta },
+        })
+    }
+
+    async criarFichas(pedidoId: string) {
+        const empresaId = Number(this.tenant.empresaId)
+        return this.prisma.$transaction(async (tx) => {
+            const pedido = await tx.pedido.findFirst({
+                where: { id: pedidoId, empresa_id: empresaId },
+                include: { itens: { include: { item: { select: { nome: true } } } } },
+            })
+            if (!pedido) throw new BadRequestException('Pedido não encontrado')
+
+            const max = await tx.ficha.aggregate({
+                _max: { numero: true },
+                where: { empresa_id: empresaId },
+            })
+            let proximo = (max._max.numero ?? 0) + 1
+
+            const fichas: any[] = []
+            for (const item of pedido.itens) {
+                const ficha = await tx.ficha.create({
+                    data: {
+                        numero:         proximo++,
+                        empresa_id:     empresaId,
+                        pedido_id:      pedidoId,
+                        pedido_item_id: item.id,
+                        item_nome:      item.item.nome,
+                        quantidade:     Number(item.quantidade),
+                        preco_unit:     item.preco,
+                    },
+                })
+                fichas.push(ficha)
+            }
+            return fichas
+        })
+    }
+
+    async buscarFichasPendentes() {
+        return this.prisma.tenantClient.ficha.findMany({
+            where: { entregue_em: null },
+            orderBy: { numero: 'asc' },
+        })
+    }
+
+    async entregarFicha(id: string) {
+        const empresaId = Number(this.tenant.empresaId)
+        return this.prisma.tenantClient.ficha.updateMany({
+            where: { id, empresa_id: empresaId },
+            data: { entregue_em: new Date() },
         })
     }
 

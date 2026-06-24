@@ -91,6 +91,7 @@ model Empresa {
   mesas                 Mesa[]
   comandas              Comanda[]
   senhas                Senha[]
+  fichas                Ficha[]
   estoque_movimentacao  EstoqueMovimentacao[]
   estoque_posicao       EstoquePosicao[]
   forma_pagamentos      EmpresaFormaPagamento[]
@@ -277,11 +278,12 @@ model Terminal {
 
   faz_pagamento Boolean @default(false) // se true, terminal exige que cada venda tenha um pagamento associado (caixa, PDV)
   
-  tem_balcao Boolean @default(false) // se true, terminal tem acesso a funcionalidades de balcão (ex: imprimir recibo, acessar vendas antigas, etc)
-  tem_mesa Boolean @default(false) // se true, terminal tem acesso a funcionalidades de mesa (ex: abrir mesa, transferir mesa, etc)
-  tem_senha Boolean @default(false) // se true, terminal tem acesso a funcionalidades de senha (ex: gerar senha, chamar senha, etc)
-  tem_comanda Boolean @default(false) // se true, terminal tem acesso a funcionalidades de comanda (ex: abrir comanda, transferir comanda, etc)
-  tem_delivery Boolean @default(false) // se true, terminal tem acesso à tela de gestão de delivery
+  tem_balcao  Boolean @default(false)
+  tem_mesa    Boolean @default(false)
+  tem_senha   Boolean @default(false) // fila de produção (PDV senhas)
+  tem_ficha   Boolean @default(false) // fichas pré-pagas (POS Android + tela retirada PDV)
+  tem_comanda Boolean @default(false)
+  tem_delivery Boolean @default(false)
 
   pode_abrir_comanda Boolean @default(false) // se true, terminal pode abrir comandas (mesmo que o formato de trabalho da empresa seja mesa ou senha)
   pode_abrir_mesa Boolean @default(false) // se true, terminal pode abrir mesas (mesmo que o formato de trabalho da empresa seja comanda ou senha)
@@ -819,6 +821,27 @@ model Senha {
   @@index([empresa_id])
 }
 
+model Ficha {
+  id             String    @id @default(cuid())
+  numero         Int
+  empresa_id     Int
+  pedido_id      String
+  pedido_item_id String    @unique
+  item_nome      String
+  quantidade     Int
+  preco_unit     Decimal   @db.Decimal(10, 2)
+  entregue_em    DateTime?
+  created_at     DateTime  @default(now())
+
+  empresa     Empresa    @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  pedido      Pedido     @relation(fields: [pedido_id], references: [id], onDelete: Cascade)
+  pedido_item PedidoItem @relation(fields: [pedido_item_id], references: [id], onDelete: Cascade)
+
+  @@unique([numero, empresa_id])
+  @@index([empresa_id])
+  @@index([empresa_id, entregue_em])
+}
+
 // ----------------------------------------------------------------------------------- EVENTOS
 
 enum EventoStatus {
@@ -1026,6 +1049,8 @@ model Pedido {
   caixa_id Int?
   caixa    Caixa? @relation(fields: [caixa_id], references: [id])
 
+  fichas Ficha[]
+
   @@index([empresa_id, created_at])   // relatório principal
   @@index([empresa_id, status])       // filtro de status
   @@index([empresa_id, terminal_id])  // terminal
@@ -1051,6 +1076,7 @@ model PedidoItem {
   desconto   Decimal @default(0) @db.Decimal(10, 2) // desconto aplicado nesse item específico
 
   subitens PedidoItemSubitem[]
+  ficha    Ficha?
 
   @@map("PedidoItem")
 }
