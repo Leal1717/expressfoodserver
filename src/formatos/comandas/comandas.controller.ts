@@ -13,7 +13,7 @@ class AbrirEntradaDto {
     cliente_id?: number;
 }
 
-@Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
+@Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.OPERADOR_GERAL, Role.OPERADOR_SEM_ESTOQUE, Role.OPERADOR_COM_FINANCEIRO)
 @Controller("api/formatos/comandas")
 export class ComandasController {
     constructor(private readonly service : ComandasService) {}

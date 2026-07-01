@@ -1,8 +1,8 @@
-import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { Roles } from 'src/decorators/role.decorator';
 import { CaixaService } from './caixa.service';
-import { AbrirCaixaDto, FecharCaixaDto, ForcarFecharCaixaDto, MovimentarCaixaDto } from './dto';
+import { AbrirCaixaDto, FecharCaixaDto, ForcarFecharCaixaDto, LiberarLoginDto, MovimentarCaixaDto } from './dto';
 
 @Roles(
   Role.OWNER,
@@ -43,6 +43,12 @@ export class CaixaController {
   @Get('resumo/:id')
   resumo(@Param('id') id: string) {
     return this.service.resumo(Number(id));
+  }
+
+  @Roles(Role.OWNER, Role.ADMIN_GERAL)
+  @Patch(':id/liberar-login')
+  liberarLogin(@Param('id') id: string, @Body() dto: LiberarLoginDto) {
+    return this.service.liberarLogin(Number(id), dto);
   }
 
   @Get('todos')

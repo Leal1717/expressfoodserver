@@ -60,6 +60,11 @@ export class TerminaisController {
 
     }
     
+    @Get("/controle")
+    controle() {
+        return this.service.controle()
+    }
+
     @Delete("/delete/:id")
     delete (
         @Param('id') id: number,

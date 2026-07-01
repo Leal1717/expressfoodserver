@@ -4,7 +4,7 @@ import { Role, type Senha } from '@prisma/client';
 import { Roles } from 'src/decorators/role.decorator';
 
 
-@Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
+@Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.OPERADOR_GERAL, Role.OPERADOR_SEM_ESTOQUE, Role.OPERADOR_COM_FINANCEIRO)
 @Controller("api/formatos/senhas")
 export class SenhasController {
     constructor(private readonly service : SenhasService) {}

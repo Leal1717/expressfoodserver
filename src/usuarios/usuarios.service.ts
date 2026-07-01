@@ -8,7 +8,15 @@ export class UsuariosService {
     constructor(private prisma: PrismaService) {}
 
     async salvar(data: Usuario) {
-        const user = await this.prisma.tenantClient.usuario.create({ data })
+        let user: Usuario
+        try {
+            user = await this.prisma.tenantClient.usuario.create({ data })
+        } catch (err: any) {
+            if (err?.code === 'P2002') {
+                throw new BadRequestException('Email já cadastrado')
+            }
+            throw err
+        }
 
         const res = await this.prisma.empresa.findFirst({
             where: { id: Number(user.empresa_id) },

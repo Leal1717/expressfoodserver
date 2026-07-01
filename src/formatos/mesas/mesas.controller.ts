@@ -4,7 +4,7 @@ import { Role, type Mesa } from '@prisma/client';
 import { Roles } from 'src/decorators/role.decorator';
 import { MesaUpdatePosDto } from './dto';
 
-@Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO)
+@Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.OPERADOR_GERAL, Role.OPERADOR_SEM_ESTOQUE, Role.OPERADOR_COM_FINANCEIRO)
 @Controller("api/formatos/mesas")
 export class MesasController {
     constructor(private readonly service : MesasService) {}

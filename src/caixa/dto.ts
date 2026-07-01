@@ -8,6 +8,15 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
+export class LiberarLoginDto {
+  @IsInt()
+  @Type(() => Number)
+  liberado_por_id: number;
+
+  @IsString()
+  liberado_por_nome: string;
+}
+
 export class AbrirCaixaDto {
   @IsInt()
   @Type(() => Number)

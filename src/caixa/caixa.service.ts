@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TenantService } from 'src/tenant/tenant.service';
-import { AbrirCaixaDto, FecharCaixaDto, ForcarFecharCaixaDto, MovimentarCaixaDto } from './dto';
+import { AbrirCaixaDto, FecharCaixaDto, ForcarFecharCaixaDto, LiberarLoginDto, MovimentarCaixaDto } from './dto';
 
 @Injectable()
 export class CaixaService {
@@ -156,6 +156,23 @@ export class CaixaService {
     });
 
     return { ...caixa, vendas };
+  }
+
+  async liberarLogin(caixaId: number, dto: LiberarLoginDto) {
+    const caixa = await this.prisma.tenantClient.caixa.findFirst({
+      where: { id: caixaId, status: 'ABERTO' },
+    });
+    if (!caixa) throw new BadRequestException('Caixa não encontrado ou já fechado.');
+
+    return this.prisma.tenantClient.caixa.update({
+      where: { id: caixaId },
+      data: {
+        login_liberado: true,
+        login_liberado_por_id: dto.liberado_por_id,
+        login_liberado_por_nome: dto.liberado_por_nome,
+        login_liberado_em: new Date(),
+      },
+    });
   }
 
   async listar(page = 1, limit = 20) {

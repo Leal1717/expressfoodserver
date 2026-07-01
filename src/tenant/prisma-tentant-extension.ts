@@ -22,7 +22,7 @@ export const prismaTenantExtension = (tenantService: TenantService) => {
                     const SEM_EMPRESA_ID = new Set(['Endereco', 'CaixaMovimentacao', 'CaixaFechamento'])
 
                     // Operações que usam "where"
-                    if (['findMany', 'findFirst', 'findUnique', 'update', 'updateMany', 'delete', 'deleteMany', 'count'].includes(operation)) {
+                    if (['findMany', 'findFirst', 'findUnique', 'update', 'updateMany', 'delete', 'deleteMany', 'count', 'aggregate', 'groupBy'].includes(operation)) {
                         if (!SEM_EMPRESA_ID.has(model)) {
                             anyArgs.where = { ...anyArgs.where, empresa_id: empresaId };
                         }

@@ -1256,6 +1256,11 @@ model Caixa {
   fechado_em     DateTime?
   observacao     String?
 
+  login_liberado          Boolean   @default(false)
+  login_liberado_por_id   Int?
+  login_liberado_por_nome String?
+  login_liberado_em       DateTime?
+
   movimentacoes CaixaMovimentacao[]
   fechamento    CaixaFechamento?
   pedidos       Pedido[]
