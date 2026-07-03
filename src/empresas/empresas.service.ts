@@ -48,7 +48,8 @@ export class EmpresasService {
                     data: {
                         nome: "adm",
                         empresa_id: empresa.id,
-                        tipo: "ADM"
+                        tipo: "ADM",
+                        plataforma: "DESKTOP"
                     }
                 })
 

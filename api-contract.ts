@@ -17,7 +17,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 type Role          = 'OWNER' | 'ADMIN_GERAL' | 'ADMIN_SEM_FINANCEIRO' | 'OPERADOR_GERAL' | 'OPERADOR_SEM_ESTOQUE' | 'OPERADOR_COM_FINANCEIRO' | 'CONTADOR'
-type TerminalTipo  = 'POS' | 'ADM' | 'PDV' | 'DELIVERY'
+type TerminalTipo  = 'POS' | 'ADM' | 'TABLET' | 'TOTEM' | 'ENTRADA' | 'SAIDA' | 'KDS' | 'MOTOBOY'
+type Plataforma    = 'ANDROID' | 'DESKTOP'
 type PedidoStatus  = 'PENDENTE' | 'PAGA' | 'CANCELADA'
 type PedidoFormato = 'BALCAO' | 'MESA' | 'SENHA' | 'COMANDA' | 'DELIVERY'
 type ComandaStatus = 'OCUPADA' | 'CONTA' | 'PAGA'
@@ -35,6 +36,7 @@ type Terminal = {
     id: number
     nome: string
     tipo: TerminalTipo
+    plataforma: Plataforma
     modelo: string | null
     ativo: boolean
 }

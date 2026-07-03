@@ -72,7 +72,7 @@ async function main() {
 
         // 5. Terminal ADM
         await tx.terminal.create({
-            data: { nome: 'adm', tipo: 'ADM', empresa_id: empresa.id },
+            data: { nome: 'adm', tipo: 'ADM', plataforma: 'DESKTOP', empresa_id: empresa.id },
         });
 
         // 6. Grupos fiscais padrão

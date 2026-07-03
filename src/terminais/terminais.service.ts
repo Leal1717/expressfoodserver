@@ -7,8 +7,6 @@ import CustomException from 'src/exceptions/exceptions';
 
 const SENHA_PADRAO_AUTOATENDIMENTO = '123Totem!'
 
-const TERMINAIS_COM_CAIXA: TerminalTipo[] = [TerminalTipo.POS, TerminalTipo.PDV];
-
 @Injectable()
 export class TerminaisService {
 
@@ -20,10 +18,10 @@ export class TerminaisService {
     async logar(data: UpdateTerminalLoginDto) {
         const terminal = await this.prisma.tenantClient.terminal.findUnique({
             where: { id: data.terminal_id },
-            select: { tipo: true, nome: true },
+            select: { faz_pagamento: true, nome: true },
         });
 
-        if (terminal && TERMINAIS_COM_CAIXA.includes(terminal.tipo)) {
+        if (terminal && terminal.faz_pagamento) {
             const caixaAberto = await this.prisma.tenantClient.caixa.findFirst({
                 where: {
                     operador_id: data.usuario_id,
@@ -65,40 +63,18 @@ export class TerminaisService {
 
     async salvar(data: SalvarTerminalDto) {
         try {
-            const { usuario_email, usuario_senha, ...terminalData } = data
-            const terminal = await this.prisma.tenantClient.terminal.create({ data: terminalData })
+            const terminal = await this.prisma.tenantClient.terminal.create({ data })
 
             const empresaId = Number(this.tenant.empresaId)
 
-            // CARDAPIO_DIGITAL: usuário único compartilhado por todos os terminais da empresa
-            if (data.tipo === TerminalTipo.CARDAPIO_DIGITAL) {
-                const jaExiste = await this.prisma.tenantClient.terminal.count({
-                    where: { tipo: TerminalTipo.CARDAPIO_DIGITAL },
-                })
-                // jaExiste inclui o que acabamos de criar, então > 1 significa que já havia outro
-                if (jaExiste <= 1 && usuario_email && usuario_senha) {
-                    const usuario = await this.prisma.tenantClient.usuario.create({
-                        data: {
-                            nome:       'Cardápio Digital',
-                            email:      usuario_email,
-                            senha:      usuario_senha,
-                            telefone:   '',
-                            role:       Role.AUTOATENDIMENTO,
-                            empresa_id: empresaId,
-                        },
-                    })
-                    return { terminal, usuario: { id: usuario.id, nome: 'Cardápio Digital', email: usuario_email, senha: usuario_senha } }
-                }
-                return { terminal }
-            }
-
-            // AUTO_TOTEM e AUTO_TABLET: cria usuário individual por terminal
-            if (data.tipo === TerminalTipo.AUTO_TOTEM || data.tipo === TerminalTipo.AUTO_TABLET) {
+            // TOTEM e TABLET com autoatendimento=true: cria usuário individual por terminal,
+            // usado pelo pareamento único do dispositivo (OrderingConfigScreen)
+            if (data.tipo === TerminalTipo.TOTEM || data.autoatendimento) {
                 const count = await this.prisma.tenantClient.usuario.count({
                     where: { role: Role.AUTOATENDIMENTO },
                 })
                 const numero = count + 1
-                const prefixo = data.tipo === TerminalTipo.AUTO_TOTEM ? 'TOTEM' : 'TABLET'
+                const prefixo = data.tipo === TerminalTipo.TOTEM ? 'TOTEM' : 'TABLET'
                 const nome  = `${prefixo} ${numero}`
                 const email = `${prefixo.toLowerCase()}${numero}@totem.com`
 
@@ -121,9 +97,9 @@ export class TerminaisService {
         }
     }
 
-    async buscarInfoCardapioDigital() {
+    async buscarInfoAutoatendimento() {
         const terminais = await this.prisma.tenantClient.terminal.findMany({
-            where:  { tipo: TerminalTipo.CARDAPIO_DIGITAL },
+            where:  { autoatendimento: true },
             select: { mesa_nome: true },
         })
         return {

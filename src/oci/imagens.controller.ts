@@ -53,7 +53,7 @@ export class ImagensController {
     async uploadImagemFundoAutoatendimento(@UploadedFile() file: { buffer: Buffer; mimetype: string }) {
         const empresa = await this.buscarEmpresa();
         const { url } = await this.oci.uploadImagemFundoAutoatendimento(empresa!.cnpj, file.buffer, file.mimetype);
-        await this.prisma.terminal.updateMany({ where: { tipo: TerminalTipo.AUTO_TOTEM }, data: { img_fundo_url: url } });
+        await this.prisma.terminal.updateMany({ where: { tipo: TerminalTipo.TOTEM }, data: { img_fundo_url: url } });
         return { url };
     }
 
@@ -61,7 +61,7 @@ export class ImagensController {
     async deleteImagemFundoAutoatendimento() {
         const empresa = await this.buscarEmpresa();
         await this.oci.deleteImagemFundoAutoatendimento(empresa!.cnpj);
-        await this.prisma.terminal.updateMany({ where: { tipo: TerminalTipo.AUTO_TOTEM }, data: { img_fundo_url: null } });
+        await this.prisma.terminal.updateMany({ where: { tipo: TerminalTipo.TOTEM }, data: { img_fundo_url: null } });
         return { ok: true };
     }
 

@@ -1,5 +1,5 @@
 import { IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { TerminalTipo } from '@prisma/client';
+import { Plataforma, TerminalTipo } from '@prisma/client';
 
 export class UpdateTerminalLoginDto {
     @IsInt()
@@ -17,6 +17,9 @@ export class SalvarTerminalDto {
     @IsEnum(TerminalTipo)
     tipo: TerminalTipo;
 
+    @IsEnum(Plataforma)
+    plataforma: Plataforma;
+
     @IsOptional() @IsString()
     modelo?: string;
 
@@ -29,13 +32,6 @@ export class SalvarTerminalDto {
     @IsOptional() @IsString()
     mesa_nome?: string;
 
-    // apenas para criar o usuário compartilhado no primeiro terminal CARDAPIO_DIGITAL
-    @IsOptional() @IsString()
-    usuario_email?: string;
-
-    @IsOptional() @IsString()
-    usuario_senha?: string;
-
     // capabilities
     @IsOptional() @IsBoolean() faz_pagamento?: boolean;
     @IsOptional() @IsBoolean() tem_balcao?: boolean;
@@ -44,6 +40,8 @@ export class SalvarTerminalDto {
     @IsOptional() @IsBoolean() tem_senha?: boolean;
     @IsOptional() @IsBoolean() tem_ficha?: boolean;
     @IsOptional() @IsBoolean() tem_delivery?: boolean;
+    @IsOptional() @IsBoolean() tem_impressora?: boolean;
+    @IsOptional() @IsBoolean() autoatendimento?: boolean;
 
     // permissions
     @IsOptional() @IsBoolean() pode_abrir_comanda?: boolean;
@@ -63,6 +61,9 @@ export class UpdateTerminalDto {
     @IsOptional() @IsEnum(TerminalTipo)
     tipo?: TerminalTipo;
 
+    @IsOptional() @IsEnum(Plataforma)
+    plataforma?: Plataforma;
+
     @IsOptional() @IsString()
     modelo?: string;
 
@@ -83,6 +84,8 @@ export class UpdateTerminalDto {
     @IsOptional() @IsBoolean() tem_senha?: boolean;
     @IsOptional() @IsBoolean() tem_ficha?: boolean;
     @IsOptional() @IsBoolean() tem_delivery?: boolean;
+    @IsOptional() @IsBoolean() tem_impressora?: boolean;
+    @IsOptional() @IsBoolean() autoatendimento?: boolean;
 
     // permissions
     @IsOptional() @IsBoolean() pode_abrir_comanda?: boolean;

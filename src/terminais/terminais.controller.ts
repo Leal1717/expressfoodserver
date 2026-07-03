@@ -46,9 +46,9 @@ export class TerminaisController {
         return this.service.buscarTodos()
     }
 
-    @Get("/cardapio-digital/info")
-    buscarInfoCardapioDigital() {
-        return this.service.buscarInfoCardapioDigital()
+    @Get("/autoatendimento/info")
+    buscarInfoAutoatendimento() {
+        return this.service.buscarInfoAutoatendimento()
     }
 
     @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO, Role.OPERADOR_GERAL, Role.OPERADOR_SEM_ESTOQUE, Role.OPERADOR_COM_FINANCEIRO)

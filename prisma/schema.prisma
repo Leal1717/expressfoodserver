@@ -223,15 +223,17 @@ enum Role {
 enum TerminalTipo {
   POS
   ADM
-  PDV
-  DELIVERY
+  TABLET
+  TOTEM
   ENTRADA
   SAIDA
   KDS
-  AUTO_TOTEM //auto de autoatendimento
-  AUTO_TABLET //auto de autoatendimento
-  CARDAPIO_DIGITAL //cardápio digital em tablets nas mesas
   MOTOBOY
+}
+
+enum Plataforma {
+  ANDROID
+  DESKTOP
 }
 
 enum DeliveryStatus {
@@ -270,20 +272,23 @@ enum CanalOrigem {
 
 
 model Terminal {
-  id     Int          @id @default(autoincrement())
-  nome   String
-  tipo   TerminalTipo
-  modelo String?
-  ativo  Boolean      @default(true)
+  id         Int          @id @default(autoincrement())
+  nome       String
+  tipo       TerminalTipo
+  plataforma Plataforma
+  modelo     String?
+  ativo      Boolean      @default(true)
 
   faz_pagamento Boolean @default(false) // se true, terminal exige que cada venda tenha um pagamento associado (caixa, PDV)
-  
+
   tem_balcao  Boolean @default(false)
   tem_mesa    Boolean @default(false)
-  tem_senha   Boolean @default(false) // fila de produção (PDV senhas)
-  tem_ficha   Boolean @default(false) // fichas pré-pagas (POS Android + tela retirada PDV)
+  tem_senha   Boolean @default(false) // fila de produção — senha por pedido, não imprime
+  tem_ficha   Boolean @default(false) // ficha por item — sempre imprime um token por item (POS Android + tela retirada PDV)
   tem_comanda Boolean @default(false)
   tem_delivery Boolean @default(false)
+  tem_impressora Boolean @default(false) // se true, imprime recibo em qualquer venda (balcão/comanda/mesa), independente de tem_ficha/tem_senha
+  autoatendimento Boolean @default(false) // se true, o próprio cliente opera o terminal (TABLET), sem pagamento neste aparelho
 
   pode_abrir_comanda Boolean @default(false) // se true, terminal pode abrir comandas (mesmo que o formato de trabalho da empresa seja mesa ou senha)
   pode_abrir_mesa Boolean @default(false) // se true, terminal pode abrir mesas (mesmo que o formato de trabalho da empresa seja comanda ou senha)
@@ -292,7 +297,7 @@ model Terminal {
   exige_cliente_comanda Boolean @default(false) // se true, toda comanda aberta neste terminal deve ter um cliente vinculado
 
   img_fundo_url String?       // para terminal de autoatendimento, a imagem de fundo do app
-  mesa_nome     String?       // para CARDAPIO_DIGITAL: nome da mesa a que este tablet está fixado
+  mesa_nome     String?       // para TABLET com autoatendimento=true: nome da mesa a que este tablet está fixado
 
   pedidos Pedido[]
 
