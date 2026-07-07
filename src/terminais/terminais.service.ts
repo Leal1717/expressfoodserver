@@ -61,6 +61,14 @@ export class TerminaisService {
         });
     }
 
+    async heartbeat(terminal_id: number) {
+        await this.prisma.tenantClient.terminal.update({
+            where: { id: terminal_id },
+            data: { ultima_atividade: new Date() },
+        });
+        return { ok: true };
+    }
+
     async salvar(data: SalvarTerminalDto) {
         try {
             const terminal = await this.prisma.tenantClient.terminal.create({ data })
@@ -124,10 +132,12 @@ export class TerminaisService {
                 t.nome                                                                   AS terminal_nome,
                 t.tipo                                                                   AS terminal_tipo,
                 t.ativo                                                                  AS terminal_ativo,
+                t.ultima_atividade,
                 c.id                                                                     AS caixa_id,
                 c.operador_nome,
                 c.aberto_em,
                 c.valor_abertura,
+                u.nome                                                                   AS ultimo_operador_nome,
                 COALESCE(SUM(CASE WHEN vhp.tipo_pagamento = 'DINHEIRO' THEN vhp.valor ELSE 0 END), 0) AS total_dinheiro,
                 COALESCE(SUM(vhp.valor), 0)                                              AS total_vendas,
                 CAST(COUNT(DISTINCT vh.id) AS SIGNED)                                   AS qtd_vendas
@@ -142,25 +152,37 @@ export class TerminaisService {
                 AND vh.status     = 'PAGA'
             LEFT JOIN VendaHistoricoPagamento vhp
                 ON  vhp.venda_historico_id = vh.id
+            LEFT JOIN Usuario u
+                ON  u.id = t.ultimo_login_usuario_id
             WHERE t.empresa_id = ${empresaId}
-            GROUP BY t.id, t.nome, t.tipo, t.ativo, c.id, c.operador_nome, c.aberto_em, c.valor_abertura
+            GROUP BY t.id, t.nome, t.tipo, t.ativo, t.ultima_atividade, c.id, c.operador_nome, c.aberto_em, c.valor_abertura, u.nome
             ORDER BY CASE WHEN c.id IS NULL THEN 1 ELSE 0 END ASC, t.tipo ASC, t.nome ASC
         `;
 
-        return rows.map(r => ({
-            terminal_id:    Number(r.terminal_id),
-            terminal_nome:  r.terminal_nome as string,
-            terminal_tipo:  r.terminal_tipo as string,
-            terminal_ativo: Boolean(r.terminal_ativo),
-            aberto:         r.caixa_id !== null,
-            caixa_id:       r.caixa_id !== null ? Number(r.caixa_id) : null,
-            operador_nome:  r.operador_nome ?? null,
-            aberto_em:      r.aberto_em ?? null,
-            valor_abertura: r.valor_abertura !== null ? Number(r.valor_abertura) : null,
-            total_dinheiro: Number(r.total_dinheiro),
-            total_vendas:   Number(r.total_vendas),
-            qtd_vendas:     Number(r.qtd_vendas),
-        }));
+        const LIMITE_ONLINE_MS = 3 * 60 * 1000; // heartbeat a cada 60s; tolera 2 batidas perdidas
+        const agora = Date.now();
+
+        return rows.map(r => {
+            const aberto = r.caixa_id !== null;
+            const online = r.ultima_atividade !== null
+                && (agora - new Date(r.ultima_atividade).getTime()) < LIMITE_ONLINE_MS;
+
+            return {
+                terminal_id:    Number(r.terminal_id),
+                terminal_nome:  r.terminal_nome as string,
+                terminal_tipo:  r.terminal_tipo as string,
+                terminal_ativo: Boolean(r.terminal_ativo),
+                aberto,
+                online:         aberto || online,
+                caixa_id:       r.caixa_id !== null ? Number(r.caixa_id) : null,
+                operador_nome:  r.operador_nome ?? (online ? r.ultimo_operador_nome ?? null : null),
+                aberto_em:      r.aberto_em ?? null,
+                valor_abertura: r.valor_abertura !== null ? Number(r.valor_abertura) : null,
+                total_dinheiro: Number(r.total_dinheiro),
+                total_vendas:   Number(r.total_vendas),
+                qtd_vendas:     Number(r.qtd_vendas),
+            };
+        });
     }
 
     async update(data: UpdateTerminalDto) {

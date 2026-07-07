@@ -18,7 +18,7 @@ export class EmpresasController {
         return this.service.buscarPorId(id)
     }
 
-    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO, Role.CONTADOR)
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO, Role.CONTADOR, Role.OPERADOR_GERAL, Role.OPERADOR_SEM_ESTOQUE, Role.OPERADOR_COM_FINANCEIRO)
     @Get("logada")
     async buscarLogada() {
         return this.service.buscarLogada()

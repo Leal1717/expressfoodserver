@@ -428,7 +428,14 @@ export class OperacionalService {
         return this.prisma.$transaction(async (tx) => {
             const pedido = await tx.pedido.findFirst({
                 where: { id: pedidoId, empresa_id: empresaId },
-                include: { itens: { include: { item: { select: { nome: true } } } } },
+                include: {
+                    itens: {
+                        include: {
+                            item: { select: { nome: true } },
+                            subitens: { include: { subitem: { select: { nome: true } } } },
+                        },
+                    },
+                },
             })
             if (!pedido) throw new BadRequestException('Pedido não encontrado')
 
@@ -451,7 +458,10 @@ export class OperacionalService {
                         preco_unit:     item.preco,
                     },
                 })
-                fichas.push(ficha)
+                const subitens = item.subitens
+                    .filter(s => s.removido || s.tipo === 'ADICIONAL')
+                    .map(s => ({ nome: s.subitem.nome, removido: s.removido, preco: s.preco, quantidade: Number(s.quantidade) }))
+                fichas.push({ ...ficha, subitens })
             }
             return fichas
         })

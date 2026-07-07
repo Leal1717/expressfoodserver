@@ -9,6 +9,11 @@ export class UpdateTerminalLoginDto {
     usuario_id: number;
 }
 
+export class HeartbeatTerminalDto {
+    @IsInt()
+    terminal_id: number;
+}
+
 export class SalvarTerminalDto {
     @IsString()
     @IsNotEmpty()

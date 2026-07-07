@@ -311,6 +311,7 @@ model Terminal {
 
   ultimo_login_data       DateTime?
   ultimo_login_usuario_id Int?
+  ultima_atividade        DateTime? // atualizado por heartbeat do cliente; usado pra status "ativo" na tela de Controle (independe de caixa)
 
   caixas Caixa[]
 

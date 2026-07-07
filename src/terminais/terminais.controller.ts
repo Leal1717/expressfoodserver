@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/
 import { TerminaisService } from './terminais.service';
 import { Role, type Terminal } from '@prisma/client';
 import { Roles } from 'src/decorators/role.decorator';
-import { SalvarTerminalDto, UpdateTerminalDto, UpdateTerminalLoginDto } from './dto';
+import { HeartbeatTerminalDto, SalvarTerminalDto, UpdateTerminalDto, UpdateTerminalLoginDto } from './dto';
 // import { PlanoEntity } from './planos.entity';
 
 @Roles(Role.OWNER, Role.ADMIN_GERAL ,Role.ADMIN_SEM_FINANCEIRO)
@@ -17,6 +17,14 @@ export class TerminaisController {
         @Body() data: UpdateTerminalLoginDto
     ) {
         return this.service.logar(data)
+    }
+
+    @Roles(Role.OWNER, Role.ADMIN_GERAL, Role.ADMIN_SEM_FINANCEIRO, Role.AUTOATENDIMENTO, Role.OPERADOR_GERAL, Role.OPERADOR_SEM_ESTOQUE, Role.OPERADOR_COM_FINANCEIRO)
+    @Post("/heartbeat")
+    heartbeat(
+        @Body() data: HeartbeatTerminalDto
+    ) {
+        return this.service.heartbeat(data.terminal_id)
     }
 
     @Post("/salvar")
