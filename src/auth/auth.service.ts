@@ -18,7 +18,7 @@ export class AuthService {
     async signIn(data: SignInDto) {
         const user = await this.userService.buscarPorEmail(data.email)
         if (user?.senha !== data.senha) {
-            throw new UnauthorizedException()
+            throw new UnauthorizedException('E-mail ou senha incorretos.')
         }
 
         const { senha, ...result } = user;

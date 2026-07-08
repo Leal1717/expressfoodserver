@@ -142,6 +142,9 @@ model Cliente {
   empresa_id Int
   empresa    Empresa @relation(fields: [empresa_id], references: [id])
 
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
   @@unique([cpf, empresa_id])
   @@index([empresa_id])
 }
@@ -783,7 +786,7 @@ model Comanda {
   id String @id @default(uuid())
 
   nome    String?
-  nfc_uid String? @unique
+  nfc_uid String?
 
   cliente_id Int?
   cliente    Cliente? @relation(fields: [cliente_id], references: [id])
@@ -798,7 +801,11 @@ model Comanda {
 
   pedidos Pedido[]
 
-  @@unique([nome, empresa_id])
+  // nome/nfc_uid não são mais @unique globalmente: pulseiras físicas são reaproveitadas
+  // entre eventos/dias, e uma comanda fechada (PAGA) não deveria travar o reuso do
+  // mesmo nome/nfc_uid numa comanda nova — a checagem de duplicidade real (entre
+  // comandas OCUPADA/CONTA) já é feita na aplicação (operacional.service.ts, comandas.service.ts)
+  @@index([nome, empresa_id])
   @@index([empresa_id])
   @@index([nfc_uid])
 }
