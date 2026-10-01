@@ -4,12 +4,10 @@
 /build
 /printer/dist
 /printer/node_modules
-/prisma/migrations
 /generated
 node_modules/
 generated/
 printer/dist/
-prisma/migrations/
 
 # Logs
 logs
